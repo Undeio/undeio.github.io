@@ -3184,3 +3184,13 @@ mark.search-keyword {
   font-size: 0.93em;
   list-style: none;
 }
+/* 干掉 404 返回腾讯网 */
+.mod_404 .desc {
+  display: none;
+}
+/* 去掉 h1 / h2 / h3 的下划线 */
+.post-body h1,
+.post-body h2,
+.post-body h3 {
+  border-bottom: none;
+}
