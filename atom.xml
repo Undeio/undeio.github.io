@@ -6,7 +6,7 @@
   <link href="https://undeio.me/atom.xml" rel="self"/>
   
   <link href="https://undeio.me/"/>
-  <updated>2020-09-16T07:17:29.393Z</updated>
+  <updated>2020-05-02T07:17:29.000Z</updated>
   <id>https://undeio.me/</id>
   
   <author>
@@ -18,10 +18,10 @@
   
   <entry>
     <title>寄存器小记</title>
-    <link href="https://undeio.me/posts/2/"/>
-    <id>https://undeio.me/posts/2/</id>
-    <published>2020-09-16T07:17:29.393Z</published>
-    <updated>2020-09-16T07:17:29.393Z</updated>
+    <link href="https://undeio.me/posts/1/"/>
+    <id>https://undeio.me/posts/1/</id>
+    <published>2020-05-02T07:17:29.000Z</published>
+    <updated>2020-05-02T07:17:29.000Z</updated>
     
     <content type="html"><![CDATA[<h3 id="通用寄存器拆分"><a href="#通用寄存器拆分" class="headerlink" title="通用寄存器拆分"></a>通用寄存器拆分</h3><p>EAX / EBX / ECX / EDX</p><p>例如：</p><ul><li>EAX = 12345678</li><li>&nbsp;&nbsp;&nbsp;AX = &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5678</li><li>&nbsp;&nbsp;&nbsp;AH = &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;56</li><li>&nbsp;&nbsp;&nbsp;AL = &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;78<a id="more"></a></li><li>ESP 永远指向堆栈的最顶端；</li><li>堆栈顶端为 ESP，依次向下为 ESP + 4、ESP + 8 ，以此类推；</li><li>EIP 永远指向 CPU 即将执行的地址；</li><li>寄存器从第 18 位开始，存放的是该寄存器从起始位置依次向后的地址，即第 18 存放的是起始位置的地址；</li></ul><h3 id="标志位寄存器"><a href="#标志位寄存器" class="headerlink" title="标志位寄存器"></a>标志位寄存器</h3><ul><li><p>OF 是<code>溢出标志位</code>;</p><ul><li>当指令改变了符号位且返回错误值的时候，OF 为 1，表示溢出成立；</li><li>运算结果超出机器能够表示的范围称为溢出；</li></ul></li><li><p>PF 是 <code>奇偶标志位</code>；</p><ul><li>当指令的<code>返回值的二进制</code>表现形式中<code>1</code>的个数为偶数个时，PF 为 1；</li><li>运算结果的最低 16 位中含 1 的个数为偶数；</li><li>如：11，101，110，1001，1010，1100，1111</li></ul></li><li><p>ZF 是<code>0 标志符</code>.</p><ul><li>当前指令的运算结果为 0，则 ZF 为 1；</li></ul></li><li><p>SF 是<code>符号位标志符</code>;</p><ul><li>当指令的运算结果为负数时，SF 为 1；</li><li>SF 与运算结果的最高位相同；</li></ul></li><li><p>CF 是<code>进位标志符</code>；</p><ul><li>当指令的无符号运算结果超过最大值时，CF 为 1；</li><li>最高位产生进位或借位；</li></ul></li><li><p>AF 是<code>辅助进位标志符</code>；</p><ul><li>当指令的运算结果的低 4 位向高 4 位有进位或借位时，AF 为 1；</li></ul></li><li><p>TF 是<code>跟踪标志符</code>；</p><ul><li>用于调试单步操作；</li><li>若 TF 为 1，则每条指令执行结束后，产生中断；</li></ul></li><li><p>DF 是<code>方向标志符</code>；</p><ul><li>用来控制串处理指令的处理方向；</li><li>若 DF 为 1，则串处理中地址自动递减，否则自动自增；</li><li>若 DF 为 1，每次操作后使 SI 和 DI 递减，DF 为 0 时则自增；</li></ul></li><li><p>IF 是<code>中断标志符</code>；</p><ul><li>用来控制 CPU 是否响应可屏蔽中断；</li><li>若 IF 为 1 则允许中断，否则禁止中断；</li></ul></li></ul>]]></content>
     
@@ -47,8 +47,8 @@
   
   <entry>
     <title>常见的汇编指令</title>
-    <link href="https://undeio.me/posts/1/"/>
-    <id>https://undeio.me/posts/1/</id>
+    <link href="https://undeio.me/posts/2/"/>
+    <id>https://undeio.me/posts/2/</id>
     <published>2020-05-01T12:16:42.000Z</published>
     <updated>2020-05-01T12:16:42.000Z</updated>
     
