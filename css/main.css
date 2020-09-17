@@ -3197,7 +3197,6 @@ mark.search-keyword {
 /* footer */
 .footer {
   font-size: 14px;
-  font-family: Menlo, Monaco, Andale Mono, lucida console, Courier New, monospace;
   text-shadow: 0 1px #fff;
 }
 .footer-inner div {
