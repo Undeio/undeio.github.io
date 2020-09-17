@@ -3194,3 +3194,12 @@ mark.search-keyword {
 .post-body h3 {
   border-bottom: none;
 }
+/* footer */
+.footer {
+  font-size: 14px;
+  font-family: Menlo, Monaco, Andale Mono, lucida console, Courier New, monospace;
+  text-shadow: 0 1px #fff;
+}
+.footer-inner div {
+  display: inline-block;
+}
