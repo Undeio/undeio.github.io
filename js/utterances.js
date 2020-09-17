@@ -38,7 +38,6 @@ function loadUtterance() {
 /* 是否已存在组件 */
 function query2add() {
   let postCopyRight = document.getElementsByClassName("post-copyright")[0];
-  console.log(postCopyRight);
   if (postCopyRight) {
     let utterances = document.getElementsByClassName("utterances")[0];
     if (utterances) {
