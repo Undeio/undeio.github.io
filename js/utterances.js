@@ -36,7 +36,6 @@ function loadUtterance() {
   js.setAttribute("crossorigin", "anonymous");
   js.setAttribute("async", "async");
   document.getElementsByClassName("main-inner")[0].appendChild(js);
-  console.log(js);
 }
 
 // 是否已存在组件
@@ -44,7 +43,7 @@ function query2add() {
   // 只有正文页面才有 post-copyright，也就是最后的版权声明
   let postCopyRight = document.getElementsByClassName("post-copyright");
   if (postCopyRight && postCopyRight[0]) {
-  // 存在评论就放弃添加
+    // 存在评论就放弃添加
     let utterances = document.getElementsByClassName("utterances");
     if (utterances && utterances[0]) {
       return;

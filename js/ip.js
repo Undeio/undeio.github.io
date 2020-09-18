@@ -5,6 +5,7 @@ function printIP() {
       res.json().then((data) => {
         const ip = data.ip;
         let node = document.createElement("div");
+        node.setAttribute("class", "ip");
         node.innerHTML = "本次访问IP: " + ip;
         document.getElementsByClassName("footer-inner")[0].appendChild(node);
         return ip;
