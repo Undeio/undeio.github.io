@@ -18,8 +18,8 @@
   
   <entry>
     <title>hexo 添加 utteranc 评论功能</title>
-    <link href="https://undeio.me/posts/1/"/>
-    <id>https://undeio.me/posts/1/</id>
+    <link href="https://undeio.me/post/3357819964/"/>
+    <id>https://undeio.me/post/3357819964/</id>
     <published>2020-05-05T12:27:21.000Z</published>
     <updated>2020-05-05T12:27:21.000Z</updated>
     
@@ -31,13 +31,19 @@
     
     
     
+    <category term="Hexo" scheme="https://undeio.me/categories/Hexo/"/>
+    
+    
+    <category term="Hexo" scheme="https://undeio.me/tags/Hexo/"/>
+    
+    <category term="Utterance" scheme="https://undeio.me/tags/Utterance/"/>
     
   </entry>
   
   <entry>
     <title>寄存器小记</title>
-    <link href="https://undeio.me/posts/2/"/>
-    <id>https://undeio.me/posts/2/</id>
+    <link href="https://undeio.me/post/592731679/"/>
+    <id>https://undeio.me/post/592731679/</id>
     <published>2020-05-02T07:17:29.000Z</published>
     <updated>2020-05-02T07:17:29.000Z</updated>
     
@@ -65,8 +71,8 @@
   
   <entry>
     <title>常见的汇编指令</title>
-    <link href="https://undeio.me/posts/2/"/>
-    <id>https://undeio.me/posts/2/</id>
+    <link href="https://undeio.me/post/1025109479/"/>
+    <id>https://undeio.me/post/1025109479/</id>
     <published>2020-05-01T12:16:42.000Z</published>
     <updated>2020-05-01T12:16:42.000Z</updated>
     

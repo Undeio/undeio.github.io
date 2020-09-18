@@ -2,7 +2,7 @@
 <search>
   <entry>
     <title>hexo 添加 utteranc 评论功能</title>
-    <url>/posts/1/</url>
+    <url>/post/3357819964/</url>
     <content><![CDATA[<p>每逢看到大佬们的精彩文章，感慨甚多之际，不能留言把欢甚是遗憾。</p>
 <p>缺少了留言支持、请教解惑、互相探讨，总感觉博客没有灵魂。</p>
 <a id="more"></a>
@@ -43,10 +43,17 @@
 
 <p>无图无真相<img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giumvnbuw0j30gu0hm0vd.jpg" alt="真相"><br>最终效果<img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giun047pynj30w10admy8.jpg" alt="效果"><br>才疏学浅，实现比较粗糙，如果你有更好的实现，请给我留言。</p>
 ]]></content>
+      <categories>
+        <category>Hexo</category>
+      </categories>
+      <tags>
+        <tag>Hexo</tag>
+        <tag>Utterance</tag>
+      </tags>
   </entry>
   <entry>
     <title>寄存器小记</title>
-    <url>/posts/2/</url>
+    <url>/post/592731679/</url>
     <content><![CDATA[<h3 id="通用寄存器拆分"><a href="#通用寄存器拆分" class="headerlink" title="通用寄存器拆分"></a>通用寄存器拆分</h3><p>EAX / EBX / ECX / EDX</p>
 <p>例如：</p>
 <ul>
@@ -126,7 +133,7 @@
   </entry>
   <entry>
     <title>常见的汇编指令</title>
-    <url>/posts/2/</url>
+    <url>/post/1025109479/</url>
     <content><![CDATA[<h3 id="常见指令"><a href="#常见指令" class="headerlink" title="常见指令"></a>常见指令</h3><h4 id="NOP"><a href="#NOP" class="headerlink" title="NOP"></a>NOP</h4><ul>
 <li>NOP 的机器码是<code>90</code>；</li>
 <li>NOP 是空指令，就是没有操作，无操作；</li>

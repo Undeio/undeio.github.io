@@ -30,21 +30,21 @@
   </url>
   
   <url>
-    <loc>https://undeio.me/posts/1/</loc>
+    <loc>https://undeio.me/post/3357819964/</loc>
     
     <lastmod>2020-05-05</lastmod>
     
   </url>
   
   <url>
-    <loc>https://undeio.me/posts/2/</loc>
+    <loc>https://undeio.me/post/592731679/</loc>
     
     <lastmod>2020-05-02</lastmod>
     
   </url>
   
   <url>
-    <loc>https://undeio.me/posts/2/</loc>
+    <loc>https://undeio.me/post/1025109479/</loc>
     
     <lastmod>2020-05-01</lastmod>
     
@@ -58,6 +58,20 @@
     <priority>1.0</priority>
   </url>
 
+  
+  <url>
+    <loc>https://undeio.me/tags/Hexo/</loc>
+    <lastmod>2020-09-18</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://undeio.me/tags/Utterance/</loc>
+    <lastmod>2020-09-18</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
   
   <url>
     <loc>https://undeio.me/tags/%E5%AF%84%E5%AD%98%E5%99%A8/</loc>
@@ -74,6 +88,13 @@
   </url>
   
 
+  
+  <url>
+    <loc>https://undeio.me/categories/Hexo/</loc>
+    <lastmod>2020-09-18</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
   
   <url>
     <loc>https://undeio.me/categories/%E9%80%86%E5%90%91%E5%B7%A5%E7%A8%8B/</loc>
