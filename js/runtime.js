@@ -11,7 +11,7 @@ function intervalToDuration() {
     .toDuration(["years", "months", "days", "hours", "minutes", "seconds"])
     .toObject();
 
-  let runtime = document.createElement("p");
+  let runtime = document.createElement("div");
   runtime.setAttribute("class", "runtime");
   runtime.innerHTML = `网站陆续运行${result.years}年${result.months}月${
     result.days
