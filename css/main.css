@@ -3205,6 +3205,6 @@ mark.search-keyword {
   margin-top: 12px;
   background-color: #fff;
 }
-.runtime {
-  margin: 0;
+.ip:after {
+  content: "\00a0";
 }
