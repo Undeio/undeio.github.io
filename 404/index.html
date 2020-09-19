@@ -16,27 +16,7 @@
       const commentClass = event.target.classList[1];
       localStorage.setItem('comments_active', commentClass);
     });
-  }</script></div></main><footer class="footer"><div class="footer-inner"><div class="copyright">&copy; <span itemprop="copyrightYear">2020</span> <span class="with-love"><i class="fa fa-heart"></i> </span><span class="author" itemprop="copyrightHolder">Undeio</span></div><div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener external nofollow noreferrer" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener external nofollow noreferrer" target="_blank">NexT.Gemini</a> 强力驱动</div><script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div class="busuanzi">本站总访问量<span id="busuanzi_value_site_pv"></span>次 <span>|</span> 本站访客数<span id="busuanzi_value_site_uv"></span>人次</div><script>/* 在网站底部添加访问 ip */
-    printIP();
-    function printIP() {
-        fetch("https://ipapi.co/json/").then((res) => {
-            if (res.ok) {
-                res
-                    .json()
-                    .then((data) => {
-                        const ip = data.ip;
-                        let foot = document.getElementsByClassName("footer-inner")[0];
-                        let node = document.createElement("div");
-                        node.setAttribute("class", "ip");
-                        node.innerHTML = "本次访问IP: " + ip;
-                        if (foot) {
-                            foot.appendChild(node);
-                        }
-                        return ip;
-                    });
-            }
-        });
-    }</script><script src="https://cdn.jsdelivr.net/npm/luxon@1.25.0/build/global/luxon.min.js"></script><script>// 在网站底部添加网站运行时间
+  }</script></div></main><footer class="footer"><div class="footer-inner"><div class="copyright">&copy; <span itemprop="copyrightYear">2020</span> <span class="with-love"><i class="fa fa-heart"></i> </span><span class="author" itemprop="copyrightHolder">Undeio</span></div><div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener external nofollow noreferrer" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener external nofollow noreferrer" target="_blank">NexT.Gemini</a> 强力驱动</div><script src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div class="busuanzi">本站总访问量<span id="busuanzi_value_site_pv"></span>次 <span>|</span> 本站访客数<span id="busuanzi_value_site_uv"></span>人次</div><script src="https://cdn.jsdelivr.net/npm/luxon@1.25.0/build/global/luxon.min.js"></script><script>// 在网站底部添加网站运行时间
 
     const DateTime = luxon.DateTime;
     const Interval = luxon.Interval;
@@ -56,14 +36,14 @@
 
         let runtime = document.createElement("div");
         runtime.setAttribute("class", "runtime");
-        runtime.innerHTML = `网站陆续运行${result.years}年${result.months}月${
+        runtime.innerHTML = `本站陆续运行${result.years}年${result.months}月${
         result.days}天${result.hours}时${result.minutes}分${parseInt(result.seconds)}秒`;
 
         return runtime;
     }
 
-    function query2add() {
-        window.setTimeout(query2add, 1000);
+    function query22add() {
+        window.setTimeout(query22add, 1000);
         let foot = document.getElementsByClassName("footer-inner")[0];
         let page = document.getElementsByClassName("runtime")[0];
         if (foot) {
@@ -74,7 +54,7 @@
         }
     }
 
-    query2add();</script><script>/* utterances 评论插件 */
+    query22add();</script><script>/* utterances 评论插件 */
     // 初始化
     window.addEventListener("DOMContentLoaded", function () {
         query2add();
@@ -127,6 +107,26 @@
             }
             loadUtterance();
         }
+    }</script><script>/* 在网站底部添加访问 ip */
+    printIP();
+    function printIP() {
+        fetch("https://ipapi.co/json/").then((res) => {
+            if (res.ok) {
+                res
+                    .json()
+                    .then((data) => {
+                        const ip = data.ip;
+                        let foot = document.getElementsByClassName("footer-inner")[0];
+                        let node = document.createElement("div");
+                        node.setAttribute("class", "ip");
+                        node.innerHTML = "本次访问IP: " + ip;
+                        if (foot) {
+                            foot.appendChild(node);
+                        }
+                        return ip;
+                    });
+            }
+        });
     }</script></div></footer><script src="//cdn.jsdelivr.net/npm/animejs@3.2.0/lib/anime.min.js"></script><script src="//cdn.jsdelivr.net/npm/@next-theme/pjax@0.4.0/pjax.min.js"></script><script src="//cdn.jsdelivr.net/npm/medium-zoom@1.0.6/dist/medium-zoom.min.js"></script><script src="//cdn.jsdelivr.net/npm/lozad@1.15.0/dist/lozad.min.js"></script><script src="//cdn.jsdelivr.net/npm/pangu@4.0.7/dist/browser/pangu.min.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script><script>var pjax = new Pjax({
   selectors: [
     'head title',
