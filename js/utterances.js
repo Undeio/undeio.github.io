@@ -1,5 +1,6 @@
 /* utterances 评论插件 */
 
+// query2add();
 // 初始化
 window.addEventListener("DOMContentLoaded", function () {
   query2add();
@@ -40,12 +41,13 @@ function loadUtterance() {
 
 // 是否已存在组件
 function query2add() {
+  console.log("will add utterance...");
   // 只有正文页面才有 post-copyright，也就是最后的版权声明
-  let postCopyRight = document.getElementsByClassName("post-copyright");
-  if (postCopyRight && postCopyRight[0]) {
+  let postCopyRight = document.getElementsByClassName("post-copyright")[0];
+  if (postCopyRight) {
     // 存在评论就放弃添加
-    let utterances = document.getElementsByClassName("utterances");
-    if (utterances && utterances[0]) {
+    let utterances = document.getElementsByClassName("utterances")[0];
+    if (utterances) {
       return;
     }
     loadUtterance();

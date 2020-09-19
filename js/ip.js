@@ -4,10 +4,13 @@ function printIP() {
     if (res.ok) {
       res.json().then((data) => {
         const ip = data.ip;
+        let foot = document.getElementsByClassName("footer-inner")[0];
         let node = document.createElement("div");
         node.setAttribute("class", "ip");
         node.innerHTML = "本次访问IP: " + ip;
-        document.getElementsByClassName("footer-inner")[0].appendChild(node);
+        if (foot) {
+          foot.appendChild(node);
+        }
         return ip;
       });
     }

@@ -22,13 +22,14 @@ function intervalToDuration() {
 
 function query2add() {
   window.setTimeout(query2add, 1000);
+  let foot = document.getElementsByClassName("footer-inner")[0];
   let page = document.getElementsByClassName("runtime")[0];
-  if (page) {
-    document.getElementsByClassName("footer-inner")[0].removeChild(page);
+  if (foot) {
+    if (page) {
+      foot.removeChild(page);
+    }
+    foot.appendChild(intervalToDuration());
   }
-  document
-    .getElementsByClassName("footer-inner")[0]
-    .appendChild(intervalToDuration());
 }
 
 query2add();
