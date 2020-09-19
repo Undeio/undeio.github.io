@@ -1,6 +1,5 @@
 /* utterances 评论插件 */
 
-// query2add();
 // 初始化
 window.addEventListener("DOMContentLoaded", function () {
   query2add();
@@ -41,7 +40,7 @@ function loadUtterance() {
 
 // 是否已存在组件
 function query2add() {
-  console.log("will add utterance...");
+  console.log("query and add utterance...");
   // 只有正文页面才有 post-copyright，也就是最后的版权声明
   let postCopyRight = document.getElementsByClassName("post-copyright")[0];
   if (postCopyRight) {

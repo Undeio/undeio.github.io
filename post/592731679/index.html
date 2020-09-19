@@ -1,4 +1,473 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=2"><meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.0.2"><link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png"><link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.ico"><link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.ico"><link rel="mask-icon" href="/images/logo.svg" color="#222"><meta name="google-site-verification" content="Oe5X3we6LueobdVkYt_0OWN2MKIdhLA1ABWWwBtCInI"><meta name="baidu-site-verification" content="code-cAwJVzSa3d"><link rel="stylesheet" href="/css/main.css"><link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.14.0/css/all.min.css"><link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css"><script class="hexo-configurations">var NexT=window.NexT||{},CONFIG={hostname:"undeio.me",root:"/",scheme:"Gemini",version:"8.0.0-rc.5",exturl:!1,sidebar:{position:"left",display:"post",padding:18,offset:12,width:300},copycode:!0,bookmark:{enable:!1,color:"#222",save:"auto"},fancybox:!1,mediumzoom:!0,lazyload:!0,pangu:!0,comments:{style:"tabs",active:null,storage:!0,lazyload:!1,nav:null},motion:{enable:!0,async:!1,transition:{post_block:"fadeIn",post_header:"fadeInDown",post_body:"fadeInDown",coll_header:"fadeInLeft",sidebar:"fadeInUp"}},prism:!1,path:"search.xml",localsearch:{enable:!0,trigger:"auto",top_n_per_article:1,unescape:!1,preload:!0}}</script><meta name="description" content="通用寄存器拆分EAX &#x2F; EBX &#x2F; ECX &#x2F; EDX 例如：  EAX &#x3D; 12345678 &amp;nbsp;&amp;nbsp;&amp;nbsp;AX &#x3D; &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;5678 &amp;nbsp;&amp;nbsp;&amp;nbsp;AH &#x3D; &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;56 &amp;"><meta property="og:type" content="article"><meta property="og:title" content="寄存器小记"><meta property="og:url" content="https://undeio.me/post/592731679/"><meta property="og:site_name" content="池塘·半亩"><meta property="og:description" content="通用寄存器拆分EAX &#x2F; EBX &#x2F; ECX &#x2F; EDX 例如：  EAX &#x3D; 12345678 &amp;nbsp;&amp;nbsp;&amp;nbsp;AX &#x3D; &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;5678 &amp;nbsp;&amp;nbsp;&amp;nbsp;AH &#x3D; &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;56 &amp;"><meta property="og:locale" content="zh_CN"><meta property="article:published_time" content="2020-05-02T07:17:29.000Z"><meta property="article:modified_time" content="2020-05-02T07:17:29.000Z"><meta property="article:author" content="Undeio"><meta property="article:tag" content="寄存器"><meta name="twitter:card" content="summary"><link rel="canonical" href="https://undeio.me/post/592731679/"><script data-pjax class="page-configurations">CONFIG.page={sidebar:"",isHome:!1,isPost:!0,lang:"zh-CN"}</script><script src="/js/utterances.js"></script><title>寄存器小记 | 池塘·半亩</title><script data-pjax>var _hmt=_hmt||[];!function(){var e=document.createElement("script");e.src="https://hm.baidu.com/hm.js?1dca64bee6b4ddd8e5704b56999cb693";var t=document.getElementsByTagName("script")[0];t.parentNode.insertBefore(e,t)}()</script><noscript><style>body{margin-top:2rem}.use-motion .collection-header,.use-motion .comments,.use-motion .menu-item,.use-motion .pagination,.use-motion .post-block,.use-motion .post-body,.use-motion .post-header,.use-motion .sidebar{visibility:visible}.use-motion .footer,.use-motion .header,.use-motion .site-brand-container .toggle{opacity:initial}.use-motion .custom-logo-image,.use-motion .site-subtitle,.use-motion .site-title{opacity:initial;top:initial}.use-motion .logo-line{transform:scaleX(1)}.search-pop-overlay,.sidebar-nav{display:none}.sidebar-panel{display:block}</style></noscript></head><body itemscope itemtype="http://schema.org/WebPage" class="use-motion"><div class="headband"></div><main class="main"><header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="header-inner"><div class="site-brand-container"><div class="site-nav-toggle"><div class="toggle" aria-label="切换导航栏"><span class="toggle-line"></span> <span class="toggle-line"></span> <span class="toggle-line"></span></div></div><div class="site-meta"><a href="/" class="brand" rel="start"><i class="logo-line"></i><h1 class="site-title">池塘·半亩</h1><i class="logo-line"></i></a><p class="site-subtitle" itemprop="description">业精于勤，荒于嬉。行成于思，毁于随。</p></div><div class="site-nav-right"><div class="toggle popup-trigger"><i class="fa fa-search fa-fw fa-lg"></i></div></div></div><nav class="site-nav"><ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-commonweal"><a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>公益 404</a></li><li class="menu-item menu-item-search"><a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索</a></li></ul></nav><div class="search-pop-overlay"><div class="popup search-popup"><div class="search-header"><span class="search-icon"><i class="fa fa-search"></i></span><div class="search-input-container"><input autocomplete="off" autocapitalize="off" maxlength="80" placeholder="搜索..." spellcheck="false" type="search" class="search-input"></div><span class="popup-btn-close"><i class="fa fa-times-circle"></i></span></div><div class="search-result-container"><div class="no-result"><i class="fa fa-spinner fa-pulse fa-5x"></i></div></div></div></div></div><div class="toggle sidebar-toggle"><span class="toggle-line"></span> <span class="toggle-line"></span> <span class="toggle-line"></span></div><aside class="sidebar"><div class="sidebar-inner sidebar-nav-active sidebar-toc-active"><ul class="sidebar-nav"><li class="sidebar-nav-toc">文章目录</li><li class="sidebar-nav-overview">站点概览</li></ul><section class="post-toc-wrap sidebar-panel"><div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%9A%E7%94%A8%E5%AF%84%E5%AD%98%E5%99%A8%E6%8B%86%E5%88%86"><span class="nav-number">1.</span> <span class="nav-text">通用寄存器拆分</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%87%E5%BF%97%E4%BD%8D%E5%AF%84%E5%AD%98%E5%99%A8"><span class="nav-number">2.</span> <span class="nav-text">标志位寄存器</span></a></li></ol></div></section><section class="site-overview-wrap sidebar-panel"><div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person"><img class="site-author-image" itemprop="image" alt="Undeio" src="/images/avatar.jpg"><p class="site-author-name" itemprop="name">Undeio</p><div class="site-description" itemprop="description">也许似乎大概是，然而未必不见得。</div></div><div class="site-state-wrap animated"><nav class="site-state"><div class="site-state-item site-state-posts"><a href="/archives"><span class="site-state-item-count">3</span> <span class="site-state-item-name">日志</span></a></div><div class="site-state-item site-state-categories"><a href="/categories/"><span class="site-state-item-count">3</span> <span class="site-state-item-name">分类</span></a></div><div class="site-state-item site-state-tags"><a href="/tags/"><span class="site-state-item-count">5</span> <span class="site-state-item-name">标签</span></a></div></nav></div><div class="links-of-author animated"><span class="links-of-author-item"><a href="https://github.com/Undeio" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;Undeio" rel="noopener external nofollow noreferrer" target="_blank"><i class="fab fa-github fa-fw"></i></a> </span><span class="links-of-author-item"><a href="mailto:sean_link@live.com" title="E-Mail → mailto:sean_link@live.com" rel="noopener external nofollow noreferrer" target="_blank"><i class="fa fa-envelope fa-fw"></i></a></span></div><div class="cc-license animated" itemprop="license"><a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" class="cc-opacity" rel="noopener external nofollow noreferrer" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.css"><script src="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js"></script><script src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js"></script><meting-js server="tencent" type="playlist" id="714421782" order="random" list-max-height="164px"></meting-js></section><div class="back-to-top animated"><i class="fa fa-arrow-up"></i> <span>0%</span></div></div></aside><div class="sidebar-dimmer"></div></header><noscript><div class="noscript-warning">Theme NexT works best with JavaScript enabled</div></noscript><div class="main-inner post posts-expand"><article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN"><link itemprop="mainEntityOfPage" href="https://undeio.me/post/592731679/"><span hidden itemprop="author" itemscope itemtype="http://schema.org/Person"><meta itemprop="image" content="/images/avatar.jpg"><meta itemprop="name" content="Undeio"><meta itemprop="description" content="也许似乎大概是，然而未必不见得。"></span><span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization"><meta itemprop="name" content="池塘·半亩"></span><header class="post-header"><h1 class="post-title" itemprop="name headline">寄存器小记</h1><div class="post-meta"><span class="post-meta-item"><span class="post-meta-item-icon"><i class="far fa-calendar"></i> </span><span class="post-meta-item-text">发表于</span> <time title="创建时间：2020-05-02 15:17:29" itemprop="dateCreated datePublished" datetime="2020-05-02T15:17:29+08:00">2020-05-02</time> </span><span class="post-meta-item"><span class="post-meta-item-icon"><i class="far fa-folder"></i> </span><span class="post-meta-item-text">分类于</span> <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/%E9%80%86%E5%90%91%E5%B7%A5%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">逆向工程</span></a> </span>， <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/%E6%B1%87%E7%BC%96/" itemprop="url" rel="index"><span itemprop="name">汇编</span></a></span></span></div></header><div class="post-body" itemprop="articleBody"><h3 id="通用寄存器拆分"><a href="#通用寄存器拆分" class="headerlink" title="通用寄存器拆分"></a>通用寄存器拆分</h3><p>EAX / EBX / ECX / EDX</p><p>例如：</p><ul><li>EAX = 12345678</li><li>&nbsp;&nbsp;&nbsp;AX = &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5678</li><li>&nbsp;&nbsp;&nbsp;AH = &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;56</li><li>&nbsp;&nbsp;&nbsp;AL = &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;78<a id="more"></a></li><li>ESP 永远指向堆栈的最顶端；</li><li>堆栈顶端为 ESP，依次向下为 ESP + 4、ESP + 8 ，以此类推；</li><li>EIP 永远指向 CPU 即将执行的地址；</li><li>寄存器从第 18 位开始，存放的是该寄存器从起始位置依次向后的地址，即第 18 存放的是起始位置的地址；</li></ul><h3 id="标志位寄存器"><a href="#标志位寄存器" class="headerlink" title="标志位寄存器"></a>标志位寄存器</h3><ul><li><p>OF 是<code>溢出标志位</code>;</p><ul><li>当指令改变了符号位且返回错误值的时候，OF 为 1，表示溢出成立；</li><li>运算结果超出机器能够表示的范围称为溢出；</li></ul></li><li><p>PF 是 <code>奇偶标志位</code>；</p><ul><li>当指令的<code>返回值的二进制</code>表现形式中<code>1</code>的个数为偶数个时，PF 为 1；</li><li>运算结果的最低 16 位中含 1 的个数为偶数；</li><li>如：11，101，110，1001，1010，1100，1111</li></ul></li><li><p>ZF 是<code>0 标志符</code>.</p><ul><li>当前指令的运算结果为 0，则 ZF 为 1；</li></ul></li><li><p>SF 是<code>符号位标志符</code>;</p><ul><li>当指令的运算结果为负数时，SF 为 1；</li><li>SF 与运算结果的最高位相同；</li></ul></li><li><p>CF 是<code>进位标志符</code>；</p><ul><li>当指令的无符号运算结果超过最大值时，CF 为 1；</li><li>最高位产生进位或借位；</li></ul></li><li><p>AF 是<code>辅助进位标志符</code>；</p><ul><li>当指令的运算结果的低 4 位向高 4 位有进位或借位时，AF 为 1；</li></ul></li><li><p>TF 是<code>跟踪标志符</code>；</p><ul><li>用于调试单步操作；</li><li>若 TF 为 1，则每条指令执行结束后，产生中断；</li></ul></li><li><p>DF 是<code>方向标志符</code>；</p><ul><li>用来控制串处理指令的处理方向；</li><li>若 DF 为 1，则串处理中地址自动递减，否则自动自增；</li><li>若 DF 为 1，每次操作后使 SI 和 DI 递减，DF 为 0 时则自增；</li></ul></li><li><p>IF 是<code>中断标志符</code>；</p><ul><li>用来控制 CPU 是否响应可屏蔽中断；</li><li>若 IF 为 1 则允许中断，否则禁止中断；</li></ul></li></ul></div><div><ul class="post-copyright"><li class="post-copyright-author"><strong>本文作者： </strong>Undeio</li><li class="post-copyright-link"><strong>本文链接：</strong> <a href="https://undeio.me/post/592731679/" title="寄存器小记">https://undeio.me/post/592731679/</a></li><li class="post-copyright-license"><strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" rel="noopener external nofollow noreferrer" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！</li></ul></div><footer class="post-footer"><div class="post-tags"><a href="/tags/%E5%AF%84%E5%AD%98%E5%99%A8/" rel="tag"><i class="fa fa-tag"></i> 寄存器</a></div><div class="post-nav"><div class="post-nav-item"><a href="/post/1025109479/" rel="prev" title="常见的汇编指令"><i class="fa fa-chevron-left"></i> 常见的汇编指令</a></div><div class="post-nav-item"><a href="/post/3357819964/" rel="next" title="hexo 添加 utteranc 评论功能">hexo 添加 utteranc 评论功能 <i class="fa fa-chevron-right"></i></a></div></div></footer></article><script>window.addEventListener('tabs:register', () => {
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.0.2">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.ico">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="google-site-verification" content="Oe5X3we6LueobdVkYt_0OWN2MKIdhLA1ABWWwBtCInI">
+  <meta name="baidu-site-verification" content="code-cAwJVzSa3d">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.14.0/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"undeio.me","root":"/","scheme":"Gemini","version":"8.0.0-rc.5","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"width":300},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":true,"lazyload":true,"pangu":true,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"path":"search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true}};
+  </script>
+
+  <meta name="description" content="通用寄存器拆分EAX &#x2F; EBX &#x2F; ECX &#x2F; EDX 例如：  EAX &#x3D; 12345678 &amp;nbsp;&amp;nbsp;&amp;nbsp;AX &#x3D; &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;5678 &amp;nbsp;&amp;nbsp;&amp;nbsp;AH &#x3D; &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;56 &amp;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="寄存器小记">
+<meta property="og:url" content="https://undeio.me/post/592731679/">
+<meta property="og:site_name" content="池塘·半亩">
+<meta property="og:description" content="通用寄存器拆分EAX &#x2F; EBX &#x2F; ECX &#x2F; EDX 例如：  EAX &#x3D; 12345678 &amp;nbsp;&amp;nbsp;&amp;nbsp;AX &#x3D; &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;5678 &amp;nbsp;&amp;nbsp;&amp;nbsp;AH &#x3D; &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;56 &amp;">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-05-02T07:17:29.000Z">
+<meta property="article:modified_time" content="2020-05-02T07:17:29.000Z">
+<meta property="article:author" content="Undeio">
+<meta property="article:tag" content="寄存器">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://undeio.me/post/592731679/">
+
+
+<script data-pjax class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script><!-- 评论插件-->
+<script src="/js/utterances.js" defer></script>
+
+
+  <title>寄存器小记 | 池塘·半亩</title>
+  
+
+
+  <script data-pjax>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?1dca64bee6b4ddd8e5704b56999cb693";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">池塘·半亩</h1>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">业精于勤，荒于嬉。行成于思，毁于随。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>公益 404</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container">
+  <div class="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <section class="post-toc-wrap sidebar-panel">
+          <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%9A%E7%94%A8%E5%AF%84%E5%AD%98%E5%99%A8%E6%8B%86%E5%88%86"><span class="nav-number">1.</span> <span class="nav-text">通用寄存器拆分</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%87%E5%BF%97%E4%BD%8D%E5%AF%84%E5%AD%98%E5%99%A8"><span class="nav-number">2.</span> <span class="nav-text">标志位寄存器</span></a></li></ol></div>
+      </section>
+      <!--/noindex-->
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Undeio"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">Undeio</p>
+  <div class="site-description" itemprop="description">也许似乎大概是，然而未必不见得。</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">3</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/Undeio" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;Undeio" rel="noopener external nofollow noreferrer" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:sean_link@live.com" title="E-Mail → mailto:sean_link@live.com" rel="noopener external nofollow noreferrer" target="_blank"><i class="fa fa-envelope fa-fw"></i></a>
+      </span>
+  </div>
+  <div class="cc-license animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" class="cc-opacity" rel="noopener external nofollow noreferrer" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+      </section>
+        <div class="back-to-top animated">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://undeio.me/post/592731679/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="Undeio">
+      <meta itemprop="description" content="也许似乎大概是，然而未必不见得。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="池塘·半亩">
+    </span>
+
+    
+    
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          寄存器小记
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-05-02 15:17:29" itemprop="dateCreated datePublished" datetime="2020-05-02T15:17:29+08:00">2020-05-02</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E9%80%86%E5%90%91%E5%B7%A5%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">逆向工程</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%B1%87%E7%BC%96/" itemprop="url" rel="index"><span itemprop="name">汇编</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h3 id="通用寄存器拆分"><a href="#通用寄存器拆分" class="headerlink" title="通用寄存器拆分"></a>通用寄存器拆分</h3><p>EAX / EBX / ECX / EDX</p>
+<p>例如：</p>
+<ul>
+<li>EAX = 12345678</li>
+<li>&nbsp;&nbsp;&nbsp;AX = &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5678</li>
+<li>&nbsp;&nbsp;&nbsp;AH = &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;56</li>
+<li>&nbsp;&nbsp;&nbsp;AL = &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;78<a id="more"></a></li>
+<li>ESP 永远指向堆栈的最顶端；</li>
+<li>堆栈顶端为 ESP，依次向下为 ESP + 4、ESP + 8 ，以此类推；</li>
+<li>EIP 永远指向 CPU 即将执行的地址；</li>
+<li>寄存器从第 18 位开始，存放的是该寄存器从起始位置依次向后的地址，即第 18 存放的是起始位置的地址；</li>
+</ul>
+<h3 id="标志位寄存器"><a href="#标志位寄存器" class="headerlink" title="标志位寄存器"></a>标志位寄存器</h3><ul>
+<li><p>OF 是<code>溢出标志位</code>;</p>
+<ul>
+<li>当指令改变了符号位且返回错误值的时候，OF 为 1，表示溢出成立；</li>
+<li>运算结果超出机器能够表示的范围称为溢出；</li>
+</ul>
+</li>
+<li><p>PF 是 <code>奇偶标志位</code>；</p>
+<ul>
+<li>当指令的<code>返回值的二进制</code>表现形式中<code>1</code>的个数为偶数个时，PF 为 1；</li>
+<li>运算结果的最低 16 位中含 1 的个数为偶数；</li>
+<li>如：11，101，110，1001，1010，1100，1111</li>
+</ul>
+</li>
+<li><p>ZF 是<code>0 标志符</code>.</p>
+<ul>
+<li>当前指令的运算结果为 0，则 ZF 为 1；</li>
+</ul>
+</li>
+<li><p>SF 是<code>符号位标志符</code>;</p>
+<ul>
+<li>当指令的运算结果为负数时，SF 为 1；</li>
+<li>SF 与运算结果的最高位相同；</li>
+</ul>
+</li>
+<li><p>CF 是<code>进位标志符</code>；</p>
+<ul>
+<li>当指令的无符号运算结果超过最大值时，CF 为 1；</li>
+<li>最高位产生进位或借位；</li>
+</ul>
+</li>
+<li><p>AF 是<code>辅助进位标志符</code>；</p>
+<ul>
+<li>当指令的运算结果的低 4 位向高 4 位有进位或借位时，AF 为 1；</li>
+</ul>
+</li>
+<li><p>TF 是<code>跟踪标志符</code>；</p>
+<ul>
+<li>用于调试单步操作；</li>
+<li>若 TF 为 1，则每条指令执行结束后，产生中断；</li>
+</ul>
+</li>
+<li><p>DF 是<code>方向标志符</code>；</p>
+<ul>
+<li>用来控制串处理指令的处理方向；</li>
+<li>若 DF 为 1，则串处理中地址自动递减，否则自动自增；</li>
+<li>若 DF 为 1，每次操作后使 SI 和 DI 递减，DF 为 0 时则自增；</li>
+</ul>
+</li>
+<li><p>IF 是<code>中断标志符</code>；</p>
+<ul>
+<li>用来控制 CPU 是否响应可屏蔽中断；</li>
+<li>若 IF 为 1 则允许中断，否则禁止中断；</li>
+</ul>
+</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Undeio
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://undeio.me/post/592731679/" title="寄存器小记">https://undeio.me/post/592731679/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" rel="noopener external nofollow noreferrer" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%AF%84%E5%AD%98%E5%99%A8/" rel="tag"><i class="fa fa-tag"></i> 寄存器</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/post/1025109479/" rel="prev" title="常见的汇编指令">
+                  <i class="fa fa-chevron-left"></i> 常见的汇编指令
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/post/3357819964/" rel="next" title="hexo 添加 utteranc 评论功能">
+                  hexo 添加 utteranc 评论功能 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
     let { activeClass } = CONFIG.comments;
     if (CONFIG.comments.storage) {
       activeClass = localStorage.getItem('comments_active') || activeClass;
@@ -16,7 +485,56 @@
       const commentClass = event.target.classList[1];
       localStorage.setItem('comments_active', commentClass);
     });
-  }</script></div></main><footer class="footer"><div class="footer-inner"><div class="copyright">&copy; <span itemprop="copyrightYear">2020</span> <span class="with-love"><i class="fa fa-heart"></i> </span><span class="author" itemprop="copyrightHolder">Undeio</span></div><div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener external nofollow noreferrer" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener external nofollow noreferrer" target="_blank">NexT.Gemini</a> 强力驱动</div><script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div class="busuanzi">本站总访问量<span id="busuanzi_value_site_pv"></span>次 <span>|</span> 本站访客数<span id="busuanzi_value_site_uv"></span>人次</div><script async src="/js/ip.js"></script><script src="https://cdn.jsdelivr.net/npm/luxon@1.25.0/build/global/luxon.min.js"></script><script async src="/js/runtime.js"></script></div></footer><script src="//cdn.jsdelivr.net/npm/animejs@3.2.0/lib/anime.min.js"></script><script src="//cdn.jsdelivr.net/npm/@next-theme/pjax@0.4.0/pjax.min.js"></script><script src="//cdn.jsdelivr.net/npm/medium-zoom@1.0.6/dist/medium-zoom.min.js"></script><script src="//cdn.jsdelivr.net/npm/lozad@1.15.0/dist/lozad.min.js"></script><script src="//cdn.jsdelivr.net/npm/pangu@4.0.7/dist/browser/pangu.min.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script><script>var pjax = new Pjax({
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Undeio</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener external nofollow noreferrer" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener external nofollow noreferrer" target="_blank">NexT.Gemini</a> 强力驱动
+  </div><!-- busuanzi -->
+<script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="busuanzi">
+    本站总访问量<span id="busuanzi_value_site_pv"></span>次
+    <span>|</span>
+    本站访客数<span id="busuanzi_value_site_uv"></span>人次
+    <!-- 本文总阅读量<span id="busuanzi_value_page_pv"></span>次 --></div>
+
+<!-- ip -->
+<script src="/js/ip.js" async></script>
+
+<!-- 在网站底部添加网站运行时间 -->
+<script src="https://cdn.jsdelivr.net/npm/luxon@1.25.0/build/global/luxon.min.js"></script>
+<script src="/js/runtime.js" async></script>
+
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/@next-theme/pjax@0.4.0/pjax.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1.0.6/dist/medium-zoom.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1.15.0/dist/lozad.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/pangu@4.0.7/dist/browser/pangu.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+  <script>
+var pjax = new Pjax({
   selectors: [
     'head title',
     '.page-configurations',
@@ -46,4 +564,51 @@ document.addEventListener('pjax:success', () => {
   document.querySelector('.sidebar-inner').classList.toggle('sidebar-nav-active', hasTOC);
   document.querySelector(hasTOC ? '.sidebar-nav-toc' : '.sidebar-nav-overview').click();
   NexT.utils.updateSidebarPosition();
-});</script><script data-pjax>!function(){var t=document.createElement("script"),e=window.location.protocol.split(":")[0];t.src="https"===e?"https://zz.bdstatic.com/linksubmit/push.js":"http://push.zhanzhang.baidu.com/push.js";var s=document.getElementsByTagName("script")[0];s.parentNode.insertBefore(t,s)}()</script><script src="/js/local-search.js"></script><div class="pjax"></div></body></html>
+});
+</script>
+
+
+  
+  <script data-pjax>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+    <div class="pjax">
+  
+
+  
+
+    </div>
+</body>
+</html>
