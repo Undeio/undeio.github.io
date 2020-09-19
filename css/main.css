@@ -3199,9 +3199,6 @@ mark.search-keyword {
 .footer-inner div {
   display: inline-block;
 }
-.footer-inner div:after {
-  content: "\00a0\00a0";
-}
 /* 评论插件 */
 .utterances {
   max-width: 100%;
