@@ -1,90 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>寄存器小记</title>
-    <url>/post/592731679/</url>
-    <content><![CDATA[<h3 id="通用寄存器拆分"><a href="#通用寄存器拆分" class="headerlink" title="通用寄存器拆分"></a>通用寄存器拆分</h3><p>EAX / EBX / ECX / EDX</p>
-<p>例如：</p>
-<ul>
-<li>EAX = 12345678</li>
-<li>&nbsp;&nbsp;&nbsp;AX = &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5678</li>
-<li>&nbsp;&nbsp;&nbsp;AH = &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;56</li>
-<li>&nbsp;&nbsp;&nbsp;AL = &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;78<a id="more"></a></li>
-<li>ESP 永远指向堆栈的最顶端；</li>
-<li>堆栈顶端为 ESP，依次向下为 ESP + 4、ESP + 8 ，以此类推；</li>
-<li>EIP 永远指向 CPU 即将执行的地址；</li>
-<li>寄存器从第 18 位开始，存放的是该寄存器从起始位置依次向后的地址，即第 18 存放的是起始位置的地址；</li>
-</ul>
-<h3 id="标志位寄存器"><a href="#标志位寄存器" class="headerlink" title="标志位寄存器"></a>标志位寄存器</h3><ul>
-<li><p>OF 是<code>溢出标志位</code>;</p>
-<ul>
-<li>当指令改变了符号位且返回错误值的时候，OF 为 1，表示溢出成立；</li>
-<li>运算结果超出机器能够表示的范围称为溢出；</li>
-</ul>
-</li>
-<li><p>PF 是 <code>奇偶标志位</code>；</p>
-<ul>
-<li>当指令的<code>返回值的二进制</code>表现形式中<code>1</code>的个数为偶数个时，PF 为 1；</li>
-<li>运算结果的最低 16 位中含 1 的个数为偶数；</li>
-<li>如：11，101，110，1001，1010，1100，1111</li>
-</ul>
-</li>
-<li><p>ZF 是<code>0 标志符</code>.</p>
-<ul>
-<li>当前指令的运算结果为 0，则 ZF 为 1；</li>
-</ul>
-</li>
-<li><p>SF 是<code>符号位标志符</code>;</p>
-<ul>
-<li>当指令的运算结果为负数时，SF 为 1；</li>
-<li>SF 与运算结果的最高位相同；</li>
-</ul>
-</li>
-<li><p>CF 是<code>进位标志符</code>；</p>
-<ul>
-<li>当指令的无符号运算结果超过最大值时，CF 为 1；</li>
-<li>最高位产生进位或借位；</li>
-</ul>
-</li>
-<li><p>AF 是<code>辅助进位标志符</code>；</p>
-<ul>
-<li>当指令的运算结果的低 4 位向高 4 位有进位或借位时，AF 为 1；</li>
-</ul>
-</li>
-<li><p>TF 是<code>跟踪标志符</code>；</p>
-<ul>
-<li>用于调试单步操作；</li>
-<li>若 TF 为 1，则每条指令执行结束后，产生中断；</li>
-</ul>
-</li>
-<li><p>DF 是<code>方向标志符</code>；</p>
-<ul>
-<li>用来控制串处理指令的处理方向；</li>
-<li>若 DF 为 1，则串处理中地址自动递减，否则自动自增；</li>
-<li>若 DF 为 1，每次操作后使 SI 和 DI 递减，DF 为 0 时则自增；</li>
-</ul>
-</li>
-<li><p>IF 是<code>中断标志符</code>；</p>
-<ul>
-<li>用来控制 CPU 是否响应可屏蔽中断；</li>
-<li>若 IF 为 1 则允许中断，否则禁止中断；</li>
-</ul>
-</li>
-</ul>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>汇编</category>
-      </categories>
-      <tags>
-        <tag>寄存器</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>hexo 添加 utteranc 评论功能</title>
     <url>/post/3357819964/</url>
-    <content><![CDATA[<p>每逢看到大佬们的精彩文章，感慨甚多之际，不能留言把欢甚是遗憾。</p>
-<p>缺少了留言支持、请教解惑、互相探讨，总感觉博客没有灵魂。</p>
+    <content><![CDATA[<blockquote>
+<p>每逢看到大佬们的精彩文章，感慨甚多之际，不能留言把欢甚是遗憾。<br>缺少了留言支持、请教解惑、互相探讨，总感觉博客没有灵魂。</p>
+</blockquote>
 <a id="more"></a>
 
 <h4 id="废话连篇"><a href="#废话连篇" class="headerlink" title="废话连篇"></a>废话连篇</h4><p>曾记得，2016 年端午节，在<code>Github Pages</code>上写下了人生中的第一篇博客，那时就用的<code>Hexo + Next</code>主题，直至今日，一直对<code>Hexo + Next</code>甚是喜爱，感谢大佬，感谢开源 🙏 。</p>
@@ -343,6 +264,152 @@
       </categories>
       <tags>
         <tag>汇编指令</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>寄存器小记</title>
+    <url>/post/592731679/</url>
+    <content><![CDATA[<h3 id="通用寄存器拆分"><a href="#通用寄存器拆分" class="headerlink" title="通用寄存器拆分"></a>通用寄存器拆分</h3><p>EAX / EBX / ECX / EDX</p>
+<p>例如：</p>
+<ul>
+<li>EAX = 12345678</li>
+<li>&nbsp;&nbsp;&nbsp;AX = &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5678</li>
+<li>&nbsp;&nbsp;&nbsp;AH = &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;56</li>
+<li>&nbsp;&nbsp;&nbsp;AL = &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;78<a id="more"></a></li>
+<li>ESP 永远指向堆栈的最顶端；</li>
+<li>堆栈顶端为 ESP，依次向下为 ESP + 4、ESP + 8 ，以此类推；</li>
+<li>EIP 永远指向 CPU 即将执行的地址；</li>
+<li>寄存器从第 18 位开始，存放的是该寄存器从起始位置依次向后的地址，即第 18 存放的是起始位置的地址；</li>
+</ul>
+<h3 id="标志位寄存器"><a href="#标志位寄存器" class="headerlink" title="标志位寄存器"></a>标志位寄存器</h3><ul>
+<li><p>OF 是<code>溢出标志位</code>;</p>
+<ul>
+<li>当指令改变了符号位且返回错误值的时候，OF 为 1，表示溢出成立；</li>
+<li>运算结果超出机器能够表示的范围称为溢出；</li>
+</ul>
+</li>
+<li><p>PF 是 <code>奇偶标志位</code>；</p>
+<ul>
+<li>当指令的<code>返回值的二进制</code>表现形式中<code>1</code>的个数为偶数个时，PF 为 1；</li>
+<li>运算结果的最低 16 位中含 1 的个数为偶数；</li>
+<li>如：11，101，110，1001，1010，1100，1111</li>
+</ul>
+</li>
+<li><p>ZF 是<code>0 标志符</code>.</p>
+<ul>
+<li>当前指令的运算结果为 0，则 ZF 为 1；</li>
+</ul>
+</li>
+<li><p>SF 是<code>符号位标志符</code>;</p>
+<ul>
+<li>当指令的运算结果为负数时，SF 为 1；</li>
+<li>SF 与运算结果的最高位相同；</li>
+</ul>
+</li>
+<li><p>CF 是<code>进位标志符</code>；</p>
+<ul>
+<li>当指令的无符号运算结果超过最大值时，CF 为 1；</li>
+<li>最高位产生进位或借位；</li>
+</ul>
+</li>
+<li><p>AF 是<code>辅助进位标志符</code>；</p>
+<ul>
+<li>当指令的运算结果的低 4 位向高 4 位有进位或借位时，AF 为 1；</li>
+</ul>
+</li>
+<li><p>TF 是<code>跟踪标志符</code>；</p>
+<ul>
+<li>用于调试单步操作；</li>
+<li>若 TF 为 1，则每条指令执行结束后，产生中断；</li>
+</ul>
+</li>
+<li><p>DF 是<code>方向标志符</code>；</p>
+<ul>
+<li>用来控制串处理指令的处理方向；</li>
+<li>若 DF 为 1，则串处理中地址自动递减，否则自动自增；</li>
+<li>若 DF 为 1，每次操作后使 SI 和 DI 递减，DF 为 0 时则自增；</li>
+</ul>
+</li>
+<li><p>IF 是<code>中断标志符</code>；</p>
+<ul>
+<li>用来控制 CPU 是否响应可屏蔽中断；</li>
+<li>若 IF 为 1 则允许中断，否则禁止中断；</li>
+</ul>
+</li>
+</ul>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>汇编</category>
+      </categories>
+      <tags>
+        <tag>寄存器</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>逆向分析之断点</title>
+    <url>/post/2731277808/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li>Ollydg1.1 原版</li>
+<li>简称<code>OD</code>；</li>
+</ul>
+<a id="more"></a>
+
+<h4 id="断点的分类"><a href="#断点的分类" class="headerlink" title="断点的分类"></a>断点的分类</h4><h5 id="F2-断点"><a href="#F2-断点" class="headerlink" title="F2 断点"></a>F2 断点</h5><ul>
+<li><code>F2断点</code>又叫<code>普通断点</code>、<code>CC断点</code>、<code>int3断点</code>；</li>
+<li>在<code>OD</code>反汇编窗口（<code>C</code>窗口）中，双击语句的某一行或按下 F2 会设置（触发）一个<code>int3 断点</code>；</li>
+<li><code>int3</code>是一个断点（中断）指令，在汇编中机器码是<code>CC</code>，所以，<code>F2断点</code>又可以称为<code>int3断点</code>或<code>CC断点</code>；</li>
+<li>在使用 F2 设置断点后，CPU 会引发一个异常，而 OD 会捕获这个异常，从而中断程序；</li>
+<li>可以使用命令<code>bp xxxxxxxx</code>快速设置一个<code>CC断点</code>；</li>
+<li><code>bp</code>可以为内存地址设置断点，也就是为某条语句设置断点；</li>
+<li><code>bp</code>当然也可以为<code>API（函数）</code>设置一个断点，如<code>bp MessageBoxA</code>，断点会设置在 API 的行首，也就是函数的第一行；</li>
+<li>通常情况下，当使用<code>bp</code>为<code>API</code>设置断点时，该<code>API</code>应该是可见的，也就是在反汇编窗口按下<code>ctrl + n</code>后，在函数窗口能找得到时，才能使用<code>bp</code>设置断点，不过偶尔在找不到的情况下，也能使用<code>bp</code>设置断点，这种情况时可以买一注彩票；</li>
+<li>使用<code>bp MessageBoxA</code>也就是为<code>API</code>设置断点后，会在系统领空下，这个<code>API</code>的行首设置断点；</li>
+<li>使用<code>bpx MessageBoxA</code>也就是为<code>API</code>设置断点后，会在程序领空下，所有调用这个<code>API</code>的位置设置断点；</li>
+<li><code>F2断点</code>的设置没有数量限制，可以设置无数个，只要你看着爽；</li>
+<li><code>F2断点</code>很容易被检测，从而触发反调试；</li>
+<li><code>F2断点</code>重载程序后不会丢失；</li>
+</ul>
+<h5 id="内存断点"><a href="#内存断点" class="headerlink" title="内存断点"></a>内存断点</h5><ul>
+<li><code>内存断点</code>是通过修改内存属性为不可访问、不可执行来实现的；</li>
+<li><code>内存断点</code>同时只能存在一个；</li>
+<li><code>内存断点</code>在重载程序后会丢失，需要重新设置；</li>
+</ul>
+<h5 id="硬件断点"><a href="#硬件断点" class="headerlink" title="硬件断点"></a>硬件断点</h5><ul>
+<li><code>硬件断点</code>最多可以设置 4 个；</li>
+<li><code>硬件断点</code>在设置位置的下一条指令中断；</li>
+<li>可以使用命令<code>HE xxxxxxxx</code>快速设置一个<code>硬件断点</code>；</li>
+<li>可以使用命令<code>HE MessageBoxA</code>在<code>API</code>的行首快速设置一个<code>硬件断点</code>；</li>
+</ul>
+<h5 id="条件断点"><a href="#条件断点" class="headerlink" title="条件断点"></a>条件断点</h5><ul>
+<li>满足某个条件的<code>CC断点</code>;</li>
+<li>使用<code>shift + F2</code>快速设置条件断点；</li>
+</ul>
+<h5 id="条件记录断点"><a href="#条件记录断点" class="headerlink" title="条件记录断点"></a>条件记录断点</h5><ul>
+<li>和条件断点类似，多了记录日志等功能，更加详细的设置条件；</li>
+<li>使用<code>shift + F4</code>快速设置条件断点；</li>
+</ul>
+<h5 id="API-断点"><a href="#API-断点" class="headerlink" title="API 断点"></a>API 断点</h5><ul>
+<li>给系统提供的 API 设置的<code>CC断点</code>；</li>
+<li><code>MessageBoxA</code>中的<code>A</code>表示使用<code>ASCII</code>编码；</li>
+<li><code>MessageBoxW</code>中的<code>W</code>表示使用<code>Unicode</code>编码；</li>
+</ul>
+<h5 id="消息断点"><a href="#消息断点" class="headerlink" title="消息断点"></a>消息断点</h5><ul>
+<li>消息断点实际上就是条件记录断点；</li>
+<li>在操作窗口或控件时，都会发送一个消息；</li>
+<li>在<code>OD</code>的<code>W</code>窗口刷新来获取交互消息；</li>
+<li>检测交互（消息循环）来设置<code>消息断点</code>，如<code>101 按键抬起</code>、<code>202 鼠标左键抬起</code>等；</li>
+<li>断点生效后，修改条件来记录操作日志，在<code>OD</code>的<code>L</code>窗口查看记录的日志或将日志输出到指定文件来进一步进行分析；</li>
+</ul>
+<p>未完待续。。。</p>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>汇编</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>断点</tag>
       </tags>
   </entry>
 </search>
