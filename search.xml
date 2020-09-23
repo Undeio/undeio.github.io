@@ -413,6 +413,69 @@
       </tags>
   </entry>
   <entry>
+    <title>逆向分析之硬编码寻找序列号（一）</title>
+    <url>/post/2293324257/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li>Ollydg1.1 原版，简称<code>OD</code>；</li>
+<li><code>OD</code>汉化文件来自互联网;</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a> 来源于<a href="http://xuepojie.com/">学破解论坛</a>；</li>
+<li>文中所有的数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
+</ul>
+<a id="more"></a>
+
+<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
+<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
+</li>
+<li><p>倒入<code>OD</code>开始分析：</p>
+<ul>
+<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
+</li>
+<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，咦，发现可疑函数：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy1j9yekwj30oc065t9q.jpg" alt="分析"><br>就是它了，选中它并右键<code>在输入函数上切换断点</code>，然后去<code>断点窗口（B 窗口）</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
+</li>
+<li><p>然后运行程序，“随便输入”一些字符后点击验证，可以随便输入，但请记住它；</p>
+</li>
+<li><p>程序停在了设置断点的<code>API</code>的行首，在堆栈窗口可以看到<code>API</code>的各种参数，而参数<code>Buffer</code>里存放着函数返回的数据，选中<code>Buffer</code>右键<code>数据窗口中跟随</code>，可以看到，由于断点中断在了函数的第一行，所以这个地址里什么也没有：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy267st5oj30t00drq4u.jpg" alt="Buffer"></p>
+</li>
+<li><p>接着按下<code>Ctrl + F9</code>或点击菜单栏的调试选项并选择<code>执行到返回</code>，然后发现<code>Buffer</code>对应的地址里有数据了，并且是我们输入的字符串；</p>
+</li>
+<li><p>在上一步中，我们<code>执行到返回</code>，那就意味着接下来登场的将会是<code>RETN</code>了，按下<code>F7 或 F8</code>，返回到调用<code>API</code>的程序，发现接下来将要执行的代码很可疑：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy2kqa9a0j30sz0dt0uo.jpg" alt="程序"><br>一个比较，一个跳转，并且文字显示和序列号有关；</p>
+</li>
+<li><p>分析一下这几行可疑的代码：</p>
+<ul>
+<li><p><code>MOV EDX,CrackMe.00403008</code>将<code>00403008</code>这个地址拷贝到<code>EDX</code>，执行一下这行代码：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy2xlpyn3j308805374d.jpg" alt="EDX"></p>
+<p>在<code>EDX</code>存放的地址中发现一串可疑字符串，选中<code>EDX</code>右键<code>数据窗口中跟随</code>，原来可疑字符串只是前面几位，而后面那几个字符是我们输入的字符；</p>
+</li>
+<li><p><code>MOV EBX,DWORD PTR DS:[403010]</code>将<code>00403010</code>这个地址中的数据的前四个字节拷贝到<code>EBX</code>，执行一下这行代码：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy3ehrs27j30as0ay3zf.jpg" alt="EBX"></p>
+<p>既然<code>EBX</code>中存放的是数据，而数据又看不懂，怎么知道是什么呢？<code>OD</code>很强大，选择那行代码并右键<code>数据窗口中跟随，然后选择内存地址</code>或者在数据窗口选中那行代码的数据并选择<code>数据窗口中跟随地址</code>就可以看到<code>EBX</code>中存放的内容了，原来是我们输入的“序列号”；</p>
+</li>
+<li><p><code>CMP EBX,DWORD PTR DS:[403008]</code>这行代码就没什么好说的了，减法比较是否相等，还使用了一个障眼法，<code>EDX</code>放地址，<code>EBX</code>放数据，在这里再取出<code>EDX</code>的数据进行比较；</p>
+</li>
+<li><p><code>JE SHORT CrackMe.00401087</code>这行也没啥说的，<code>JE</code>根据<code>ZF 标志位</code>进行跳转，而如果上一步的计算结果为<code>0</code>，则<code>ZF</code>为<code>1</code>，<code>JE</code>跳转成立，也就是说，如果<code>EDX</code>和<code>EBX</code>中的数据相同，那么序列号就是对的，<code>JE</code>跳转并向下执行，最后弹出<code>正确！</code>，反之则不跳转向下执行，弹出<code>序列号错误！</code>，看来第一步中发现的可疑字符串就是真正的序列号了；</p>
+</li>
+<li><p>如果想要输入啥都能通过验证，那么可以将<code>JE</code>改为<code>JMP</code>无条件跳转，保存修改到文件就获得了一个新的程序；</p>
+</li>
+<li><p>但我们的目的是找出真正的序列号，所以嘛，复制那串字符去试一下，果然，一切如我们所料！</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>汇编</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>CrackMe</tag>
+        <tag>逆向分析</tag>
+        <tag>硬编码</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>逆向分析之硬编码寻找序列号（三）</title>
     <url>/post/4122547819/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -472,68 +535,6 @@
 </ul>
 </li>
 </ul>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>汇编</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>CrackMe</tag>
-        <tag>逆向分析</tag>
-        <tag>硬编码</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>逆向分析之硬编码寻找序列号（一）</title>
-    <url>/post/2293324257/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>Ollydg1.1 原版，简称<code>OD</code>；</li>
-<li><code>OD</code>汉化文件来自互联网;</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a> 来源于<a href="http://xuepojie.com/">学破解论坛</a>；</li>
-</ul>
-<a id="more"></a>
-
-<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
-<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
-</li>
-<li><p>倒入<code>OD</code>开始分析：</p>
-<ul>
-<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
-</li>
-<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，咦，发现可疑函数：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy1j9yekwj30oc065t9q.jpg" alt="分析"><br>就是它了，选中它并右键<code>在输入函数上切换断点</code>，然后去<code>断点窗口（B 窗口）</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
-</li>
-<li><p>然后运行程序，“随便输入”一些字符后点击验证，可以随便输入，但请记住它；</p>
-</li>
-<li><p>程序停在了设置断点的<code>API</code>的行首，在堆栈窗口可以看到<code>API</code>的各种参数，而参数<code>Buffer</code>里存放着函数返回的数据，选中<code>Buffer</code>右键<code>数据窗口中跟随</code>，可以看到，由于断点中断在了函数的第一行，所以这个地址里什么也没有：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy267st5oj30t00drq4u.jpg" alt="Buffer"></p>
-</li>
-<li><p>接着按下<code>Ctrl + F9</code>或点击菜单栏的调试选项并选择<code>执行到返回</code>，然后发现<code>Buffer</code>对应的地址里有数据了，并且是我们输入的字符串；</p>
-</li>
-<li><p>在上一步中，我们<code>执行到返回</code>，那就意味着接下来登场的将会是<code>RETN</code>了，按下<code>F7 或 F8</code>，返回到调用<code>API</code>的程序，发现接下来将要执行的代码很可疑：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy2kqa9a0j30sz0dt0uo.jpg" alt="程序"><br>一个比较，一个跳转，并且文字显示和序列号有关；</p>
-</li>
-<li><p>分析一下这几行可疑的代码：</p>
-<ul>
-<li><p><code>MOV EDX,CrackMe.00403008</code>将<code>00403008</code>这个地址拷贝到<code>EDX</code>，执行一下这行代码：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy2xlpyn3j308805374d.jpg" alt="EDX"></p>
-<p>在<code>EDX</code>存放的地址中发现一串可疑字符串，选中<code>EDX</code>右键<code>数据窗口中跟随</code>，原来可疑字符串只是前面几位，而后面那几个字符是我们输入的字符；</p>
-</li>
-<li><p><code>MOV EBX,DWORD PTR DS:[403010]</code>将<code>00403010</code>这个地址中的数据的前四个字节拷贝到<code>EBX</code>，执行一下这行代码：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy3ehrs27j30as0ay3zf.jpg" alt="EBX"></p>
-<p>既然<code>EBX</code>中存放的是数据，而数据又看不懂，怎么知道是什么呢？<code>OD</code>很强大，选择那行代码并右键<code>数据窗口中跟随，然后选择内存地址</code>或者在数据窗口选中那行代码的数据并选择<code>数据窗口中跟随地址</code>就可以看到<code>EBX</code>中存放的内容了，原来是我们输入的“序列号”；</p>
-</li>
-<li><p><code>CMP EBX,DWORD PTR DS:[403008]</code>这行代码就没什么好说的了，减法比较是否相等，还使用了一个障眼法，<code>EDX</code>放地址，<code>EBX</code>放数据，在这里再取出<code>EDX</code>的数据进行比较；</p>
-</li>
-<li><p><code>JE SHORT CrackMe.00401087</code>这行也没啥说的，<code>JE</code>根据<code>ZF 标志位</code>进行跳转，而如果上一步的计算结果为<code>0</code>，则<code>ZF</code>为<code>1</code>，<code>JE</code>跳转成立，也就是说，如果<code>EDX</code>和<code>EBX</code>中的数据相同，那么序列号就是对的，<code>JE</code>跳转并向下执行，最后弹出<code>正确！</code>，反之则不跳转向下执行，弹出<code>序列号错误！</code>，看来第一步中发现的可疑字符串就是真正的序列号了；</p>
-</li>
-<li><p>如果想要输入啥都能通过验证，那么可以将<code>JE</code>改为<code>JMP</code>无条件跳转，保存修改到文件就获得了一个新的程序；</p>
-</li>
-<li><p>但我们的目的是找出真正的序列号，所以嘛，复制那串字符去试一下，果然，一切如我们所料！</p>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ol>
 ]]></content>
       <categories>
         <category>逆向工程</category>
@@ -628,6 +629,7 @@
 <li>Ollydg1.1 原版，简称<code>OD</code>；</li>
 <li><code>OD</code>汉化文件来自互联网;</li>
 <li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a> 来源于<a href="http://xuepojie.com/">学破解论坛</a>；</li>
+<li>文中所有的数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
 </ul>
 <a id="more"></a>
 
@@ -688,7 +690,8 @@
 <li><code>OD</code>汉化文件来自互联网;</li>
 <li><code>OD</code>插件：<code>中文搜索引擎</code>和<code>ApiBreak</code>；</li>
 <li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>【歪坑牌 CM2.2】来源于<a href="http://xuepojie.com/">学破解论坛</a>；</li>
-<li><a href="http://xuepojie.com/"><code>Shark恒</code></a>大佬教了一种方法，但中间部分内容需要经验判断，才疏学浅的我一直不明白，经过多次失败后总结出了属于自己的方法，So，设置断点的思路来源于大佬，分析的过程属于自己；<a id="more"></a>
+<li><a href="http://xuepojie.com/"><code>Shark恒</code></a>大佬教了一种方法，但中间部分内容需要经验判断，才疏学浅的我一直不明白，经过多次失败后总结出了属于自己的方法，So，设置断点的思路来源于大佬，分析的过程属于自己；</li>
+<li>文中所有的数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
 
 </li>
 </ul>
@@ -782,9 +785,10 @@
 <li><code>OD</code>汉化文件来自互联网;</li>
 <li><code>OD</code>插件：<code>中文搜索引擎</code>；</li>
 <li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a> 来源于<a href="http://xuepojie.com/">学破解论坛</a>；</li>
-</ul>
-<a id="more"></a>
+<li>文中所有的数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
 
+</li>
+</ul>
 <h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><p>事实证明：不能“以貌取人”。</p>
 <p>刚打开软件的时候，心里还想着，这么简陋？分分钟就逆向完毕了，结果，“啪啪啪”实力打脸，针扎的疼。</p>
 <p>嗯，还在学习阶段，等我功力深厚之时，定会找回场子！</p>
@@ -841,6 +845,87 @@
         <tag>CrackMe</tag>
         <tag>逆向分析</tag>
         <tag>硬编码</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>逆向分析之软编码寻找序列号（一）</title>
+    <url>/post/4167455493/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li>Ollydg1.1 原版，简称<code>OD</code>；</li>
+<li><code>OD</code>汉化文件来自互联网;</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来源于<a href="http://xuepojie.com/">学破解论坛</a>；</li>
+<li>文中所有的数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
+
+</li>
+</ul>
+<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
+<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gj0t1wtpivj308z0anmxb.jpg" alt="开始"></p>
+</li>
+<li><p>倒入<code>OD</code>开始分析：</p>
+<ul>
+<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
+</li>
+<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，用的<code>API</code>不多，一眼就看到了<code>GetDlgItemTextA</code>，在<code>GetDlgItemTextA</code>函数上设置断点，然后去<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
+</li>
+<li><p>然后<code>F9</code>运行程序，输入用户名和注册码，点击确定；</p>
+</li>
+<li><p>程序断下来了，在堆栈窗口选择<code>Buffer</code>右键<code>数据窗口中跟随</code>，没有数据，因为断点在行首，<code>Ctrl + F9</code>或者点击菜单栏调试选项，选择<code>执行到返回</code>，再去数据窗口中看看，有数据了，是我们输入的用户名；</p>
+</li>
+<li><p>再次运行程序，程序再次中断，不出意外应该是获取注册码，在堆栈窗口选择<code>Buffer</code>右键<code>数据窗口中跟随</code>，没有数据，<code>Ctrl + F9</code>或者点击菜单栏调试选项，选择<code>执行到返回</code>，再去数据窗口中看看，有数据了，是我们输入的注册码；</p>
+</li>
+<li><p>能获取到数据就是一个好的开始，<code>F7 或 F8</code>单步执行到程序领空，熟悉的字样映入眼帘：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gj0tc5u51bj312e0t3q6p.jpg" alt="程序领空"><br>既有我们输入的内容，也有提示字样，应该就是这里了，那就开始分析；</p>
+</li>
+<li><p>前面的代码是堆栈平衡和清除弹窗的代码，进<code>CALL</code>之后，直接<code>ALT + F9</code>或者点击菜单栏调试选项，选择<code>执行到用户代码</code>；</p>
+</li>
+<li><p>需要分析的代码来了：刚分析了两行，发现了几行特别的代码：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gj0tni2rn6j30oy03hmxm.jpg" alt="发现"><br>这几行代码，一个<code>push</code>然后紧跟着一个<code>CALL</code>，而且 push 的是我们输入的内容，这里应该就是关键了；</p>
+</li>
+<li><p><code>F7</code>进第 1 个<code>CALL</code>看看：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gj0tswn8jfj30ox01owee.jpg" alt="用户名call"></p>
+<ul>
+<li><p>刚进来第 1 行代码有困惑的吗？你咋知道是用户名放入<code>ESI 寄存器</code>？<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gj0tvmwgxqj312j0satc7.jpg" alt="第一行"><br>很简单，<code>[ESP+4]</code>告诉我的，<code>ESP 寄存器</code>永远指向堆栈的顶端，那<code>[ESP+4]</code>就是下一行喽，看一眼堆栈窗口，第二行的数据不正是我们输入的用户名吗？</p>
+</li>
+<li><p>接着，出现了第 2 处令人疑惑的代码：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj0xi158x1j312n0b0q4t.jpg" alt="疑惑1"><br>机器码和<code>41</code>比较，这到底是啥意思？刚开始我也弄不明白，而且后面的逻辑也显示和<code>41</code>半毛钱关系没有，直到无意中在用户名输入了数字，弹出两次<code>注册失败</code>，才好像明白了这里判断的是啥？我们先看看 16 进制的<code>41</code>到底是什么：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj0xochjx2j30b50bs3ys.jpg" alt="41"></p>
+<p>原来<code>41</code>是大写字母<code>A</code>，而后面的<code>5A</code>则是大写字母<code>Z</code>，那我好像明白怎么回事儿了，它应该是在判断用户名是否是英文字母；</p>
+</li>
+<li><p>当字符的机器码大于<code>41</code>并且大于<code>5A</code>时，程序会跳转到一个新的<code>CALL</code>，那它干了什么呢：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj0y7pkvqij312l0sc432.jpg" alt="新CALL"></p>
+<p>可以看到，这里只有 3 行代码，我们分析一下，小写字母的机器码减去<code>20</code>是什么，没错，是对应的大写字母，这三行代码的作用就是：将用户名转换为大写字母，然后用大写字母替换用户名中的小写字母，然后返回：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj0z4k7ifkj312m0sbn3m.jpg" alt="大写"></p>
+<p>当用户名全部转为大写字母之后，又来到了一个<code>CALL</code>，这个<code>CALL</code>又是干什么的呢，<code>F7</code>跟进去看看：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj0zamesrsj312k0sbwic.jpg" alt="新CALL"><br>原来，是将转换为大写字母后的用户名的每个字节的机器码累加在一起，然后和<code>5678</code>异或，并把异或后的结果放入<code>EAX</code>并返回：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj0zluaydsj312k0se0xd.jpg" alt="返回"></p>
+</li>
+</ul>
+</li>
+<li><p>用户名处理完了，接下来就是注册码了：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj0ztl37fnj30oy03daa7.jpg" alt="比较"></p>
+<p>刚从用户名的连环<code>CALL</code>里出来就这么刺激吗？把用户名运算后的结果和我们输入的注册码都 push 到了这个<code>CALL</code>里面，这里应该就是比较了；<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj10dmcv8zj30ox06cwey.jpg" alt="注册码"></p>
+<p>结果很打脸啊，不是验证<code>CALL</code>而是运算注册码的<code>CALL</code>，而第一行的<code>PUSH EAX</code>只是个入栈而已。。。</p>
+</li>
+<li><p>验证环节<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj10q4hzwfj30k6063wf9.jpg" alt="验证"></p>
+<p>根据<code>CALL</code>跳转的位置，轻松知道它的用途；</p>
+</li>
+<li><p>注册码的计算规则：</p>
+<ul>
+<li>用户名必须是字母；</li>
+<li>将每个字母转为大写字母；</li>
+<li>把每个字母的 16 进制累加在一起；</li>
+<li>累加的结果与 5678 异或；</li>
+<li>异或后的结果与 1234 异或；</li>
+<li>将最后的结果转为 10 进制，注册码就出来啦；</li>
+<li>例如：<code>yang</code>的大写<code>YANG</code>的 16 进制是<code>59 41 4E 47</code>，加在一起是<code>12F</code>，与<code>5678</code>异或之后是<code>5757</code>，与<code>1234</code>异或之后是<code>4563</code>，转为 10 进制后就是<code>17763</code>;</li>
+</ul>
+</li>
+<li><p>无图无真相</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj119l81wcj30b50csdg7.jpg" alt="上图"></p>
+</li>
+</ul>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>汇编</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>CrackMe</tag>
+        <tag>逆向分析</tag>
+        <tag>软编码</tag>
       </tags>
   </entry>
 </search>
