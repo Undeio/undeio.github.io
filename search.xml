@@ -54,6 +54,86 @@
       </tags>
   </entry>
   <entry>
+    <title>寄存器小记</title>
+    <url>/post/592731679/</url>
+    <content><![CDATA[<h3 id="通用寄存器拆分"><a href="#通用寄存器拆分" class="headerlink" title="通用寄存器拆分"></a>通用寄存器拆分</h3><p>EAX / EBX / ECX / EDX</p>
+<p>例如：</p>
+<ul>
+<li>EAX = 12345678</li>
+<li>&nbsp;&nbsp;&nbsp;AX = &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5678</li>
+<li>&nbsp;&nbsp;&nbsp;AH = &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;56</li>
+<li>&nbsp;&nbsp;&nbsp;AL = &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;78<a id="more"></a></li>
+<li>ESP 永远指向堆栈的最顶端；</li>
+<li>堆栈顶端为 ESP，依次向下为 ESP + 4、ESP + 8 ，以此类推；</li>
+<li>EIP 永远指向 CPU 即将执行的地址；</li>
+<li>寄存器从第 18 位开始，存放的是该寄存器从起始位置依次向后的地址，即第 18 存放的是起始位置的地址；</li>
+</ul>
+<h3 id="标志位寄存器"><a href="#标志位寄存器" class="headerlink" title="标志位寄存器"></a>标志位寄存器</h3><ul>
+<li><p>OF 是<code>溢出标志位</code>;</p>
+<ul>
+<li>当指令改变了符号位且返回错误值的时候，OF 为 1，表示溢出成立；</li>
+<li>运算结果超出机器能够表示的范围称为溢出；</li>
+</ul>
+</li>
+<li><p>PF 是 <code>奇偶标志位</code>；</p>
+<ul>
+<li>当指令的<code>返回值的二进制</code>表现形式中<code>1</code>的个数为偶数个时，PF 为 1；</li>
+<li>运算结果的最低 16 位中含 1 的个数为偶数；</li>
+<li>如：11，101，110，1001，1010，1100，1111</li>
+</ul>
+</li>
+<li><p>ZF 是<code>0 标志符</code>.</p>
+<ul>
+<li>当前指令的运算结果为 0，则 ZF 为 1；</li>
+</ul>
+</li>
+<li><p>SF 是<code>符号位标志符</code>;</p>
+<ul>
+<li>当指令的运算结果为负数时，SF 为 1；</li>
+<li>SF 与运算结果的最高位相同；</li>
+</ul>
+</li>
+<li><p>CF 是<code>进位标志符</code>；</p>
+<ul>
+<li>当指令的无符号运算结果超过最大值时，CF 为 1；</li>
+<li>最高位产生进位或借位；</li>
+</ul>
+</li>
+<li><p>AF 是<code>辅助进位标志符</code>；</p>
+<ul>
+<li>当指令的运算结果的低 4 位向高 4 位有进位或借位时，AF 为 1；</li>
+</ul>
+</li>
+<li><p>TF 是<code>跟踪标志符</code>；</p>
+<ul>
+<li>用于调试单步操作；</li>
+<li>若 TF 为 1，则每条指令执行结束后，产生中断；</li>
+</ul>
+</li>
+<li><p>DF 是<code>方向标志符</code>；</p>
+<ul>
+<li>用来控制串处理指令的处理方向；</li>
+<li>若 DF 为 1，则串处理中地址自动递减，否则自动自增；</li>
+<li>若 DF 为 1，每次操作后使 SI 和 DI 递减，DF 为 0 时则自增；</li>
+</ul>
+</li>
+<li><p>IF 是<code>中断标志符</code>；</p>
+<ul>
+<li>用来控制 CPU 是否响应可屏蔽中断；</li>
+<li>若 IF 为 1 则允许中断，否则禁止中断；</li>
+</ul>
+</li>
+</ul>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>汇编</category>
+      </categories>
+      <tags>
+        <tag>寄存器</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>常见的汇编指令</title>
     <url>/post/1025109479/</url>
     <content><![CDATA[<h3 id="常见指令"><a href="#常见指令" class="headerlink" title="常见指令"></a>常见指令</h3><h4 id="NOP"><a href="#NOP" class="headerlink" title="NOP"></a>NOP</h4><ul>
@@ -264,86 +344,6 @@
       </categories>
       <tags>
         <tag>汇编指令</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>寄存器小记</title>
-    <url>/post/592731679/</url>
-    <content><![CDATA[<h3 id="通用寄存器拆分"><a href="#通用寄存器拆分" class="headerlink" title="通用寄存器拆分"></a>通用寄存器拆分</h3><p>EAX / EBX / ECX / EDX</p>
-<p>例如：</p>
-<ul>
-<li>EAX = 12345678</li>
-<li>&nbsp;&nbsp;&nbsp;AX = &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5678</li>
-<li>&nbsp;&nbsp;&nbsp;AH = &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;56</li>
-<li>&nbsp;&nbsp;&nbsp;AL = &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;78<a id="more"></a></li>
-<li>ESP 永远指向堆栈的最顶端；</li>
-<li>堆栈顶端为 ESP，依次向下为 ESP + 4、ESP + 8 ，以此类推；</li>
-<li>EIP 永远指向 CPU 即将执行的地址；</li>
-<li>寄存器从第 18 位开始，存放的是该寄存器从起始位置依次向后的地址，即第 18 存放的是起始位置的地址；</li>
-</ul>
-<h3 id="标志位寄存器"><a href="#标志位寄存器" class="headerlink" title="标志位寄存器"></a>标志位寄存器</h3><ul>
-<li><p>OF 是<code>溢出标志位</code>;</p>
-<ul>
-<li>当指令改变了符号位且返回错误值的时候，OF 为 1，表示溢出成立；</li>
-<li>运算结果超出机器能够表示的范围称为溢出；</li>
-</ul>
-</li>
-<li><p>PF 是 <code>奇偶标志位</code>；</p>
-<ul>
-<li>当指令的<code>返回值的二进制</code>表现形式中<code>1</code>的个数为偶数个时，PF 为 1；</li>
-<li>运算结果的最低 16 位中含 1 的个数为偶数；</li>
-<li>如：11，101，110，1001，1010，1100，1111</li>
-</ul>
-</li>
-<li><p>ZF 是<code>0 标志符</code>.</p>
-<ul>
-<li>当前指令的运算结果为 0，则 ZF 为 1；</li>
-</ul>
-</li>
-<li><p>SF 是<code>符号位标志符</code>;</p>
-<ul>
-<li>当指令的运算结果为负数时，SF 为 1；</li>
-<li>SF 与运算结果的最高位相同；</li>
-</ul>
-</li>
-<li><p>CF 是<code>进位标志符</code>；</p>
-<ul>
-<li>当指令的无符号运算结果超过最大值时，CF 为 1；</li>
-<li>最高位产生进位或借位；</li>
-</ul>
-</li>
-<li><p>AF 是<code>辅助进位标志符</code>；</p>
-<ul>
-<li>当指令的运算结果的低 4 位向高 4 位有进位或借位时，AF 为 1；</li>
-</ul>
-</li>
-<li><p>TF 是<code>跟踪标志符</code>；</p>
-<ul>
-<li>用于调试单步操作；</li>
-<li>若 TF 为 1，则每条指令执行结束后，产生中断；</li>
-</ul>
-</li>
-<li><p>DF 是<code>方向标志符</code>；</p>
-<ul>
-<li>用来控制串处理指令的处理方向；</li>
-<li>若 DF 为 1，则串处理中地址自动递减，否则自动自增；</li>
-<li>若 DF 为 1，每次操作后使 SI 和 DI 递减，DF 为 0 时则自增；</li>
-</ul>
-</li>
-<li><p>IF 是<code>中断标志符</code>；</p>
-<ul>
-<li>用来控制 CPU 是否响应可屏蔽中断；</li>
-<li>若 IF 为 1 则允许中断，否则禁止中断；</li>
-</ul>
-</li>
-</ul>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>汇编</category>
-      </categories>
-      <tags>
-        <tag>寄存器</tag>
       </tags>
   </entry>
   <entry>
@@ -650,7 +650,7 @@
 </li>
 <li><p>然后在<code>内存窗口</code>按下<code>Ctrl + B</code>或者右键选择<code>查找</code>，搜索输入的序列号：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjv4k2qij311w0ngn0d.jpg" alt="查找"><br>找到最接近<code>输入的序列号</code>的内容，设置<code>内存访问断点</code>:<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjz6z1umj311m0n7tc9.jpg" alt="内存访问断点"></p>
 </li>
-<li><p>运行程序，程序暂停在了读取序列号的地方，开始分析：<br>好聪明的“程序”，开始转移数据了：<br>  <img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizk98xwaej313w0ncdis.jpg" alt="转移数据"></p>
+<li><p>运行程序，程序暂停在了读取序列号的地方，开始分析：<br>好聪明的“程序”，开始转移数据了：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizk98xwaej313w0ncdis.jpg" alt="转移数据"></p>
 </li>
 <li><p>既然它都挪窝儿了，咱也别闲着了：在<code>EDI</code>上右键选择<code>数据窗口中跟随</code>,果然，输入的序列号在这里了，选择序列号的数据右键<code>断点&gt;&gt;删除内存访问断点</code>删除第一次设置的<code>内存访问断点</code>，也可以理解为设置在<code>ESI</code>上的<code>内存访问断点</code>，既然数据都转移了，断点也就没意义了，所以要重新设置在<code>EDI</code>上，再次选择序列号的数据右键<code>断点&gt;&gt;内存访问</code>，这样就实时掌握了输入的序列号的动向了：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizko5erudj31450o7gpl.jpg" alt="EDI"></p>
 </li>
