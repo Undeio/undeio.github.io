@@ -54,86 +54,6 @@
       </tags>
   </entry>
   <entry>
-    <title>寄存器小记</title>
-    <url>/post/592731679/</url>
-    <content><![CDATA[<h3 id="通用寄存器拆分"><a href="#通用寄存器拆分" class="headerlink" title="通用寄存器拆分"></a>通用寄存器拆分</h3><p>EAX / EBX / ECX / EDX</p>
-<p>例如：</p>
-<ul>
-<li>EAX = 12345678</li>
-<li>&nbsp;&nbsp;&nbsp;AX = &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5678</li>
-<li>&nbsp;&nbsp;&nbsp;AH = &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;56</li>
-<li>&nbsp;&nbsp;&nbsp;AL = &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;78<a id="more"></a></li>
-<li>ESP 永远指向堆栈的最顶端；</li>
-<li>堆栈顶端为 ESP，依次向下为 ESP + 4、ESP + 8 ，以此类推；</li>
-<li>EIP 永远指向 CPU 即将执行的地址；</li>
-<li>寄存器从第 18 位开始，存放的是该寄存器从起始位置依次向后的地址，即第 18 存放的是起始位置的地址；</li>
-</ul>
-<h3 id="标志位寄存器"><a href="#标志位寄存器" class="headerlink" title="标志位寄存器"></a>标志位寄存器</h3><ul>
-<li><p>OF 是<code>溢出标志位</code>;</p>
-<ul>
-<li>当指令改变了符号位且返回错误值的时候，OF 为 1，表示溢出成立；</li>
-<li>运算结果超出机器能够表示的范围称为溢出；</li>
-</ul>
-</li>
-<li><p>PF 是 <code>奇偶标志位</code>；</p>
-<ul>
-<li>当指令的<code>返回值的二进制</code>表现形式中<code>1</code>的个数为偶数个时，PF 为 1；</li>
-<li>运算结果的最低 16 位中含 1 的个数为偶数；</li>
-<li>如：11，101，110，1001，1010，1100，1111</li>
-</ul>
-</li>
-<li><p>ZF 是<code>0 标志符</code>.</p>
-<ul>
-<li>当前指令的运算结果为 0，则 ZF 为 1；</li>
-</ul>
-</li>
-<li><p>SF 是<code>符号位标志符</code>;</p>
-<ul>
-<li>当指令的运算结果为负数时，SF 为 1；</li>
-<li>SF 与运算结果的最高位相同；</li>
-</ul>
-</li>
-<li><p>CF 是<code>进位标志符</code>；</p>
-<ul>
-<li>当指令的无符号运算结果超过最大值时，CF 为 1；</li>
-<li>最高位产生进位或借位；</li>
-</ul>
-</li>
-<li><p>AF 是<code>辅助进位标志符</code>；</p>
-<ul>
-<li>当指令的运算结果的低 4 位向高 4 位有进位或借位时，AF 为 1；</li>
-</ul>
-</li>
-<li><p>TF 是<code>跟踪标志符</code>；</p>
-<ul>
-<li>用于调试单步操作；</li>
-<li>若 TF 为 1，则每条指令执行结束后，产生中断；</li>
-</ul>
-</li>
-<li><p>DF 是<code>方向标志符</code>；</p>
-<ul>
-<li>用来控制串处理指令的处理方向；</li>
-<li>若 DF 为 1，则串处理中地址自动递减，否则自动自增；</li>
-<li>若 DF 为 1，每次操作后使 SI 和 DI 递减，DF 为 0 时则自增；</li>
-</ul>
-</li>
-<li><p>IF 是<code>中断标志符</code>；</p>
-<ul>
-<li>用来控制 CPU 是否响应可屏蔽中断；</li>
-<li>若 IF 为 1 则允许中断，否则禁止中断；</li>
-</ul>
-</li>
-</ul>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>汇编</category>
-      </categories>
-      <tags>
-        <tag>寄存器</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>常见的汇编指令</title>
     <url>/post/1025109479/</url>
     <content><![CDATA[<h3 id="常见指令"><a href="#常见指令" class="headerlink" title="常见指令"></a>常见指令</h3><h4 id="NOP"><a href="#NOP" class="headerlink" title="NOP"></a>NOP</h4><ul>
@@ -347,6 +267,86 @@
       </tags>
   </entry>
   <entry>
+    <title>寄存器小记</title>
+    <url>/post/592731679/</url>
+    <content><![CDATA[<h3 id="通用寄存器拆分"><a href="#通用寄存器拆分" class="headerlink" title="通用寄存器拆分"></a>通用寄存器拆分</h3><p>EAX / EBX / ECX / EDX</p>
+<p>例如：</p>
+<ul>
+<li>EAX = 12345678</li>
+<li>&nbsp;&nbsp;&nbsp;AX = &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5678</li>
+<li>&nbsp;&nbsp;&nbsp;AH = &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;56</li>
+<li>&nbsp;&nbsp;&nbsp;AL = &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;78<a id="more"></a></li>
+<li>ESP 永远指向堆栈的最顶端；</li>
+<li>堆栈顶端为 ESP，依次向下为 ESP + 4、ESP + 8 ，以此类推；</li>
+<li>EIP 永远指向 CPU 即将执行的地址；</li>
+<li>寄存器从第 18 位开始，存放的是该寄存器从起始位置依次向后的地址，即第 18 存放的是起始位置的地址；</li>
+</ul>
+<h3 id="标志位寄存器"><a href="#标志位寄存器" class="headerlink" title="标志位寄存器"></a>标志位寄存器</h3><ul>
+<li><p>OF 是<code>溢出标志位</code>;</p>
+<ul>
+<li>当指令改变了符号位且返回错误值的时候，OF 为 1，表示溢出成立；</li>
+<li>运算结果超出机器能够表示的范围称为溢出；</li>
+</ul>
+</li>
+<li><p>PF 是 <code>奇偶标志位</code>；</p>
+<ul>
+<li>当指令的<code>返回值的二进制</code>表现形式中<code>1</code>的个数为偶数个时，PF 为 1；</li>
+<li>运算结果的最低 16 位中含 1 的个数为偶数；</li>
+<li>如：11，101，110，1001，1010，1100，1111</li>
+</ul>
+</li>
+<li><p>ZF 是<code>0 标志符</code>.</p>
+<ul>
+<li>当前指令的运算结果为 0，则 ZF 为 1；</li>
+</ul>
+</li>
+<li><p>SF 是<code>符号位标志符</code>;</p>
+<ul>
+<li>当指令的运算结果为负数时，SF 为 1；</li>
+<li>SF 与运算结果的最高位相同；</li>
+</ul>
+</li>
+<li><p>CF 是<code>进位标志符</code>；</p>
+<ul>
+<li>当指令的无符号运算结果超过最大值时，CF 为 1；</li>
+<li>最高位产生进位或借位；</li>
+</ul>
+</li>
+<li><p>AF 是<code>辅助进位标志符</code>；</p>
+<ul>
+<li>当指令的运算结果的低 4 位向高 4 位有进位或借位时，AF 为 1；</li>
+</ul>
+</li>
+<li><p>TF 是<code>跟踪标志符</code>；</p>
+<ul>
+<li>用于调试单步操作；</li>
+<li>若 TF 为 1，则每条指令执行结束后，产生中断；</li>
+</ul>
+</li>
+<li><p>DF 是<code>方向标志符</code>；</p>
+<ul>
+<li>用来控制串处理指令的处理方向；</li>
+<li>若 DF 为 1，则串处理中地址自动递减，否则自动自增；</li>
+<li>若 DF 为 1，每次操作后使 SI 和 DI 递减，DF 为 0 时则自增；</li>
+</ul>
+</li>
+<li><p>IF 是<code>中断标志符</code>；</p>
+<ul>
+<li>用来控制 CPU 是否响应可屏蔽中断；</li>
+<li>若 IF 为 1 则允许中断，否则禁止中断；</li>
+</ul>
+</li>
+</ul>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>汇编</category>
+      </categories>
+      <tags>
+        <tag>寄存器</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>逆向分析之断点</title>
     <url>/post/2731277808/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -474,6 +474,77 @@
       </tags>
   </entry>
   <entry>
+    <title>逆向分析之硬编码寻找序列号（三）</title>
+    <url>/post/4122547819/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li>Ollydg1.1 原版，简称<code>OD</code>；</li>
+<li><code>OD</code>汉化文件来自互联网;</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a> 来源于<a href="http://xuepojie.com/">学破解论坛</a>；</li>
+<li>文中所有的数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
+</ul>
+<a id="more"></a>
+
+<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><h5 id="第一部分"><a href="#第一部分" class="headerlink" title="第一部分"></a>第一部分</h5><ol>
+<li>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；<ul>
+<li>这个 CrackMe 不一般，有两个部分，两个按钮，那就分两部分分析喽（这句话绕不绕）：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giyeer5jilj309a0740su.jpg" alt="CrackMe"></li>
+</ul>
+</li>
+<li>倒入<code>OD</code>开始分析：<ul>
+<li>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</li>
+<li>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，咦，发现可疑函数：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giyek762n6j30k20cgq4j.jpg" alt="第一部分"><br>很好的开始，在<code>GetWindowTextA</code>函数上设置断点，然后去<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</li>
+<li>然后<code>F9</code>运行程序，“随便输入” 一些字符后点击验证，可以随便输入，但请记住它；</li>
+<li>程序断在了设置断点的 API 的行首，在堆栈窗口可以看到 API 的各种参数，而参数 Buffer 里存放着函数返回的数据，选中 Buffer 右键<code>数据窗口中跟随</code>，可以看到，由于断点中断在了函数的第一行，所以这个地址里什么也没有：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giyeq2lafej311s0kx415.jpg" alt="Buffer"></li>
+<li>接着按下 Ctrl + F9 或点击菜单栏的调试选项并选择<code>执行到返回</code>，然后发现 Buffer 对应的地址里有数据了，并且是我们输入的字符串；</li>
+<li>在上一步中，我们<code>执行到返回</code>，那就意味着接下来登场的将会是<code>RETN</code>了，按下 F8，返回到调用 API 的程序，多么令人兴奋的内容，这么简单吗，会不会有诈？<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giyeumc7cqj30m60bbmyl.jpg" alt="第一部分找到了"></li>
+<li>那就分析一下，看看到底是啥：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giyf5uv9tsj30nc0b1gms.jpg" alt="第一部分结束"><br>看来第一部分很简单，逻辑简单粗暴，只要不对直接弹出错误；<br>第一部分到此结束。<br>既然第一部分这么简单，那难点肯定在第二部分，去看看！</li>
+</ul>
+</li>
+</ol>
+<h5 id="第二部分"><a href="#第二部分" class="headerlink" title="第二部分"></a>第二部分</h5><ul>
+<li>倒入<code>OD</code>开始分析：<ul>
+<li>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</li>
+<li>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，还是那个可疑的函数：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giyfexxb79j30kc0cmabo.jpg" alt="第二部分"><br>很好的开始，在<code>GetWindowTextA</code>函数上设置断点，然后去<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</li>
+<li>然后<code>F9</code>运行程序，“随便输入” 一些字符后点击验证，可以随便输入，但请记住它；</li>
+<li>程序断在了设置断点的 API 的行首，在堆栈窗口可以看到 API 的各种参数，而参数 Buffer 里存放着函数返回的数据，选中 Buffer 右键<code>数据窗口中跟随</code>，可以看到，由于断点中断在了函数的第一行，所以这个地址里什么也没有：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giyfhdwjazj311o0l076u.jpg" alt="Buffer"></li>
+<li>接着按下 Ctrl + F9 或点击菜单栏的调试选项并选择<code>执行到返回</code>，然后发现 Buffer 对应的地址里有数据了，并且是我们输入的字符串；</li>
+<li>在上一步中，我们<code>执行到返回</code>，那就意味着接下来登场的将会是<code>RETN</code>了，按下 F8，返回到调用 API 的程序，哦豁，好像没啥有用的内容，等等，下面还有个<code>GetWindowTextA</code>，对对，我们输入了用户名和密码，那就得获取两次，而第一次获取的是密码，那就<code>F9</code>再运行程序；</li>
+<li>是的，又获取了一次，而这次获取的是用户名，执行到用户代码，果然是下面这个<code>GetWindowTextA</code>，那下面就是比较的代码了呗，毕竟它位于获取和弹窗之间；</li>
+<li>那就分析一下它的流程：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giyfxtvb0yj30ng0ecq43.jpg" alt="开始"><ul>
+<li>第一行<code>TEST EAX, EAX</code>不迷茫，<code>TEST EAX, EAX</code>表示检查<code>EAX</code>自身是否为 0，而第二行的<code>JE SHORT 硬编码寻.0040167E</code>指向了一个<code>MessageBoxA</code>，那就说明<code>EAX</code>很重要，既然弹窗提示的是<code>必须输入用户名才可以</code>，那它不是用户名的长度是什么，况且<code>EAX</code>里的数据刚好和用户名长度相同；</li>
+<li>接下来，它对用户名做了一系列的运算，并把运算的结果放到了指定的内存中，暂时还不知道它想干嘛：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giyh5fsj3gj30ox082753.jpg" alt="用户名"></li>
+<li>同样的，又对输入的假序列号进行了一系列运算，并把运算结果放到了指定的内存中，不过相对于用户名，序列号的处理比较简单，只是进行了除法运算，并存储了余数：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giyh8v4k4vj30oz05faah.jpg" alt="假码"></li>
+<li>直到序列号运算完毕，一个<code>JMP</code>跳下来，分析之后，终于知道了它要干什么：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giyhc0gpmtj30oy08ddgr.jpg" alt="比较"><br>原来，它上面进行的一系列运算，是为这一步的比较做准备；</li>
+<li>至此，终于分析出了结果：这里没有硬编码，而是软编码，序列号是根据用户名计算出来的</li>
+<li>至于计算的规则：<ul>
+<li>用户名的运算规则：用户名的下标从零开始，每个字节依次和<code>A</code>进行除法运算，然后用余数和下标异或之后的值加 2；</li>
+<li>序列号的运算规则：序列号的每个字节和<code>A</code>进行除法运算，然后用余数和用户名运算的结果进行比较；</li>
+<li>序列号的算法：任意数字和<code>A</code>进行乘法运算，并加上用户名每个字符运算的结果就是这个用户名对应的序列号，运算的结果必须可以转为<code>ASCII</code>码中的数字；</li>
+<li>例如：<ul>
+<li>用户名： yang</li>
+<li>运算的结果：03 08 04 02</li>
+<li>序列号算法：<code>5 * A + 3 = 35</code> <code>4 * A + 8 = 30</code> <code>5 * A + 4 = 36</code> <code>5 * A + 2 = 34</code></li>
+<li>转成 ASCII：5064<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giyhyvwfqlj30d2074aaa.jpg" alt="成功"></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>汇编</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>CrackMe</tag>
+        <tag>逆向分析</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>逆向分析之硬编码寻找序列号（二）</title>
     <url>/post/3097998650/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -548,77 +619,6 @@
       </tags>
   </entry>
   <entry>
-    <title>逆向分析之硬编码寻找序列号（三）</title>
-    <url>/post/4122547819/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>Ollydg1.1 原版，简称<code>OD</code>；</li>
-<li><code>OD</code>汉化文件来自互联网;</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a> 来源于<a href="http://xuepojie.com/">学破解论坛</a>；</li>
-<li>文中所有的数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
-</ul>
-<a id="more"></a>
-
-<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><h5 id="第一部分"><a href="#第一部分" class="headerlink" title="第一部分"></a>第一部分</h5><ol>
-<li>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；<ul>
-<li>这个 CrackMe 不一般，有两个部分，两个按钮，那就分两部分分析喽（这句话绕不绕）：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giyeer5jilj309a0740su.jpg" alt="CrackMe"></li>
-</ul>
-</li>
-<li>倒入<code>OD</code>开始分析：<ul>
-<li>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</li>
-<li>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，咦，发现可疑函数：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giyek762n6j30k20cgq4j.jpg" alt="第一部分"><br>很好的开始，在<code>GetWindowTextA</code>函数上设置断点，然后去<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</li>
-<li>然后<code>F9</code>运行程序，“随便输入” 一些字符后点击验证，可以随便输入，但请记住它；</li>
-<li>程序断在了设置断点的 API 的行首，在堆栈窗口可以看到 API 的各种参数，而参数 Buffer 里存放着函数返回的数据，选中 Buffer 右键<code>数据窗口中跟随</code>，可以看到，由于断点中断在了函数的第一行，所以这个地址里什么也没有：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giyeq2lafej311s0kx415.jpg" alt="Buffer"></li>
-<li>接着按下 Ctrl + F9 或点击菜单栏的调试选项并选择<code>执行到返回</code>，然后发现 Buffer 对应的地址里有数据了，并且是我们输入的字符串；</li>
-<li>在上一步中，我们<code>执行到返回</code>，那就意味着接下来登场的将会是<code>RETN</code>了，按下 F8，返回到调用 API 的程序，多么令人兴奋的内容，这么简单吗，会不会有诈？<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giyeumc7cqj30m60bbmyl.jpg" alt="第一部分找到了"></li>
-<li>那就分析一下，看看到底是啥：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giyf5uv9tsj30nc0b1gms.jpg" alt="第一部分结束"><br>看来第一部分很简单，逻辑简单粗暴，只要不对直接弹出错误；<br>第一部分到此结束。<br>既然第一部分这么简单，那难点肯定在第二部分，去看看！</li>
-</ul>
-</li>
-</ol>
-<h5 id="第二部分"><a href="#第二部分" class="headerlink" title="第二部分"></a>第二部分</h5><ul>
-<li>倒入<code>OD</code>开始分析：<ul>
-<li>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</li>
-<li>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，还是那个可疑的函数：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giyfexxb79j30kc0cmabo.jpg" alt="第二部分"><br>很好的开始，在<code>GetWindowTextA</code>函数上设置断点，然后去<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</li>
-<li>然后<code>F9</code>运行程序，“随便输入” 一些字符后点击验证，可以随便输入，但请记住它；</li>
-<li>程序断在了设置断点的 API 的行首，在堆栈窗口可以看到 API 的各种参数，而参数 Buffer 里存放着函数返回的数据，选中 Buffer 右键<code>数据窗口中跟随</code>，可以看到，由于断点中断在了函数的第一行，所以这个地址里什么也没有：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giyfhdwjazj311o0l076u.jpg" alt="Buffer"></li>
-<li>接着按下 Ctrl + F9 或点击菜单栏的调试选项并选择<code>执行到返回</code>，然后发现 Buffer 对应的地址里有数据了，并且是我们输入的字符串；</li>
-<li>在上一步中，我们<code>执行到返回</code>，那就意味着接下来登场的将会是<code>RETN</code>了，按下 F8，返回到调用 API 的程序，哦豁，好像没啥有用的内容，等等，下面还有个<code>GetWindowTextA</code>，对对，我们输入了用户名和密码，那就得获取两次，而第一次获取的是密码，那就<code>F9</code>再运行程序；</li>
-<li>是的，又获取了一次，而这次获取的是用户名，执行到用户代码，果然是下面这个<code>GetWindowTextA</code>，那下面就是比较的代码了呗，毕竟它位于获取和弹窗之间；</li>
-<li>那就分析一下它的流程：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giyfxtvb0yj30ng0ecq43.jpg" alt="开始"><ul>
-<li>第一行<code>TEST EAX, EAX</code>不迷茫，<code>TEST EAX, EAX</code>表示检查<code>EAX</code>自身是否为 0，而第二行的<code>JE SHORT 硬编码寻.0040167E</code>指向了一个<code>MessageBoxA</code>，那就说明<code>EAX</code>很重要，既然弹窗提示的是<code>必须输入用户名才可以</code>，那它不是用户名的长度是什么，况且<code>EAX</code>里的数据刚好和用户名长度相同；</li>
-<li>接下来，它对用户名做了一系列的运算，并把运算的结果放到了指定的内存中，暂时还不知道它想干嘛：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giyh5fsj3gj30ox082753.jpg" alt="用户名"></li>
-<li>同样的，又对输入的假序列号进行了一系列运算，并把运算结果放到了指定的内存中，不过相对于用户名，序列号的处理比较简单，只是进行了除法运算，并存储了余数：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giyh8v4k4vj30oz05faah.jpg" alt="假码"></li>
-<li>直到序列号运算完毕，一个<code>JMP</code>跳下来，分析之后，终于知道了它要干什么：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giyhc0gpmtj30oy08ddgr.jpg" alt="比较"><br>原来，它上面进行的一系列运算，是为这一步的比较做准备；</li>
-<li>至此，终于分析出了结果：这里没有硬编码，而是软编码，序列号是根据用户名计算出来的</li>
-<li>至于计算的规则：<ul>
-<li>用户名的运算规则：用户名的下标从零开始，每个字节依次和<code>A</code>进行除法运算，然后用余数和下标异或之后的值加 2；</li>
-<li>序列号的运算规则：序列号的每个字节和<code>A</code>进行除法运算，然后用余数和用户名运算的结果进行比较；</li>
-<li>序列号的算法：任意数字和<code>A</code>进行乘法运算，并加上用户名每个字符运算的结果就是这个用户名对应的序列号，运算的结果必须可以转为<code>ASCII</code>码中的数字；</li>
-<li>例如：<ul>
-<li>用户名： yang</li>
-<li>运算的结果：03 08 04 02</li>
-<li>序列号算法：<code>5 * A + 3 = 35</code> <code>4 * A + 8 = 30</code> <code>5 * A + 4 = 36</code> <code>5 * A + 2 = 34</code></li>
-<li>转成 ASCII：5064<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giyhyvwfqlj30d2074aaa.jpg" alt="成功"></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>汇编</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>CrackMe</tag>
-        <tag>逆向分析</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>逆向分析之硬编码寻找序列号（五）</title>
     <url>/post/755681865/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -650,10 +650,7 @@
 </li>
 <li><p>然后在<code>内存窗口</code>按下<code>Ctrl + B</code>或者右键选择<code>查找</code>，搜索输入的序列号：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjv4k2qij311w0ngn0d.jpg" alt="查找"><br>找到最接近<code>输入的序列号</code>的内容，设置<code>内存访问断点</code>:<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjz6z1umj311m0n7tc9.jpg" alt="内存访问断点"></p>
 </li>
-<li><p>运行程序，程序暂停在了读取序列号的地方，开始分析：</p>
-<ul>
-<li>好聪明的“程序”，开始转移数据了：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizk98xwaej313w0ncdis.jpg" alt="转移数据"></li>
-</ul>
+<li><p>运行程序，程序暂停在了读取序列号的地方，开始分析：<br>好聪明的“程序”，开始转移数据了：<br>  <img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizk98xwaej313w0ncdis.jpg" alt="转移数据"></p>
 </li>
 <li><p>既然它都挪窝儿了，咱也别闲着了：在<code>EDI</code>上右键选择<code>数据窗口中跟随</code>,果然，输入的序列号在这里了，选择序列号的数据右键<code>断点&gt;&gt;删除内存访问断点</code>删除第一次设置的<code>内存访问断点</code>，也可以理解为设置在<code>ESI</code>上的<code>内存访问断点</code>，既然数据都转移了，断点也就没意义了，所以要重新设置在<code>EDI</code>上，再次选择序列号的数据右键<code>断点&gt;&gt;内存访问</code>，这样就实时掌握了输入的序列号的动向了：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizko5erudj31450o7gpl.jpg" alt="EDI"></p>
 </li>
