@@ -8,23 +8,23 @@
 </blockquote>
 <a id="more"></a>
 
-<h4 id="废话连篇"><a href="#废话连篇" class="headerlink" title="废话连篇"></a>废话连篇</h4><p>曾记得，2016 年端午节，在<code>Github Pages</code>上写下了人生中的第一篇博客，那时就用的<code>Hexo + Next</code>主题，直至今日，一直对<code>Hexo + Next</code>甚是喜爱，感谢大佬，感谢开源 🙏 。</p>
+<h4 id="废话连篇"><a href="#废话连篇" class="headerlink" title="废话连篇"></a>废话连篇</h4><p>曾记得，2016 年端午节，在<code>Github Pages</code>上写下了人生中的第一篇博客，那时就用的<code>Hexo + Next</code>主题，时至今日，一直对<code>Hexo + Next</code>甚是喜爱，感谢大佬，感谢开源 🙏 。</p>
 <p>期间，经历了换工作、换电脑、换域名、换托管，诸多原因导致博客遗失，不过也是甚好，不能守着过去，要拥抱现在和未来（不应该是拥抱开源吗？）。</p>
 <p>之前使用过<code>网易云跟帖</code>，大家都戏称灌水专用，现在业已关闭。</p>
 <p>接着使用了<code>来必力</code>，一个来自韩国的评论插件，国内访问甚是感人，至于大佬们的反向代理，那时心有余而力不足，遂卒。</p>
 <p>后来使用了<code>valine</code>，依托于<a href="https://www.leancloud.cn/">LeanCloud</a>在国内运营，对用户甚是友好，界面也是简洁清新，让人看一眼就喜爱，而且支持阅读统计等诸多功能，之后便一直使用。</p>
-<p>偶然间，在<code>知乎</code>上闲逛时，发现了一位大兄关于评论插件的分析和感想，现在依稀记得的一句话就是”无论第三方插件的使用有多友好，数据都存在第三方，哪天他们歇业停工了，数据一样丢失。“，之后就对此耿耿于怀（当然不是对说这句的仁兄耿耿于怀）。</p>
+<p>偶然间，在<code>知乎</code>上闲逛时，发现了一位大兄关于评论插件的分析和感想，现在依稀记得的一句话就是“无论第三方插件的使用有多友好，数据都存在第三方，哪天他们歇业停工了，数据一样丢失。”，之后就对此耿耿于怀（当然不是对说这句话的仁兄耿耿于怀）。</p>
 <p>重建博客之际，对评论插件抱着谨慎的态度选之又选，决定将数据存在<code>Github</code>上，至于歇业停工，既然博客数据都不存在了，还留着评论数据作甚，就让他们同生共死吧。</p>
 <p><code>Gitalk</code>和<code>Gitment</code>最先映入眼帘，之后在<code>Github</code>上发现<code>Gitment</code>好久没有更新了，只剩下一个选择。</p>
 <p><code>Hexo</code>官方集成了<code>Gitalk</code>，轻车熟路的做好设置，<code>hexo clean | g | s</code>三部曲之后，熟悉的框框出现，然鹅，发现每篇文章都要手动初始化，翻阅<a href="https://github.com/gitalk/gitalk/wiki/%E8%AF%84%E8%AE%BA%E5%88%9D%E5%A7%8B%E5%8C%96">官方 Wiki</a>发现了自动初始化的脚本，底部有<a href="https://draveness.me/git-comments-initialize/">原作者</a> 的链接，遂前往，准备学习膜拜一番，看了大佬的思路解析，大呼过瘾之际也感落寞，原因无他，就是自己不会<code>Ruby</code>。在准备留言评论之际，发现又有<a href="https://www.lshell.com/post/use-github-action-and-python-to-automatically-initialize-gitalk-comments/">大佬</a>给出了使用<code>Python</code>初始化的思路，用轮子不是目的，读懂造轮子的思路学习造轮子，岂不快哉。</p>
-<p>进入文章，阅读之际，大佬感慨且推荐了一个新的评论插件<code>utteranc</code>，揣着疑惑的心去<a href="https://utteranc.es/">官网</a>，去<a href="https://github.com/utterance/utterances">官方仓库</a>查看了一番，发现没有 Wiki，也没有文档，善用搜索引擎的我，搜索一番之后发现，似乎<code>Next</code>之前的某个版本集成过，但翻阅了现在的版本又毫无所获，教程都是根据集成时的方法写的，对我无用。</p>
+<p>进入文章，阅读之际，大佬既感且叹地推荐了一个新的评论插件<code>utterances</code>，揣着疑惑的心去<a href="https://utteranc.es/">官网</a>，去<a href="https://github.com/utterance/utterances">官方仓库</a>查看了一番，发现没有 Wiki，也没有文档，善用搜索引擎的我，搜索一番之后发现，似乎<code>Next</code>主题之前的某个版本集成过，但翻阅了现在的版本又毫无所获，教程都是根据集成时的方法写的，对我无用。</p>
 <p>在这里，不得不提的是<code>Hexo</code>的一项前瞻性功能<code>代替配置文件</code>和<code>代替主题配置文件</code>，再也不用像之前一样，想要实现某个功能就去修改官方文件，它不破坏官方文件的完整性，可以无痛更新，之前最头疼的一件事儿就是<code>拉取官方更新之后合并冲突</code>。</p>
 <p>这次重建博客，所有非官方功能，如 404、音乐、footer，都使用<code>注入</code>实现，我对这项功能的称呼，暂且这么叫吧。</p>
 <p>以上都是废话，下面进入正题：</p>
 <h4 id="首先，需要一个用来存储评论的仓库"><a href="#首先，需要一个用来存储评论的仓库" class="headerlink" title="首先，需要一个用来存储评论的仓库"></a>首先，需要一个用来存储评论的仓库</h4><ul>
 <li>你可以新建一个仓库；</li>
 <li>当然，也可以像我一样，存放在博客仓库的 Issues 中，毕竟我已经承诺了它们同生共死，说到就要做到；</li>
-<li>Issues 无法删除，请谨慎选择，防止过多的无用 Issues 带来烦恼（设置 utterances 的时候，这句话依然有效）；</li>
+<li>Issues 无法删除，请谨慎选择，防止过多的无用 Issues 带来烦恼（设置 utterances 的时候，这句话依然有效！）；</li>
 </ul>
 <h4 id="安装-utterances"><a href="#安装-utterances" class="headerlink" title="安装 utterances"></a>安装 utterances</h4><ul>
 <li>点击<a href="https://github.com/apps/utterances">这里</a>打开安装页面，然后点击右上角的<code>安装</code>；</li>
@@ -413,6 +413,67 @@
       </tags>
   </entry>
   <entry>
+    <title>逆向分析之硬编码寻找序列号（一）</title>
+    <url>/post/2293324257/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li>Ollydg1.1 原版，简称<code>OD</code>；</li>
+<li><code>OD</code>汉化文件来自互联网;</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a> 来源于<a href="http://xuepojie.com/">学破解论坛</a>；</li>
+</ul>
+<a id="more"></a>
+
+<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
+<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
+</li>
+<li><p>倒入<code>OD</code>开始分析：</p>
+<ul>
+<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
+</li>
+<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，咦，发现可疑函数：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy1j9yekwj30oc065t9q.jpg" alt="分析"><br>就是它了，选中它并右键<code>在输入函数上切换断点</code>，然后去<code>断点窗口（B 窗口）</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
+</li>
+<li><p>然后运行程序，“随便输入”一些字符后点击验证，可以随便输入，但请记住它；</p>
+</li>
+<li><p>程序停在了设置断点的<code>API</code>的行首，在堆栈窗口可以看到<code>API</code>的各种参数，而参数<code>Buffer</code>里存放着函数返回的数据，选中<code>Buffer</code>右键<code>数据窗口中跟随</code>，可以看到，由于断点中断在了函数的第一行，所以这个地址里什么也没有：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy267st5oj30t00drq4u.jpg" alt="Buffer"></p>
+</li>
+<li><p>接着按下<code>Ctrl + F9</code>或点击菜单栏的调试选项并选择<code>执行到返回</code>，然后发现<code>Buffer</code>对应的地址里有数据了，并且是我们输入的字符串；</p>
+</li>
+<li><p>在上一步中，我们<code>执行到返回</code>，那就意味着接下来登场的将会是<code>RETN</code>了，按下<code>F7 或 F8</code>，返回到调用<code>API</code>的程序，发现接下来将要执行的代码很可疑：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy2kqa9a0j30sz0dt0uo.jpg" alt="程序"><br>一个比较，一个跳转，并且文字显示和序列号有关；</p>
+</li>
+<li><p>分析一下这几行可疑的代码：</p>
+<ul>
+<li><p><code>MOV EDX,CrackMe.00403008</code>将<code>00403008</code>这个地址拷贝到<code>EDX</code>，执行一下这行代码：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy2xlpyn3j308805374d.jpg" alt="EDX"></p>
+<p>在<code>EDX</code>存放的地址中发现一串可疑字符串，选中<code>EDX</code>右键<code>数据窗口中跟随</code>，原来可疑字符串只是前面几位，而后面那几个字符是我们输入的字符；</p>
+</li>
+<li><p><code>MOV EBX,DWORD PTR DS:[403010]</code>将<code>00403010</code>这个地址中的数据的前四个字节拷贝到<code>EBX</code>，执行一下这行代码：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy3ehrs27j30as0ay3zf.jpg" alt="EBX"></p>
+<p>既然<code>EBX</code>中存放的是数据，而数据又看不懂，怎么知道是什么呢？<code>OD</code>很强大，选择那行代码并右键<code>数据窗口中跟随，然后选择内存地址</code>或者在数据窗口选中那行代码的数据并选择<code>数据窗口中跟随地址</code>就可以看到<code>EBX</code>中存放的内容了，原来是我们输入的“序列号”；</p>
+</li>
+<li><p><code>CMP EBX,DWORD PTR DS:[403008]</code>这行代码就没什么好说的了，减法比较是否相等，还使用了一个障眼法，<code>EDX</code>放地址，<code>EBX</code>放数据，在这里再取出<code>EDX</code>的数据进行比较；</p>
+</li>
+<li><p><code>JE SHORT CrackMe.00401087</code>这行也没啥说的，<code>JE</code>根据<code>ZF 标志位</code>进行跳转，而如果上一步的计算结果为<code>0</code>，则<code>ZF</code>为<code>1</code>，<code>JE</code>跳转成立，也就是说，如果<code>EDX</code>和<code>EBX</code>中的数据相同，那么序列号就是对的，<code>JE</code>跳转并向下执行，最后弹出<code>正确！</code>，反之则不跳转向下执行，弹出<code>序列号错误！</code>，看来第一步中发现的可疑字符串就是真正的序列号了；</p>
+</li>
+<li><p>如果想要输入啥都能通过验证，那么可以将<code>JE</code>改为<code>JMP</code>无条件跳转，保存修改到文件就获得了一个新的程序；</p>
+</li>
+<li><p>但我们的目的是找出真正的序列号，所以嘛，复制那串字符去试一下，果然，一切如我们所料！</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>汇编</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>CrackMe</tag>
+        <tag>逆向分析</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>逆向分析之硬编码寻找序列号（三）</title>
     <url>/post/4122547819/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -472,67 +533,6 @@
 </ul>
 </li>
 </ul>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>汇编</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>CrackMe</tag>
-        <tag>逆向分析</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>逆向分析之硬编码寻找序列号（一）</title>
-    <url>/post/2293324257/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>Ollydg1.1 原版，简称<code>OD</code>；</li>
-<li><code>OD</code>汉化文件来自互联网;</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a> 来源于<a href="http://xuepojie.com/">学破解论坛</a>；</li>
-</ul>
-<a id="more"></a>
-
-<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
-<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
-</li>
-<li><p>倒入<code>OD</code>开始分析：</p>
-<ul>
-<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
-</li>
-<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，咦，发现可疑函数：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy1j9yekwj30oc065t9q.jpg" alt="分析"><br>就是它了，选中它并右键<code>在输入函数上切换断点</code>，然后去<code>断点窗口（B 窗口）</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
-</li>
-<li><p>然后运行程序，“随便输入”一些字符后点击验证，可以随便输入，但请记住它；</p>
-</li>
-<li><p>程序停在了设置断点的<code>API</code>的行首，在堆栈窗口可以看到<code>API</code>的各种参数，而参数<code>Buffer</code>里存放着函数返回的数据，选中<code>Buffer</code>右键<code>数据窗口中跟随</code>，可以看到，由于断点中断在了函数的第一行，所以这个地址里什么也没有：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy267st5oj30t00drq4u.jpg" alt="Buffer"></p>
-</li>
-<li><p>接着按下<code>Ctrl + F9</code>或点击菜单栏的调试选项并选择<code>执行到返回</code>，然后发现<code>Buffer</code>对应的地址里有数据了，并且是我们输入的字符串；</p>
-</li>
-<li><p>在上一步中，我们<code>执行到返回</code>，那就意味着接下来登场的将会是<code>RETN</code>了，按下<code>F7 或 F8</code>，返回到调用<code>API</code>的程序，发现接下来将要执行的代码很可疑：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy2kqa9a0j30sz0dt0uo.jpg" alt="程序"><br>一个比较，一个跳转，并且文字显示和序列号有关；</p>
-</li>
-<li><p>分析一下这几行可疑的代码：</p>
-<ul>
-<li><p><code>MOV EDX,CrackMe.00403008</code>将<code>00403008</code>这个地址拷贝到<code>EDX</code>，执行一下这行代码：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy2xlpyn3j308805374d.jpg" alt="EDX"></p>
-<p>在<code>EDX</code>存放的地址中发现一串可疑字符串，选中<code>EDX</code>右键<code>数据窗口中跟随</code>，原来可疑字符串只是前面几位，而后面那几个字符是我们输入的字符；</p>
-</li>
-<li><p><code>MOV EBX,DWORD PTR DS:[403010]</code>将<code>00403010</code>这个地址中的数据的前四个字节拷贝到<code>EBX</code>，执行一下这行代码：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy3ehrs27j30as0ay3zf.jpg" alt="EBX"></p>
-<p>既然<code>EBX</code>中存放的是数据，而数据又看不懂，怎么知道是什么呢？<code>OD</code>很强大，选择那行代码并右键<code>数据窗口中跟随，然后选择内存地址</code>或者在数据窗口选中那行代码的数据并选择<code>数据窗口中跟随地址</code>就可以看到<code>EBX</code>中存放的内容了，原来是我们输入的“序列号”；</p>
-</li>
-<li><p><code>CMP EBX,DWORD PTR DS:[403008]</code>这行代码就没什么好说的了，减法比较是否相等，还使用了一个障眼法，<code>EDX</code>放地址，<code>EBX</code>放数据，在这里再取出<code>EDX</code>的数据进行比较；</p>
-</li>
-<li><p><code>JE SHORT CrackMe.00401087</code>这行也没啥说的，<code>JE</code>根据<code>ZF 标志位</code>进行跳转，而如果上一步的计算结果为<code>0</code>，则<code>ZF</code>为<code>1</code>，<code>JE</code>跳转成立，也就是说，如果<code>EDX</code>和<code>EBX</code>中的数据相同，那么序列号就是对的，<code>JE</code>跳转并向下执行，最后弹出<code>正确！</code>，反之则不跳转向下执行，弹出<code>序列号错误！</code>，看来第一步中发现的可疑字符串就是真正的序列号了；</p>
-</li>
-<li><p>如果想要输入啥都能通过验证，那么可以将<code>JE</code>改为<code>JMP</code>无条件跳转，保存修改到文件就获得了一个新的程序；</p>
-</li>
-<li><p>但我们的目的是找出真正的序列号，所以嘛，复制那串字符去试一下，果然，一切如我们所料！</p>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ol>
 ]]></content>
       <categories>
         <category>逆向工程</category>
