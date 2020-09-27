@@ -130,13 +130,6 @@
 
   
   <url>
-    <loc>https://undeio.me/tags/%E5%AF%84%E5%AD%98%E5%99%A8/</loc>
-    <lastmod>2020-09-27</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
     <loc>https://undeio.me/tags/Hexo/</loc>
     <lastmod>2020-09-27</lastmod>
     <changefreq>daily</changefreq>
@@ -152,6 +145,13 @@
   
   <url>
     <loc>https://undeio.me/tags/Utterance/</loc>
+    <lastmod>2020-09-27</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://undeio.me/tags/%E5%AF%84%E5%AD%98%E5%99%A8/</loc>
     <lastmod>2020-09-27</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
@@ -209,14 +209,14 @@
 
   
   <url>
-    <loc>https://undeio.me/categories/%E9%80%86%E5%90%91%E5%B7%A5%E7%A8%8B/</loc>
+    <loc>https://undeio.me/categories/Hexo/</loc>
     <lastmod>2020-09-27</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
-    <loc>https://undeio.me/categories/Hexo/</loc>
+    <loc>https://undeio.me/categories/%E9%80%86%E5%90%91%E5%B7%A5%E7%A8%8B/</loc>
     <lastmod>2020-09-27</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
