@@ -1,6 +1,375 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>Hexo 添加 Utterance 评论功能</title>
+    <url>/post/3357819964/</url>
+    <content><![CDATA[<blockquote>
+<p>每逢看到大佬们的精彩文章，感慨甚多之际，不能留言把欢甚是遗憾。<br>缺少了留言支持、请教解惑、互相探讨，总感觉博客没有灵魂。</p>
+</blockquote>
+<a id="more"></a>
+
+<h4 id="废话连篇"><a href="#废话连篇" class="headerlink" title="废话连篇"></a>废话连篇</h4><p>曾记得，2016 年端午节，在<code>Github Pages</code>上写下了人生中的第一篇博客，那时就用的<code>Hexo + Next</code>主题，时至今日，一直对<code>Hexo + Next</code>甚是喜爱，感谢大佬，感谢开源 🙏 。</p>
+<p>期间，经历了换工作、换电脑、换域名、换托管，诸多原因导致博客遗失，不过也是甚好，不能守着过去，要拥抱现在和未来（不应该是拥抱开源吗？）。</p>
+<p>之前使用过<code>网易云跟帖</code>，大家都戏称灌水专用，现在业已关闭。</p>
+<p>接着使用了<code>来必力</code>，一个来自韩国的评论插件，国内访问甚是感人，至于大佬们的反向代理，那时心有余而力不足，遂卒。</p>
+<p>后来使用了<code>valine</code>，依托于<a href="https://www.leancloud.cn/">LeanCloud</a>在国内运营，对用户甚是友好，界面也是简洁清新，让人看一眼就喜爱，而且支持阅读统计等诸多功能，之后便一直使用。</p>
+<p>偶然间，在<code>知乎</code>上闲逛时，发现了一位大兄关于评论插件的分析和感想，现在依稀记得的一句话就是“无论第三方插件的使用有多友好，数据都存在第三方，哪天他们歇业停工了，数据一样丢失。”，之后就对此耿耿于怀（当然不是对说这句话的仁兄耿耿于怀）。</p>
+<p>重建博客之际，对评论插件抱着谨慎的态度选之又选，决定将数据存在<code>Github</code>上，至于歇业停工，既然博客数据都不存在了，还留着评论数据作甚，就让他们同生共死吧。</p>
+<p><code>Gitalk</code>和<code>Gitment</code>最先映入眼帘，之后在<code>Github</code>上发现<code>Gitment</code>好久没有更新了，只剩下一个选择。</p>
+<p><code>Hexo</code>官方集成了<code>Gitalk</code>，轻车熟路的做好设置，<code>hexo clean | g | s</code>三部曲之后，熟悉的框框出现，然鹅，发现每篇文章都要手动初始化，翻阅<a href="https://github.com/gitalk/gitalk/wiki/%E8%AF%84%E8%AE%BA%E5%88%9D%E5%A7%8B%E5%8C%96">官方 Wiki</a>发现了自动初始化的脚本，底部有<a href="https://draveness.me/git-comments-initialize/">原作者</a> 的链接，遂前往，准备学习膜拜一番，看了大佬的思路解析，大呼过瘾之际也感落寞，原因无他，就是自己不会<code>Ruby</code>。在准备留言评论之际，发现又有<a href="https://www.lshell.com/post/use-github-action-and-python-to-automatically-initialize-gitalk-comments/">大佬</a>给出了使用<code>Python</code>初始化的思路，用轮子不是目的，读懂造轮子的思路学习造轮子，岂不快哉。</p>
+<p>进入文章，阅读之际，大佬既感且叹地推荐了一个新的评论插件<code>utterances</code>，揣着疑惑的心去<a href="https://utteranc.es/">官网</a>，去<a href="https://github.com/utterance/utterances">官方仓库</a>查看了一番，发现没有 Wiki，也没有文档，善用搜索引擎的我，搜索一番之后发现，似乎<code>Next</code>主题之前的某个版本集成过，但翻阅了现在的版本又毫无所获，教程都是根据集成时的方法写的，对我无用。</p>
+<p>在这里，不得不提的是<code>Hexo</code>的一项前瞻性功能<code>代替配置文件</code>和<code>代替主题配置文件</code>，再也不用像之前一样，想要实现某个功能就去修改官方文件，它不破坏官方文件的完整性，可以无痛更新，之前最头疼的一件事儿就是<code>拉取官方更新之后合并冲突</code>。</p>
+<p>这次重建博客，所有非官方功能，如 404、音乐、footer，都使用<code>注入</code>实现，我对这项功能的称呼，暂且这么叫吧。</p>
+<p>以上都是废话，下面进入正题：</p>
+<h4 id="首先，需要一个用来存储评论的仓库"><a href="#首先，需要一个用来存储评论的仓库" class="headerlink" title="首先，需要一个用来存储评论的仓库"></a>首先，需要一个用来存储评论的仓库</h4><ul>
+<li>你可以新建一个仓库；</li>
+<li>当然，也可以像我一样，存放在博客仓库的 Issues 中，毕竟我已经承诺了它们同生共死，说到就要做到；</li>
+<li>Issues 无法删除，请谨慎选择，防止过多的无用 Issues 带来烦恼（设置 utterances 的时候，这句话依然有效！）；</li>
+</ul>
+<h4 id="安装-utterances"><a href="#安装-utterances" class="headerlink" title="安装 utterances"></a>安装 utterances</h4><ul>
+<li><p>点击<a href="https://github.com/apps/utterances">这里</a>打开安装页面，然后点击右上角的<code>安装</code>；</p>
+</li>
+<li><p>按下安装按钮，（不不不，不够严谨，按下是 201，抬起才是 202），你会跳转到：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giukvthjlpj30fy0oqtbi.jpg" alt="第二步"></p>
+<p>如图所示的页面，选择第一步中创建的仓库或已有的仓库，然后点击<code>安装</code>，请记住仓库名，因为接下来要用；</p>
+</li>
+<li><p>接下来，会跳转到设置页面；</p>
+</li>
+</ul>
+<h4 id="设置-utterances"><a href="#设置-utterances" class="headerlink" title="设置 utterances"></a>设置 utterances</h4><ul>
+<li><p>在这里，请务必填写你在上一步中选择的仓库，并在前面加上仓库的所有者：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giul8ahfszj30k60bfwfv.jpg" alt="第三步"></p>
+</li>
+<li><p>当然，如果你比较调皮，没有填写上一步中选择的仓库，还是有补救办法的，点击<a href="https://github.com/apps/utterances">这里</a>，其实就是安装页面，你会跳转到安装页面，你发现右上角的<code>安装</code>不见了，取而代之的是<code>配置</code>，就是它了，去配置页面修改吧；</p>
+</li>
+<li><p>至于这里，是配置 utterances 创建新的 Issues 时，给 Issues 起的名儿：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giullxjlwfj30jo0i2q65.jpg" alt="配置"></p>
+<p>请自由发挥，因为使用了<a href="https://github.com/rozbo/hexo-abbrlink">abbrlink</a>，链接并不显示文章名称，所以我就选图中所示的选项了，自由发挥的同学，玩的开心；</p>
+</li>
+<li><p>这里是选填选项，给 utterances 创建的 Issues 设置标签：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giulsj64dxj30jt072dgf.jpg" alt="设置标签"></p>
+</li>
+<li><p><code>Theme</code>就不用说了吧，主题选自己喜欢的，没喜欢的？给官方提交一个新主题；</p>
+</li>
+<li><p>接下来就是重头戏了，上面所有的选项都是为它服务的：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giulyonf3xj30jz09lq41.jpg" alt="script"></p>
+<p>复制 script 并添加到你想要评论出现的地方，bingo！</p>
+</li>
+</ul>
+<h4 id="个人配置"><a href="#个人配置" class="headerlink" title="个人配置"></a>个人配置</h4><p>因为要用<code>注入</code>来实现评论功能，那就不能修改官方的模板，自己撸了个 js 来实现：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="comment">/* utterances 评论插件 */</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 初始化</span></span><br><span class="line"><span class="built_in">window</span>.addEventListener(<span class="string">&quot;DOMContentLoaded&quot;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  query2add();</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">// pjax 使用 pushState() 不会触发 hashchange 事件，需要拦截</span></span><br><span class="line"><span class="keyword">var</span> _wr = <span class="function"><span class="keyword">function</span> (<span class="params">type</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">var</span> orig = history[type];</span><br><span class="line">  <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> e = <span class="keyword">new</span> Event(type);</span><br><span class="line">    e.arguments = <span class="built_in">arguments</span>;</span><br><span class="line">    <span class="built_in">window</span>.dispatchEvent(e);</span><br><span class="line">    <span class="comment">// 注意事件监听在url变更方法调用之前 也就是在事件监听的回调函数中获取的页面链接为跳转前的链接</span></span><br><span class="line">    <span class="keyword">var</span> rv = orig.apply(<span class="built_in">this</span>, <span class="built_in">arguments</span>);</span><br><span class="line">    <span class="keyword">return</span> rv;</span><br><span class="line">  &#125;;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">history.pushState = _wr(<span class="string">&quot;pushState&quot;</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 监听 change 事件</span></span><br><span class="line"><span class="built_in">window</span>.addEventListener(<span class="string">&quot;pushState&quot;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">e</span>) </span>&#123;</span><br><span class="line">  <span class="comment">// e &amp;&amp; e.arguments.length &gt; 2 &amp;&amp; e.arguments[2]</span></span><br><span class="line">  query2add();</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 加载 utterance 插件</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">loadUtterance</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">let</span> js = <span class="built_in">document</span>.createElement(<span class="string">&quot;script&quot;</span>);</span><br><span class="line">  <span class="comment">/* 以下内容改成第三步生成的配置 */</span></span><br><span class="line">  js.setAttribute(<span class="string">&quot;src&quot;</span>, <span class="string">&quot;https://utteranc.es/client.js&quot;</span>);</span><br><span class="line">  js.setAttribute(<span class="string">&quot;repo&quot;</span>, <span class="string">&quot;Undeio/undeio.github.io&quot;</span>);</span><br><span class="line">  js.setAttribute(<span class="string">&quot;issue-term&quot;</span>, <span class="string">&quot;title&quot;</span>);</span><br><span class="line">  js.setAttribute(<span class="string">&quot;theme&quot;</span>, <span class="string">&quot;github-light&quot;</span>);</span><br><span class="line">  js.setAttribute(<span class="string">&quot;crossorigin&quot;</span>, <span class="string">&quot;anonymous&quot;</span>);</span><br><span class="line">  js.setAttribute(<span class="string">&quot;async&quot;</span>, <span class="string">&quot;async&quot;</span>);</span><br><span class="line">  <span class="comment">/* 以上内容需要修改 */</span></span><br><span class="line">  <span class="comment">// 添加到主体部分的末尾</span></span><br><span class="line">  <span class="built_in">document</span>.getElementsByClassName(<span class="string">&quot;main-inner&quot;</span>)[<span class="number">0</span>].appendChild(js);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 是否已存在组件</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">query2add</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="comment">// 只有正文页面才有 post-copyright，也就是最后的版权声明</span></span><br><span class="line">  <span class="comment">// 当然，你也可以找一个自己正文才有的标识进行判断</span></span><br><span class="line">  <span class="keyword">let</span> postCopyRight = <span class="built_in">document</span>.getElementsByClassName(<span class="string">&quot;post-copyright&quot;</span>);</span><br><span class="line">  <span class="keyword">if</span> (postCopyRight &amp;&amp; postCopyRight[<span class="number">0</span>]) &#123;</span><br><span class="line">    <span class="comment">// 存在评论就放弃添加</span></span><br><span class="line">    <span class="keyword">let</span> utterances = <span class="built_in">document</span>.getElementsByClassName(<span class="string">&quot;utterances&quot;</span>);</span><br><span class="line">    <span class="keyword">if</span> (utterances &amp;&amp; utterances[<span class="number">0</span>]) &#123;</span><br><span class="line">      <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    loadUtterance();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>无图无真相</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giumvnbuw0j30gu0hm0vd.jpg" alt="真相"></p>
+<p>最终效果</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giun047pynj30w10admy8.jpg" alt="效果"></p>
+<blockquote>
+<p>才疏学浅，实现比较粗糙，如果你有更好的实现，请给我留言。</p>
+</blockquote>
+]]></content>
+      <categories>
+        <category>Hexo</category>
+      </categories>
+      <tags>
+        <tag>Hexo</tag>
+        <tag>Next</tag>
+        <tag>Utterance</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>寄存器小记</title>
+    <url>/post/592731679/</url>
+    <content><![CDATA[<h3 id="通用寄存器拆分"><a href="#通用寄存器拆分" class="headerlink" title="通用寄存器拆分"></a>通用寄存器拆分</h3><p>EAX / EBX / ECX / EDX</p>
+<p>例如：</p>
+<ul>
+<li>EAX = 12345678</li>
+<li>&nbsp;&nbsp;&nbsp;AX = &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5678</li>
+<li>&nbsp;&nbsp;&nbsp;AH = &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;56</li>
+<li>&nbsp;&nbsp;&nbsp;AL = &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;78<a id="more"></a></li>
+<li>ESP 永远指向堆栈的最顶端；</li>
+<li>堆栈顶端为 ESP，依次向下为 ESP + 4、ESP + 8 ，以此类推；</li>
+<li>EIP 永远指向 CPU 即将执行的地址；</li>
+<li>寄存器从第 18 位开始，存放的是该寄存器从起始位置依次向后的地址，即第 18 存放的是起始位置的地址；</li>
+</ul>
+<h3 id="标志位寄存器"><a href="#标志位寄存器" class="headerlink" title="标志位寄存器"></a>标志位寄存器</h3><ul>
+<li><p>OF 是<code>溢出标志位</code>;</p>
+<ul>
+<li>当指令改变了符号位且返回错误值的时候，OF 为 1，表示溢出成立；</li>
+<li>运算结果超出机器能够表示的范围称为溢出；</li>
+</ul>
+</li>
+<li><p>PF 是 <code>奇偶标志位</code>；</p>
+<ul>
+<li>当指令的<code>返回值的二进制</code>表现形式中<code>1</code>的个数为偶数个时，PF 为 1；</li>
+<li>运算结果的最低 16 位中含 1 的个数为偶数；</li>
+<li>如：11，101，110，1001，1010，1100，1111</li>
+</ul>
+</li>
+<li><p>ZF 是<code>0 标志符</code>.</p>
+<ul>
+<li>当前指令的运算结果为 0，则 ZF 为 1；</li>
+</ul>
+</li>
+<li><p>SF 是<code>符号位标志符</code>;</p>
+<ul>
+<li>当指令的运算结果为负数时，SF 为 1；</li>
+<li>SF 与运算结果的最高位相同；</li>
+</ul>
+</li>
+<li><p>CF 是<code>进位标志符</code>；</p>
+<ul>
+<li>当指令的无符号运算结果超过最大值时，CF 为 1；</li>
+<li>最高位产生进位或借位；</li>
+</ul>
+</li>
+<li><p>AF 是<code>辅助进位标志符</code>；</p>
+<ul>
+<li>当指令的运算结果的低 4 位向高 4 位有进位或借位时，AF 为 1；</li>
+</ul>
+</li>
+<li><p>TF 是<code>跟踪标志符</code>；</p>
+<ul>
+<li>用于调试单步操作；</li>
+<li>若 TF 为 1，则每条指令执行结束后，产生中断；</li>
+</ul>
+</li>
+<li><p>DF 是<code>方向标志符</code>；</p>
+<ul>
+<li>用来控制串处理指令的处理方向；</li>
+<li>若 DF 为 1，则串处理中地址自动递减，否则自动自增；</li>
+<li>若 DF 为 1，每次操作后使 SI 和 DI 递减，DF 为 0 时则自增；</li>
+</ul>
+</li>
+<li><p>IF 是<code>中断标志符</code>；</p>
+<ul>
+<li>用来控制 CPU 是否响应可屏蔽中断；</li>
+<li>若 IF 为 1 则允许中断，否则禁止中断；</li>
+</ul>
+</li>
+</ul>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>汇编</category>
+      </categories>
+      <tags>
+        <tag>寄存器</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>常见的汇编指令</title>
+    <url>/post/1025109479/</url>
+    <content><![CDATA[<h3 id="常见指令"><a href="#常见指令" class="headerlink" title="常见指令"></a>常见指令</h3><h4 id="NOP"><a href="#NOP" class="headerlink" title="NOP"></a>NOP</h4><ul>
+<li>NOP 的机器码是<code>90</code>；</li>
+<li>NOP 是空指令，就是没有操作，无操作；</li>
+<li>使用 <code>NOP</code> 来填充指令执行后多出来的字节，而不是用<code>00</code>来填充；</li>
+</ul>
+<a id="more"></a>
+
+<h4 id="PUSH-压入堆栈"><a href="#PUSH-压入堆栈" class="headerlink" title="PUSH 压入堆栈"></a>PUSH 压入堆栈</h4><p>PUSH 的用法：</p>
+<ul>
+<li><code>PUSH 0x1 / 0xF</code>：把十六进制数字压入堆栈顶部；</li>
+<li><code>PUSH EAX / EBX</code>：把指定寄存器中的数据压入堆栈顶部；</li>
+<li><code>PUSH [00401000]</code>：把指定内存地址中的数据压入堆栈顶部；</li>
+</ul>
+<h4 id="POP-弹出堆栈"><a href="#POP-弹出堆栈" class="headerlink" title="POP 弹出堆栈"></a>POP 弹出堆栈</h4><p>POP 的用法：</p>
+<ul>
+<li><code>POP EAX / EBX</code>：将堆栈顶部的内容弹出并放入指定的寄存器；</li>
+</ul>
+<h4 id="PUSHAD"><a href="#PUSHAD" class="headerlink" title="PUSHAD"></a>PUSHAD</h4><ul>
+<li>通用寄存器指：EAX / ECX / EDX / EBX / ESP / EBP / ESI / EDI；</li>
+<li>PUSHAD 保护现场 / 备份现场，将通用寄存器的数据自上而下依次压入堆栈，最后一个寄存器的数据处于堆栈顶部；</li>
+<li>PUSHAD 是 32 位操作；</li>
+<li><code>PUSHAD</code> 相当于是<code>PUSH EAX, PUSH ECX, PUSH EDX, PUSH EBX, PUSH ESP, PUSH EBP, PUSH ESI, PUSH EDI</code>八条命令的合集；</li>
+</ul>
+<h4 id="POPAD"><a href="#POPAD" class="headerlink" title="POPAD"></a>POPAD</h4><ul>
+<li>通用寄存器指：EAX / ECX / EDX / EBX / ESP / EBP / ESI / EDI；</li>
+<li>POPAD 还原现场，将堆栈顶部的数据依次弹出并自下而上依次填充到通用寄存器；</li>
+<li>POPAD 是 32 位操作；</li>
+<li><code>POPAD</code> 相当于是<code>POP EDI, POP ESI, POP EBP, POP ESP, POP EBX, POP EDX, POP ECX, POP EAX</code>八条命令的合集；</li>
+</ul>
+<h4 id="PUSHA"><a href="#PUSHA" class="headerlink" title="PUSHA"></a>PUSHA</h4><ul>
+<li>PUSHA 和 PUSHAD 功能相同，用于备份现场；</li>
+<li>PUSHA 是 16 位操作；</li>
+<li><code>PUSHA</code> 相当于是<code>PUSH AX, PUSH CX, PUSH DX, PUSH BX, PUSH SP, PUSH BP, PUSH SI, PUSH DI</code>八条命令的合集；</li>
+</ul>
+<h4 id="POPA"><a href="#POPA" class="headerlink" title="POPA"></a>POPA</h4><ul>
+<li>POPA 和 POPAD 功能相同，用于还原现场；</li>
+<li>POPA 是 16 位操作；</li>
+<li><code>POPA</code> 相当于是<code>POP DI, POP SI, POP BP, POP SP, POP BX, POP DX, POP CX, POP AX</code>八条命令的合集；</li>
+</ul>
+<h4 id="MOV"><a href="#MOV" class="headerlink" title="MOV"></a>MOV</h4><ul>
+<li>MOV 本意为<code>move，移动</code>，但功能相当于复制/赋值；</li>
+<li><code>MOV EAX, ECX</code>：两个操作数的长度必须相同；</li>
+<li><code>MOV EAX, ECX</code>：复制<code>ECX（第二个参数）</code>的数据到<code>EAX（第一个参数）</code>，4 字节操作；</li>
+<li><code>MOV AX, CX</code>：复制<code>CX（第二个参数）</code>的数据到<code>AX（第一个参数）</code>，2 字节操作；</li>
+<li><code>MOV AL, CL</code>：复制<code>CL（第二个参数）</code>的数据到<code>AL（第一个参数）</code>，1 字节操作；</li>
+<li><code>MOV [00402000], EAX</code>：复制<code>EAX（第二个参数）</code>的数据到<code>[指定内存地址]（第一个参数）</code>，4 字节操作；</li>
+<li><code>MOV [00402000], AX</code>：复制<code>AX（第二个参数）</code>的数据到<code>[指定内存地址]（第一个参数）</code>，2 字节操作；</li>
+<li><code>MOV [00402000], AH</code>：复制<code>AH（第二个参数）</code>的数据到<code>[指定内存地址]（第一个参数）</code>，1 字节操作；</li>
+</ul>
+<h4 id="MOVSX"><a href="#MOVSX" class="headerlink" title="MOVSX"></a>MOVSX</h4><ul>
+<li><code>MOVSX EAX, CX</code>：复制<code>CX（第二个参数）</code>的数据到<code>EAX（第一个参数）</code>，如果<code>EAX（第一个参数）</code>的长度比<code>CX（第二个参数）</code>长，剩余的长度用<code>CX（第二个参数）</code>的符号位填充；</li>
+<li>正数用 0 填充，负数用 F 填充；</li>
+</ul>
+<h4 id="MOVZX"><a href="#MOVZX" class="headerlink" title="MOVZX"></a>MOVZX</h4><ul>
+<li><code>MOVZX EAX, CX</code>：复制<code>CX（第二个参数）</code>的数据到<code>EAX（第一个参数）</code>，如果<code>EAX（第一个参数）</code>的长度比<code>CX（第二个参数）</code>长，剩余的长度用 0 填充；</li>
+<li>带 0 扩展传送命令；</li>
+</ul>
+<h4 id="LEA"><a href="#LEA" class="headerlink" title="LEA"></a>LEA</h4><ul>
+<li>LEA：复制<code>第二个参数的内存地址</code> 或 <code>第二个参数运算后的内存地址</code>到<code>第一个参数</code>；</li>
+<li><code>LEA EAX, [00401000]</code>：第一个参数必须是通用寄存器，第二个参数必须是内存地址；</li>
+<li><code>LEA EAX, [ECX + 16]</code>：第一个参数必须是通用寄存器，第二个参数必须是内存地址；</li>
+</ul>
+<h4 id="XCHG-互换-交换"><a href="#XCHG-互换-交换" class="headerlink" title="XCHG 互换 / 交换"></a>XCHG 互换 / 交换</h4><ul>
+<li><code>XCHG EAX, ECX</code>：第一个参数可以是通用寄存器或内存地址，第二个参数必须是通用寄存器；</li>
+<li><code>XCHG [00401000], ECX</code>：第一个参数可以是通用寄存器或内存地址，第二个参数必须是通用寄存器；</li>
+</ul>
+<h4 id="SHR-二进制右移"><a href="#SHR-二进制右移" class="headerlink" title="SHR 二进制右移"></a>SHR 二进制右移</h4><h4 id="SHL-二进制左移"><a href="#SHL-二进制左移" class="headerlink" title="SHL 二进制左移"></a>SHL 二进制左移</h4><h4 id="CLD"><a href="#CLD" class="headerlink" title="CLD"></a>CLD</h4><ul>
+<li>用来操作方向标志位 DF，CLD 使 DF 复位，即让 DF = 00；</li>
+</ul>
+<h4 id="STD"><a href="#STD" class="headerlink" title="STD"></a>STD</h4><ul>
+<li>用来操作方向标志位 DF，STD 使 DF 置位，即让 DF = 01；</li>
+</ul>
+<h3 id="数学指令"><a href="#数学指令" class="headerlink" title="数学指令"></a>数学指令</h3><h4 id="ADD-SUB-加法-减法"><a href="#ADD-SUB-加法-减法" class="headerlink" title="ADD / SUB | 加法 / 减法"></a>ADD / SUB | 加法 / 减法</h4><ul>
+<li><code>ADD / SUB</code>的返回结果放在第一个参数中；</li>
+</ul>
+<h4 id="ADC-带进位的加法"><a href="#ADC-带进位的加法" class="headerlink" title="ADC 带进位的加法"></a>ADC 带进位的加法</h4><ul>
+<li><code>ADC EAX, ECX</code> = <code>EAX + ECX + 0 | 1</code>：两个参数累加并且加上<code>进位标识符CF</code>的值为最终结果；</li>
+</ul>
+<h4 id="SBB-带进位的减法"><a href="#SBB-带进位的减法" class="headerlink" title="SBB 带进位的减法"></a>SBB 带进位的减法</h4><ul>
+<li><code>SBB EAX, ECX</code> = <code>EAX - ECX - 0 | 1</code>：两个参数相减并且减去<code>进位标识符CF</code>的值为最终结果；</li>
+</ul>
+<h4 id="INC-DEC-自增-自减"><a href="#INC-DEC-自增-自减" class="headerlink" title="INC / DEC | 自增 / 自减"></a>INC / DEC | 自增 / 自减</h4><ul>
+<li><code>INC EAX</code>：每执行一次该指令，参数的值自增 1；</li>
+<li><code>DEC EAX</code>：每执行一次该指令，参数的值自减 1；</li>
+</ul>
+<h4 id="MUL-无符号乘法"><a href="#MUL-无符号乘法" class="headerlink" title="MUL 无符号乘法"></a>MUL 无符号乘法</h4><ul>
+<li><code>MUL ECX</code>：<code>MUL CL | CX | ECX</code>默认和 <code>AL | AX | EAX</code>做乘法运算，运算结果分别存放到<br><code>AL | DX:AX | EDX:EAX</code>中，其中<code>DX 或 EDX</code>存放高位，<code>AX 或 EAX</code>存放低位；</li>
+</ul>
+<h4 id="DIV-无符号除法"><a href="#DIV-无符号除法" class="headerlink" title="DIV 无符号除法"></a>DIV 无符号除法</h4><ul>
+<li><code>DIV CL</code>：默认的被除数为<code>EAX</code>，如果 <code>CL（除数）</code>是 8 位，那么<code>商</code>放在<code>AL</code>中，<code>余数</code>放在<code>AH</code>中；</li>
+<li><code>DIV CX</code>：默认的被除数为<code>EAX</code>，如果 <code>CX（除数）</code>是 16 位，那么<code>商</code>放在<code>AX</code>中，<code>余数</code>放在<code>DX</code>中；</li>
+<li><code>DIV ECX</code>：默认的被除数为<code>EAX</code>，如果 <code>ECX（除数）</code>是 32 位，那么<code>商</code>放在<code>EAX</code>中，<code>余数</code>放在<code>EDX</code>中；</li>
+</ul>
+<h4 id="IMUL-有符号乘法"><a href="#IMUL-有符号乘法" class="headerlink" title="IMUL 有符号乘法"></a>IMUL 有符号乘法</h4><ul>
+<li>立即数：自然数；</li>
+<li>单操作数：<code>IMUL CL | CX | ECX</code>默认和 <code>AL | AX | EAX</code>做乘法运算，运算结果分别存放到<br><code>AL | DX:AX | EDX:EAX</code>中，其中<code>DX 或 EDX</code>存放高位，<code>AX 或 EAX</code>存放低位；</li>
+<li>双操作数：<code>IMUL AX, CX | 0x2</code>：第一个参数必须是通用寄存器，第二个参数可以是通用寄存器、内存地址或立即数，运算结果存放到第一个参数中；</li>
+<li>三操作数：<code>IMUL AX, CX, 0x2</code>：第一个参数必须是通用寄存器，第二个参数可以是通用寄存器或内存地址，第三个参数必须是立即数，将第二个参数和第三个参数的运算结果存放到第一个参数中；</li>
+</ul>
+<h4 id="IDIV-有符号除法"><a href="#IDIV-有符号除法" class="headerlink" title="IDIV 有符号除法"></a>IDIV 有符号除法</h4><ul>
+<li><code>IDIV CL</code>：默认的被除数为<code>EAX</code>，如果 <code>CL（除数）</code>是 8 位，那么<code>商</code>放在<code>AL</code>中，<code>余数</code>放在<code>AH</code>中；</li>
+<li><code>IDIV CX</code>：默认的被除数为<code>EAX</code>，如果 <code>CX（除数）</code>是 16 位，那么<code>商</code>放在<code>AX</code>中，<code>余数</code>放在<code>DX</code>中；</li>
+<li><code>IDIV ECX</code>：默认的被除数为<code>EAX</code>，如果 <code>ECX（除数）</code>是 32 位，那么<code>商</code>放在<code>EAX</code>中，<code>余数</code>放在<code>EDX</code>中；</li>
+</ul>
+<h4 id="XADD-先交换后相加"><a href="#XADD-先交换后相加" class="headerlink" title="XADD 先交换后相加"></a>XADD 先交换后相加</h4><ul>
+<li><code>XADD EAX, ECX</code>：先交换两个参数的值，然后进行加法运算，运算结果保存在第一个参数中；</li>
+</ul>
+<h4 id="NEG-取反"><a href="#NEG-取反" class="headerlink" title="NEG 取反"></a>NEG 取反</h4><ul>
+<li><code>NEG EAX</code>：如题，取反</li>
+</ul>
+<h3 id="逻辑指令"><a href="#逻辑指令" class="headerlink" title="逻辑指令"></a>逻辑指令</h3><h4 id="AND-OR-XOR-NOT"><a href="#AND-OR-XOR-NOT" class="headerlink" title="AND / OR / XOR / NOT"></a>AND / OR / XOR / NOT</h4><ul>
+<li>全部以二进制形式进行比较 / 操作；</li>
+<li><code>AND EAX, ECX</code>：双 1 为 1，否则为 0；</li>
+<li><code>OR EAX, ECX</code>：逢 1 为 1，否则为 0；</li>
+<li><code>XOR EAX, ECX</code>：不同为 1，相同为 0；</li>
+<li><code>NOT EAX</code>：二进制取反；</li>
+</ul>
+<h3 id="比较指令"><a href="#比较指令" class="headerlink" title="比较指令"></a>比较指令</h3><h4 id="CMP"><a href="#CMP" class="headerlink" title="CMP"></a>CMP</h4><ul>
+<li><code>CMP EAX, ECX</code>：两个参数相减进行比较，如果运算结果为 0，则 <code>ZF（0 标志位）</code>为 1；</li>
+<li>通用寄存器、内存地址和立即数之间可以相互比较；</li>
+</ul>
+<h4 id="TEST"><a href="#TEST" class="headerlink" title="TEST"></a>TEST</h4><ul>
+<li><code>TEST EAX, EAX</code>：判断 EAX 自身是否为 0；</li>
+<li>如果运算结果为 0，且 ZF（0 标志位）为 1，则说明 EAX 自身为 0；</li>
+</ul>
+<h3 id="跳转指令"><a href="#跳转指令" class="headerlink" title="跳转指令"></a>跳转指令</h3><h4 id="JMP-无条件跳转"><a href="#JMP-无条件跳转" class="headerlink" title="JMP 无条件跳转"></a>JMP 无条件跳转</h4><ul>
+<li><code>JMP 00401018</code>：无条件跳转；</li>
+</ul>
+<h4 id="JE-JZ"><a href="#JE-JZ" class="headerlink" title="JE / JZ"></a>JE / JZ</h4><ul>
+<li>名称不同，功能相同；</li>
+<li><code>ZF（0 标志位）</code>为 1 则跳转；</li>
+</ul>
+<h4 id="JNE-JNZ"><a href="#JNE-JNZ" class="headerlink" title="JNE / JNZ"></a>JNE / JNZ</h4><ul>
+<li>名称不同，功能相同；</li>
+<li><code>ZF（0 标志位）</code>为 0 则跳转；</li>
+<li>与<code>JE / JZ</code>相反；</li>
+</ul>
+<h4 id="JS"><a href="#JS" class="headerlink" title="JS"></a>JS</h4><ul>
+<li><code>SF（符号位标志位）</code>为 1 则跳转；</li>
+</ul>
+<h4 id="JNS"><a href="#JNS" class="headerlink" title="JNS"></a>JNS</h4><ul>
+<li><code>SF（符号位标志位）</code>为 0 则跳转；</li>
+<li>与<code>JS</code>相反；</li>
+</ul>
+<h4 id="JP-JPE"><a href="#JP-JPE" class="headerlink" title="JP / JPE"></a>JP / JPE</h4><ul>
+<li>名称不同，功能相同；</li>
+<li><code>PF（奇偶标志位）</code>为 1 则跳转；</li>
+</ul>
+<h4 id="JNP-JPO"><a href="#JNP-JPO" class="headerlink" title="JNP / JPO"></a>JNP / JPO</h4><ul>
+<li>名称不同，功能相同；</li>
+<li><code>PF（奇偶标志位）</code>为 0 则跳转；</li>
+<li>与<code>JP / JPE</code>相反；</li>
+</ul>
+<h4 id="JO"><a href="#JO" class="headerlink" title="JO"></a>JO</h4><ul>
+<li><code>OF（溢出标志位）</code>为 1 则跳转；</li>
+</ul>
+<h4 id="JNO"><a href="#JNO" class="headerlink" title="JNO"></a>JNO</h4><ul>
+<li><code>OF（溢出标志位）</code>为 0 则跳转；</li>
+<li>与<code>JO</code>相反；</li>
+</ul>
+<h4 id="JB"><a href="#JB" class="headerlink" title="JB"></a>JB</h4><ul>
+<li><code>CF（进位 / 借位 标志位）</code>为 1 则跳转；</li>
+<li>JB 不关注符号位，只关注无符号位的运算；</li>
+</ul>
+<h4 id="JNB"><a href="#JNB" class="headerlink" title="JNB"></a>JNB</h4><ul>
+<li><code>CF（进位 / 借位 标志位）</code>为 0 则跳转；</li>
+<li>与<code>JB</code>相反；</li>
+</ul>
+<h4 id="JL"><a href="#JL" class="headerlink" title="JL"></a>JL</h4><ul>
+<li><code>SF（）符号位标志位</code>为 1 则跳转；</li>
+<li>与 JB 不同的是，JL 关注有符号位的运算；</li>
+<li>JL 会忽略<code>CF（进位 / 借位 标志位）</code>的变化；</li>
+</ul>
+<h4 id="JBE"><a href="#JBE" class="headerlink" title="JBE"></a>JBE</h4><ul>
+<li><code>OF（溢出标志位）为 1</code>或<code>ZF（0 标志位）为 0</code>则跳转；</li>
+<li>小于等于；</li>
+</ul>
+<h4 id="JNBE-JA"><a href="#JNBE-JA" class="headerlink" title="JNBE / JA"></a>JNBE / JA</h4><ul>
+<li>名称不同，功能相同；</li>
+<li><code>OF（溢出标志位）为 0</code>并且<code>ZF（0 标志位）为 1</code>则跳转；</li>
+<li>必须是大于；</li>
+</ul>
+<h4 id="CALL-RETN"><a href="#CALL-RETN" class="headerlink" title="CALL / RETN"></a>CALL / RETN</h4><ul>
+<li>CALL 可以理解为 CALLBACK；</li>
+<li>CALL 会执行一个子程序，可以理解为执行了一个函数；</li>
+<li>RETN 在 CALL 所执行的子程序中时，会返回该 CALL 所在的主程序，并继续向下执行；</li>
+<li>RETN 与其他指令单独使用时，和 JMP 的功能相同；</li>
+</ul>
+<h3 id="循环指令"><a href="#循环指令" class="headerlink" title="循环指令"></a>循环指令</h3><h4 id="LOOP"><a href="#LOOP" class="headerlink" title="LOOP"></a>LOOP</h4><ul>
+<li><p>LOOP 相当于</p>
+<figure class="highlight mips"><table><tr><td class="code"><pre><span class="line"><span class="keyword">XOR </span>ECX, ECX</span><br><span class="line">MOV ECX, <span class="number">6</span></span><br><span class="line">DEC ECX</span><br><span class="line">// CMP ECX, 0</span><br><span class="line">TEST ECX, ECX</span><br><span class="line"><span class="keyword">JNZ </span>[DEC ECX 所在的地址]</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>与以上指令不同的是：LOOP 执行时第一次循环计数器不会自减；</p>
+</li>
+<li><p>约定俗成：使用 ECX 作为计数器；</p>
+</li>
+</ul>
+<h3 id="寻址方式"><a href="#寻址方式" class="headerlink" title="寻址方式"></a>寻址方式</h3><ul>
+<li>直接寻址：指令后面直接写出此次运算使用的地址，称为直接寻址；</li>
+<li>间接寻址：只有执行到某一行指令才能知道此次运算使用的地址，称为间接寻址；</li>
+</ul>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>汇编</category>
+      </categories>
+      <tags>
+        <tag>汇编指令</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>逆向分析之断点</title>
     <url>/post/2731277808/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -258,6 +627,75 @@
       </tags>
   </entry>
   <entry>
+    <title>逆向分析之硬编码寻找序列号（五）</title>
+    <url>/post/755681865/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li>Ollydg1.1 原版，简称<code>OD</code>；</li>
+<li><code>OD</code>汉化文件来自互联网;</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a> 来自<a href="http://xuepojie.com/">学破解论坛</a>，仅供学习使用；</li>
+<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
+</ul>
+<a id="more"></a>
+
+<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
+<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
+</li>
+<li><p>倒入<code>OD</code>开始分析：</p>
+<ul>
+<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
+</li>
+<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，翻了翻还真不少，善用搜索，<code>GetDlgItemTextA</code>没找到，那就试试<code>GetWindowTextA</code>，还真有，就它了，在<code>GetWindowTextA</code>上设置断点，然后去<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
+</li>
+<li><p><code>F9</code>运行程序，然鹅，输入内容并点击验证按钮后，程序并没有暂停；</p>
+</li>
+<li><p>界面有按钮，试试消息断点，还是没用，又尝试<code>硬件断点</code>以及<code>内存断点</code>均无效之后，只能去翻大佬的教程，以下内容是学习了<a href="http://xuepojie.com/"><code>Shark恒</code></a>大佬的教程之后自己的总结；</p>
+</li>
+<li><p>使用一个特殊的<code>API：TranslateMessage</code>，没错，它的功能就是字面的意思<code>翻译虚拟按键消息为字符消息</code>，很好很强大；</p>
+</li>
+<li><p>在<code>API</code>列表页面搜索，还真有，设置断点，然后在<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，还没有完，在断点上右键<code>断点&gt;&gt;条件记录</code>或者<code>Shift + F4</code>（也就是<code>条件记录断点</code>，毕竟<code>API断点</code>的本质就是<code>CC断点</code>），修改条件：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjea06qzj311u0nfad3.jpg" alt="TranslateMessage"></p>
+</li>
+<li><p>然后运行程序，输入并点击验证，程序在<code>TranslateMessage</code>函数的行首暂停下来，然后<code>Ctrl + F9</code>或者点击菜单栏的调试选项并选择<code>执行到返回</code>，然后<code>F8</code>单步执行到程序领空；</p>
+</li>
+<li><p>然后在<code>内存窗口</code>按下<code>Ctrl + B</code>或者右键选择<code>查找</code>，搜索输入的序列号：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjv4k2qij311w0ngn0d.jpg" alt="查找"></p>
+<p>找到最接近<code>输入的序列号</code>的内容，设置<code>内存访问断点</code>:</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjz6z1umj311m0n7tc9.jpg" alt="内存访问断点"></p>
+</li>
+<li><p>运行程序，程序暂停在了读取序列号的地方，开始分析：<br>好聪明的“程序”，开始转移数据了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizk98xwaej313w0ncdis.jpg" alt="转移数据"></p>
+</li>
+<li><p>既然它都挪窝儿了，咱也别闲着了：在<code>EDI</code>上右键选择<code>数据窗口中跟随</code>,果然，输入的序列号在这里了，选择序列号的数据右键<code>断点&gt;&gt;删除内存访问断点</code>删除第一次设置的<code>内存访问断点</code>，也可以理解为设置在<code>ESI</code>上的<code>内存访问断点</code>，既然数据都转移了，断点也就没意义了，所以要重新设置在<code>EDI</code>上，再次选择序列号的数据右键<code>断点&gt;&gt;内存访问</code>，这样就实时掌握了输入的序列号的动向了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizko5erudj31450o7gpl.jpg" alt="EDI"></p>
+</li>
+<li><p>继续运行程序，终于来到来最关键的地方：比较</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizlfw3ua4j313q0s4dky.jpg" alt="比较"></p>
+<p>分析完毕，逻辑简单粗暴：</p>
+<ul>
+<li>首先，假码 和 可疑字符串 的前 4 个字节的机器码进行比较，不相等跳转到下一步；</li>
+<li>接着，假码 和 可疑字符串 的第 1 个字节的机器码进行比较，不相等跳转到下一步；</li>
+<li>最后，恢复寄存器的内容并<code>RETN</code>，直接弹出错误的弹窗；</li>
+</ul>
+</li>
+<li><p>分析的时候已经发现了正确的序列号，也就是可疑字符串，试一下：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizm3afyiyj30am0btacd.jpg" alt="完工"></p>
+</li>
+</ul>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>汇编</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>CrackMe</tag>
+        <tag>逆向分析</tag>
+        <tag>硬编码</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>逆向分析之硬编码寻找序列号（二）</title>
     <url>/post/3097998650/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -334,75 +772,6 @@
 </li>
 <li><p>最后，完整的分析图：</p>
 <p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giyciwo9jqj30y80u0tf0.jpg" alt="完整图"></p>
-</li>
-</ul>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>汇编</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>CrackMe</tag>
-        <tag>逆向分析</tag>
-        <tag>硬编码</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>逆向分析之硬编码寻找序列号（五）</title>
-    <url>/post/755681865/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>Ollydg1.1 原版，简称<code>OD</code>；</li>
-<li><code>OD</code>汉化文件来自互联网;</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a> 来自<a href="http://xuepojie.com/">学破解论坛</a>，仅供学习使用；</li>
-<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
-</ul>
-<a id="more"></a>
-
-<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
-<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
-</li>
-<li><p>倒入<code>OD</code>开始分析：</p>
-<ul>
-<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
-</li>
-<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，翻了翻还真不少，善用搜索，<code>GetDlgItemTextA</code>没找到，那就试试<code>GetWindowTextA</code>，还真有，就它了，在<code>GetWindowTextA</code>上设置断点，然后去<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
-</li>
-<li><p><code>F9</code>运行程序，然鹅，输入内容并点击验证按钮后，程序并没有暂停；</p>
-</li>
-<li><p>界面有按钮，试试消息断点，还是没用，又尝试<code>硬件断点</code>以及<code>内存断点</code>均无效之后，只能去翻大佬的教程，以下内容是学习了<a href="http://xuepojie.com/"><code>Shark恒</code></a>大佬的教程之后自己的总结；</p>
-</li>
-<li><p>使用一个特殊的<code>API：TranslateMessage</code>，没错，它的功能就是字面的意思<code>翻译虚拟按键消息为字符消息</code>，很好很强大；</p>
-</li>
-<li><p>在<code>API</code>列表页面搜索，还真有，设置断点，然后在<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，还没有完，在断点上右键<code>断点&gt;&gt;条件记录</code>或者<code>Shift + F4</code>（也就是<code>条件记录断点</code>，毕竟<code>API断点</code>的本质就是<code>CC断点</code>），修改条件：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjea06qzj311u0nfad3.jpg" alt="TranslateMessage"></p>
-</li>
-<li><p>然后运行程序，输入并点击验证，程序在<code>TranslateMessage</code>函数的行首暂停下来，然后<code>Ctrl + F9</code>或者点击菜单栏的调试选项并选择<code>执行到返回</code>，然后<code>F8</code>单步执行到程序领空；</p>
-</li>
-<li><p>然后在<code>内存窗口</code>按下<code>Ctrl + B</code>或者右键选择<code>查找</code>，搜索输入的序列号：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjv4k2qij311w0ngn0d.jpg" alt="查找"></p>
-<p>找到最接近<code>输入的序列号</code>的内容，设置<code>内存访问断点</code>:</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjz6z1umj311m0n7tc9.jpg" alt="内存访问断点"></p>
-</li>
-<li><p>运行程序，程序暂停在了读取序列号的地方，开始分析：<br>好聪明的“程序”，开始转移数据了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizk98xwaej313w0ncdis.jpg" alt="转移数据"></p>
-</li>
-<li><p>既然它都挪窝儿了，咱也别闲着了：在<code>EDI</code>上右键选择<code>数据窗口中跟随</code>,果然，输入的序列号在这里了，选择序列号的数据右键<code>断点&gt;&gt;删除内存访问断点</code>删除第一次设置的<code>内存访问断点</code>，也可以理解为设置在<code>ESI</code>上的<code>内存访问断点</code>，既然数据都转移了，断点也就没意义了，所以要重新设置在<code>EDI</code>上，再次选择序列号的数据右键<code>断点&gt;&gt;内存访问</code>，这样就实时掌握了输入的序列号的动向了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizko5erudj31450o7gpl.jpg" alt="EDI"></p>
-</li>
-<li><p>继续运行程序，终于来到来最关键的地方：比较</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizlfw3ua4j313q0s4dky.jpg" alt="比较"></p>
-<p>分析完毕，逻辑简单粗暴：</p>
-<ul>
-<li>首先，假码 和 可疑字符串 的前 4 个字节的机器码进行比较，不相等跳转到下一步；</li>
-<li>接着，假码 和 可疑字符串 的第 1 个字节的机器码进行比较，不相等跳转到下一步；</li>
-<li>最后，恢复寄存器的内容并<code>RETN</code>，直接弹出错误的弹窗；</li>
-</ul>
-</li>
-<li><p>分析的时候已经发现了正确的序列号，也就是可疑字符串，试一下：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizm3afyiyj30am0btacd.jpg" alt="完工"></p>
 </li>
 </ul>
 </li>
@@ -600,246 +969,6 @@
         <tag>CrackMe</tag>
         <tag>逆向分析</tag>
         <tag>硬编码</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>逆向分析之软编码寻找序列号（一）</title>
-    <url>/post/4167455493/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>Ollydg1.1 原版，简称<code>OD</code>；</li>
-<li><code>OD</code>汉化文件来自互联网;</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自<a href="http://xuepojie.com/">学破解论坛</a>，仅供学习使用；</li>
-<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
-</ul>
-<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
-<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gj0t1wtpivj308z0anmxb.jpg" alt="开始"></p>
-</li>
-<li><p>倒入<code>OD</code>开始分析：</p>
-<ul>
-<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
-</li>
-<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，用的<code>API</code>不多，一眼就看到了<code>GetDlgItemTextA</code>，在<code>GetDlgItemTextA</code>函数上设置断点，然后去<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
-</li>
-<li><p>然后<code>F9</code>运行程序，输入用户名和注册码，点击确定；</p>
-</li>
-<li><p>程序断下来了，在堆栈窗口选择<code>Buffer</code>右键<code>数据窗口中跟随</code>，没有数据，因为断点在行首，<code>Ctrl + F9</code>或者点击菜单栏调试选项，选择<code>执行到返回</code>，再去数据窗口中看看，有数据了，是我们输入的用户名；</p>
-</li>
-<li><p>再次运行程序，程序再次中断，不出意外应该是获取注册码，在堆栈窗口选择<code>Buffer</code>右键<code>数据窗口中跟随</code>，没有数据，<code>Ctrl + F9</code>或者点击菜单栏调试选项，选择<code>执行到返回</code>，再去数据窗口中看看，有数据了，是我们输入的注册码；</p>
-</li>
-<li><p>能获取到数据就是一个好的开始，<code>F7 或 F8</code>单步执行到程序领空，熟悉的字样映入眼帘：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gj0tc5u51bj312e0t3q6p.jpg" alt="程序领空"><br>既有我们输入的内容，也有提示字样，应该就是这里了，那就开始分析；</p>
-</li>
-<li><p>前面的代码是堆栈平衡和清除弹窗的代码，进<code>CALL</code>之后，直接<code>ALT + F9</code>或者点击菜单栏调试选项，选择<code>执行到用户代码</code>；</p>
-</li>
-<li><p>需要分析的代码来了：刚分析了两行，发现了几行特别的代码：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gj0tni2rn6j30oy03hmxm.jpg" alt="发现"></p>
-<p>这几行代码，一个<code>push</code>然后紧跟着一个<code>CALL</code>，而且 push 的是我们输入的内容，这里应该就是关键了；</p>
-</li>
-<li><p><code>F7</code>进第 1 个<code>CALL</code>看看：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gj0tswn8jfj30ox01owee.jpg" alt="用户名call"></p>
-<ul>
-<li><p>刚进来第 1 行代码有困惑的吗？你咋知道是用户名放入<code>ESI 寄存器</code>？</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gj0tvmwgxqj312j0satc7.jpg" alt="第一行"></p>
-<p>很简单，<code>[ESP+4]</code>告诉我的，<code>ESP 寄存器</code>永远指向堆栈的顶端，那<code>[ESP+4]</code>就是下一行喽，看一眼堆栈窗口，第二行的数据不正是我们输入的用户名吗？</p>
-</li>
-<li><p>接着，出现了第 2 处令人疑惑的代码：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj0xi158x1j312n0b0q4t.jpg" alt="疑惑1"></p>
-<p>机器码和<code>41</code>比较，这到底是啥意思？刚开始我也弄不明白，而且后面的逻辑也显示和<code>41</code>半毛钱关系没有，直到无意中在用户名输入了数字，弹出两次<code>注册失败</code>，才好像明白了这里判断的是啥？我们先看看 16 进制的<code>41</code>到底是什么：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj0xochjx2j30b50bs3ys.jpg" alt="41"></p>
-<p>原来<code>41</code>是大写字母<code>A</code>，而后面的<code>5A</code>则是大写字母<code>Z</code>，那我好像明白怎么回事儿了，它应该是在判断用户名是否是英文字母；</p>
-</li>
-<li><p>当字符的机器码大于<code>41</code>并且大于<code>5A</code>时，程序会跳转到一个新的<code>CALL</code>，那它干了什么呢：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj0y7pkvqij312l0sc432.jpg" alt="新CALL"></p>
-<p>可以看到，这里只有 3 行代码，我们分析一下，小写字母的机器码减去<code>20</code>是什么，没错，是对应的大写字母，这三行代码的作用就是：将用户名转换为大写字母，然后用大写字母替换用户名中的小写字母，然后返回：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj0z4k7ifkj312m0sbn3m.jpg" alt="大写"></p>
-<p>当用户名全部转为大写字母之后，又来到了一个<code>CALL</code>，这个<code>CALL</code>又是干什么的呢，<code>F7</code>跟进去看看：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj0zamesrsj312k0sbwic.jpg" alt="新CALL"></p>
-<p>原来，是将转换为大写字母后的用户名的每个字节的机器码累加在一起，然后和<code>5678</code>异或，并把异或后的结果放入<code>EAX</code>并返回：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj0zluaydsj312k0se0xd.jpg" alt="返回"></p>
-</li>
-</ul>
-</li>
-<li><p>用户名处理完了，接下来就是注册码了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj0ztl37fnj30oy03daa7.jpg" alt="比较"></p>
-<p>刚从用户名的连环<code>CALL</code>里出来就这么刺激吗？把用户名运算后的结果和我们输入的注册码都 push 到了这个<code>CALL</code>里面，这里应该就是比较了；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj10dmcv8zj30ox06cwey.jpg" alt="注册码"></p>
-<p>结果很打脸啊，不是验证<code>CALL</code>而是运算注册码的<code>CALL</code>，而第一行的<code>PUSH EAX</code>只是个入栈而已。。。</p>
-</li>
-<li><p>验证环节</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj10q4hzwfj30k6063wf9.jpg" alt="验证"></p>
-<p>根据<code>CALL</code>跳转的位置，轻松知道它的用途；</p>
-</li>
-<li><p>注册码的计算规则：</p>
-<ul>
-<li>用户名必须是字母；</li>
-<li>将每个字母转为大写字母；</li>
-<li>把每个字母的 16 进制累加在一起；</li>
-<li>累加的结果与 5678 异或；</li>
-<li>异或后的结果与 1234 异或；</li>
-<li>将最后的结果转为 10 进制，注册码就出来啦；</li>
-</ul>
-</li>
-<li><p>无图无真相</p>
-<ul>
-<li><p>例如：<code>yang</code>的大写<code>YANG</code>的 16 进制是<code>59 41 4E 47</code>；</p>
-</li>
-<li><p>加在一起是<code>59 + 41 + 4E + 47 &gt;&gt; 12F</code>；</p>
-</li>
-<li><p><code>12F</code>与<code>5678</code>异或<code>xor 12F, 5678 &gt;&gt; 5757</code>；</p>
-</li>
-<li><p><code>5757</code>与<code>1234</code>异或<code>xor 5757, 1234 &gt;&gt; 4563</code>；</p>
-</li>
-<li><p><code>4563</code>转为 10 进制后<code>17763</code>;</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj119l81wcj30b50csdg7.jpg" alt="上图"></p>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>汇编</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>CrackMe</tag>
-        <tag>逆向分析</tag>
-        <tag>软编码</tag>
-        <tag>算法分析</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>逆向分析之软编码寻找序列号（二）</title>
-    <url>/post/3362832349/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>Ollydg1.1 原版，简称<code>OD</code>；</li>
-<li><code>OD</code>汉化文件来自互联网;</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自<a href="http://xuepojie.com/">学破解论坛</a>，仅供学习使用；</li>
-<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
-</ul>
-<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
-<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1lnjinquj307x04v0tf.jpg" alt="开始"></p>
-<p>有点意思，输入内容之后没有任何提示，看来只有输入正确的序列号才会有提示；</p>
-</li>
-<li><p>倒入<code>OD</code>开始分析：</p>
-<ul>
-<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
-</li>
-<li><p>既然界面没有按钮，那就得先猜测它的工作原理了，如果它会在输入正确之后提示的话，那么它就是实时获取我们输入的内容并进行判断，这样的话，有用的应该就是<code>内存断点</code>了；</p>
-</li>
-<li><p>说干就干，既然要去内存中找我们输入的内容，那输入就一定得个性一点，起码不是内存中常见的，不然一找一大堆就无从下手了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1lnjinquj307x04v0tf.jpg" alt="输入"></p>
-</li>
-<li><p>然后去<code>内存窗口</code>按下<code>Ctrl + B</code>或者右键选择<code>查找</code>，输入我们的序列号点击确定开始查找，记得勾选<code>区分大小写</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1m10r2ncj30b806e74c.jpg" alt="查找"></p>
-</li>
-<li><p>输入的还算奇葩，只找到了两个，选择第二个吧，虽然第一个是独立的，但它在内存中的范围不太像：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1m2ueqnpj312j0nlgp6.jpg" alt="找到"></p>
-</li>
-<li><p>设置<code>内存访问断点</code>，长度随意，看心情，我就选 5 个字节了；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1m8qdz03j312i0noadj.jpg" alt="内存断点"></p>
-</li>
-<li><p>然后去程序界面再输入一个字符后，发现程序中断了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1mbkjvz1j312k0npgob.jpg" alt="中断1"></p>
-<p>不过中断的地方好像没什么用，我们输入的内容在<code>EDX</code>中，下面的代码段并没有操作它，<code>F9</code>继续运行程序；</p>
-</li>
-<li><p>刚一进程序领空就发现了亮点，这里好像就是比较了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1mgimi9aj312i0nljub.jpg" alt="亮点"></p>
-</li>
-<li><p>分析一番之后发现，逻辑很常规：</p>
-<ul>
-<li><p>首先，假码 和 可疑字符串 的前 4 个字节的机器码进行比较，不相等跳转到下一步；</p>
-</li>
-<li><p>接着，假码 和 可疑字符串 的第 1 个字节的机器码进行比较，不相等跳转到下一步</p>
-</li>
-<li><p>最后，恢复寄存器的内容并<code>RETN</code>，然后就杳无音讯了；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1mp4qouej312g0qqdjn.jpg" alt="比较"></p>
-</li>
-</ul>
-</li>
-<li><p>至于正确的序列号，当然就是那串可疑字符串了，那这串字符是怎么来的呢，不能每次都这么找吧：</p>
-<ul>
-<li><p>我们都知道<code>RETN</code>返回的是调用位置的下一行，那跟着<code>RETN</code>去看看：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1mv3jb6bj312i0qnq6f.jpg" alt="调用位置"></p>
-</li>
-<li><p>按照程序的流程走，既然这里是判断，那上面的就是获取和处理了，上面有好几个<code>CALL</code>，哪一个才是我们想要的那个呢，按照先获取后处理的流程来看，离我们最近的那个<code>CALL</code>应该是处理用的，那么这个<code>CALL</code>上面那两行代码应该就是它的参数，在参数上设置断点，看看参数是什么就知道这个<code>CALL</code>的用途了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1n7mrqnaj312i0qp0w5.jpg" alt="重点"></p>
-<p>设置断点，重载程序并运行后，程序中断了，但重点不在<code>反汇编窗口</code>，而是在<code>堆栈窗口</code>，我们发现了可疑字符串也就是正确的序列号，如果我们设置断点的这个<code>CALL</code>是处理函数的话，那么它还没运行怎么会出现正确的序列号呢？取消断点，在它上面那个<code>CALL</code>的参数上设置断点；</p>
-</li>
-<li><p>和上面的情况一样，程序中断后，在<code>堆栈窗口</code>，我们又发现了正确的序列号，再次取消断点，给它上面那个<code>CALL</code>设置断点：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1niua0lfj312g0qrgp0.jpg" alt="新断点"></p>
-<p>这次就好多了，虽然没发现有用的数据但正确的序列号也没有出现，那这个<code>CALL</code>很可能就是生成序列号的函数了，<code>F7</code>跟进去看看，结果很丧气，它也不；</p>
-</li>
-<li><p>那就接着往上呗，终于，在设置好断点，重载并运行程序之后有了欣喜的收获，用户名当作参数传递了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1o2fra1jj312j0qowhy.jpg" alt="真的重点"></p>
-<p>虽然还没有运行代码，但信息窗口已经告诉我们它是什么了；</p>
-</li>
-<li><p>果断<code>F7</code>跟进去看看，都失败那么多次了，不差这一次：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1o7hfyf0j312h0qr0w3.jpg" alt="进CALL"></p>
-<p>进来只有四行代码，但内容非常令人兴奋：这几行代码在检测有没有输入用户名；这就是一个好的开始，因为要操作数据的时候才会检测数据有没有输入；</p>
-</li>
-<li><p>从这个<code>CALl</code>里出来的窗口很熟悉，因为我们在这里已经操作了 3 次了，也失败了 3 次，这次将会是最后一次了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1ofq31sjj312h0qp78t.jpg" alt="多次操作"></p>
-</li>
-<li><p>这手灯下黑玩儿的漂亮，它一直在眼皮子底下计算序列号：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1q8fz1njj312g0qmn0r.jpg" alt="序列号运算"></p>
-<p>这就完了？那序列号呢？嘿嘿，在这里：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1qc14sgtj312i0qn42d.jpg" alt="序列号"></p>
-<p>是的，运算结束后，虽然数据保存到了<code>EBP-C</code>的位置，但我们并没有弹栈，所以<code>EAX</code>没有被覆盖，双击<code>EAX</code>试试，对啦，将运算结果转为 10 进制就是这个用户名对应的序列号；</p>
-</li>
-</ul>
-</li>
-<li><p>序列号的算法：</p>
-<ul>
-<li>用户名最少两位；</li>
-<li>用户名的下标从 1 开始；</li>
-<li>取用户名每个字节和它对应的下标进行异或运算；</li>
-<li>所有字节异或后的结果累加在一起；</li>
-<li>取最后一个字节的机器码，与对应下标进行异或运算后，循环左移 C 位；</li>
-<li>然后把左移的结果和所有字节异或后累加的结果相加；</li>
-<li>最后把最终结果转换成 10 进制就是这个用户名对应的注册码；</li>
-</ul>
-</li>
-<li><p>无图无真相</p>
-<ul>
-<li><p>例如：用户名<code>feng</code>对应的机器码是<code>66 65 6E 67</code>；</p>
-</li>
-<li><p>用户名的下标从 1 开始；</p>
-</li>
-<li><p>每个字节分别与它对应的下标进行异或运算<code>xor 66, 1 &gt;&gt; 67</code>，<code>xor 65, 2 &gt;&gt; 67</code>，<code>xor 6E, 3 &gt;&gt; 6D</code>，<code>xor 67, 4 &gt;&gt; 63</code>;</p>
-</li>
-<li><p>异或后的结果累加<code>67 + 67 + 6D + 63 &gt;&gt; 19E</code>;</p>
-</li>
-<li><p>取最后一个字节的机器码，与对应下标进行异或运算后，循环左移 C 位<code>xor 67, 4 &gt;&gt; 63</code>，<code>ROL 63, C &gt;&gt; 63000</code>;</p>
-</li>
-<li><p>然后把左移的结果和所有字节异或后累加的结果相加<code>63000 + 19E &gt;&gt; 6319E</code>；</p>
-</li>
-<li><p>转换成 10 进制<code>6319E &gt;&gt; 405918</code>；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1qoidbqcj30e409yq41.jpg" alt="真相"></p>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>汇编</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>CrackMe</tag>
-        <tag>逆向分析</tag>
-        <tag>软编码</tag>
-        <tag>算法分析</tag>
       </tags>
   </entry>
   <entry>
@@ -1116,7 +1245,7 @@
 <li>至于为啥要大于<code>A 的 5 次方</code>，十万不就是最小的 6 位数吗？你不大于<code>A 的 5 次方</code>也就是不够 6 位，肯定不行喽；</li>
 <li>至于对 10 求余的结果是什么，不用说了吧？</li>
 <li>16 进制的<code>30</code>是什么，是 ASCII 码的<code>0</code>，所以，求余后加 0 的意义是什么？</li>
-<li>总结：如果你的用户名运算的最终结果转换为 10 进制是 6 位数字，那就直接转为 10 进制吧，因为它就是注册码；如果小于 6 位，就乘以 2 或 3 或 N，以此类推，直到是 6 位或更多位，当然，如果是更多位，那就用结果求余 10 吧；</li>
+<li>总结：如果你输入的用户名运算的最终结果，转换为 10 进制是 6 位数字，那这个 6 位的数字就是注册码；如果小于 6 位，就用最终结果乘以 2 或 3 或 N，以此类推，直到是 6 位或更多位，当然，6 位最好，因为更多位需要求余 😊；</li>
 </ul>
 </li>
 <li><p>无图无真相：</p>
@@ -1247,372 +1376,243 @@
       </tags>
   </entry>
   <entry>
-    <title>常见的汇编指令</title>
-    <url>/post/1025109479/</url>
-    <content><![CDATA[<h3 id="常见指令"><a href="#常见指令" class="headerlink" title="常见指令"></a>常见指令</h3><h4 id="NOP"><a href="#NOP" class="headerlink" title="NOP"></a>NOP</h4><ul>
-<li>NOP 的机器码是<code>90</code>；</li>
-<li>NOP 是空指令，就是没有操作，无操作；</li>
-<li>使用 <code>NOP</code> 来填充指令执行后多出来的字节，而不是用<code>00</code>来填充；</li>
-</ul>
-<a id="more"></a>
+    <title>逆向分析之软编码寻找序列号（二）</title>
+    <url>/post/3362832349/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li>Ollydg1.1 原版，简称<code>OD</code>；</li>
+<li><code>OD</code>汉化文件来自互联网;</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自<a href="http://xuepojie.com/">学破解论坛</a>，仅供学习使用；</li>
+<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
 
-<h4 id="PUSH-压入堆栈"><a href="#PUSH-压入堆栈" class="headerlink" title="PUSH 压入堆栈"></a>PUSH 压入堆栈</h4><p>PUSH 的用法：</p>
+</li>
+</ul>
+<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
+<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1lnjinquj307x04v0tf.jpg" alt="开始"></p>
+<p>有点意思，输入内容之后没有任何提示，看来只有输入正确的序列号才会有提示；</p>
+</li>
+<li><p>倒入<code>OD</code>开始分析：</p>
 <ul>
-<li><code>PUSH 0x1 / 0xF</code>：把十六进制数字压入堆栈顶部；</li>
-<li><code>PUSH EAX / EBX</code>：把指定寄存器中的数据压入堆栈顶部；</li>
-<li><code>PUSH [00401000]</code>：把指定内存地址中的数据压入堆栈顶部；</li>
-</ul>
-<h4 id="POP-弹出堆栈"><a href="#POP-弹出堆栈" class="headerlink" title="POP 弹出堆栈"></a>POP 弹出堆栈</h4><p>POP 的用法：</p>
+<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
+</li>
+<li><p>既然界面没有按钮，那就得先猜测它的工作原理了，如果它会在输入正确之后提示的话，那么它就是实时获取我们输入的内容并进行判断，这样的话，有用的应该就是<code>内存断点</code>了；</p>
+</li>
+<li><p>说干就干，既然要去内存中找我们输入的内容，那输入就一定得个性一点，起码不是内存中常见的，不然一找一大堆就无从下手了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1lnjinquj307x04v0tf.jpg" alt="输入"></p>
+</li>
+<li><p>然后去<code>内存窗口</code>按下<code>Ctrl + B</code>或者右键选择<code>查找</code>，输入我们的序列号点击确定开始查找，记得勾选<code>区分大小写</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1m10r2ncj30b806e74c.jpg" alt="查找"></p>
+</li>
+<li><p>输入的还算奇葩，只找到了两个，选择第二个吧，虽然第一个是独立的，但它在内存中的范围不太像：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1m2ueqnpj312j0nlgp6.jpg" alt="找到"></p>
+</li>
+<li><p>设置<code>内存访问断点</code>，长度随意，看心情，我就选 5 个字节了；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1m8qdz03j312i0noadj.jpg" alt="内存断点"></p>
+</li>
+<li><p>然后去程序界面再输入一个字符后，发现程序中断了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1mbkjvz1j312k0npgob.jpg" alt="中断1"></p>
+<p>不过中断的地方好像没什么用，我们输入的内容在<code>EDX</code>中，下面的代码段并没有操作它，<code>F9</code>继续运行程序；</p>
+</li>
+<li><p>刚一进程序领空就发现了亮点，这里好像就是比较了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1mgimi9aj312i0nljub.jpg" alt="亮点"></p>
+</li>
+<li><p>分析一番之后发现，逻辑很常规：</p>
 <ul>
-<li><code>POP EAX / EBX</code>：将堆栈顶部的内容弹出并放入指定的寄存器；</li>
-</ul>
-<h4 id="PUSHAD"><a href="#PUSHAD" class="headerlink" title="PUSHAD"></a>PUSHAD</h4><ul>
-<li>通用寄存器指：EAX / ECX / EDX / EBX / ESP / EBP / ESI / EDI；</li>
-<li>PUSHAD 保护现场 / 备份现场，将通用寄存器的数据自上而下依次压入堆栈，最后一个寄存器的数据处于堆栈顶部；</li>
-<li>PUSHAD 是 32 位操作；</li>
-<li><code>PUSHAD</code> 相当于是<code>PUSH EAX, PUSH ECX, PUSH EDX, PUSH EBX, PUSH ESP, PUSH EBP, PUSH ESI, PUSH EDI</code>八条命令的合集；</li>
-</ul>
-<h4 id="POPAD"><a href="#POPAD" class="headerlink" title="POPAD"></a>POPAD</h4><ul>
-<li>通用寄存器指：EAX / ECX / EDX / EBX / ESP / EBP / ESI / EDI；</li>
-<li>POPAD 还原现场，将堆栈顶部的数据依次弹出并自下而上依次填充到通用寄存器；</li>
-<li>POPAD 是 32 位操作；</li>
-<li><code>POPAD</code> 相当于是<code>POP EDI, POP ESI, POP EBP, POP ESP, POP EBX, POP EDX, POP ECX, POP EAX</code>八条命令的合集；</li>
-</ul>
-<h4 id="PUSHA"><a href="#PUSHA" class="headerlink" title="PUSHA"></a>PUSHA</h4><ul>
-<li>PUSHA 和 PUSHAD 功能相同，用于备份现场；</li>
-<li>PUSHA 是 16 位操作；</li>
-<li><code>PUSHA</code> 相当于是<code>PUSH AX, PUSH CX, PUSH DX, PUSH BX, PUSH SP, PUSH BP, PUSH SI, PUSH DI</code>八条命令的合集；</li>
-</ul>
-<h4 id="POPA"><a href="#POPA" class="headerlink" title="POPA"></a>POPA</h4><ul>
-<li>POPA 和 POPAD 功能相同，用于还原现场；</li>
-<li>POPA 是 16 位操作；</li>
-<li><code>POPA</code> 相当于是<code>POP DI, POP SI, POP BP, POP SP, POP BX, POP DX, POP CX, POP AX</code>八条命令的合集；</li>
-</ul>
-<h4 id="MOV"><a href="#MOV" class="headerlink" title="MOV"></a>MOV</h4><ul>
-<li>MOV 本意为<code>move，移动</code>，但功能相当于复制/赋值；</li>
-<li><code>MOV EAX, ECX</code>：两个操作数的长度必须相同；</li>
-<li><code>MOV EAX, ECX</code>：复制<code>ECX（第二个参数）</code>的数据到<code>EAX（第一个参数）</code>，4 字节操作；</li>
-<li><code>MOV AX, CX</code>：复制<code>CX（第二个参数）</code>的数据到<code>AX（第一个参数）</code>，2 字节操作；</li>
-<li><code>MOV AL, CL</code>：复制<code>CL（第二个参数）</code>的数据到<code>AL（第一个参数）</code>，1 字节操作；</li>
-<li><code>MOV [00402000], EAX</code>：复制<code>EAX（第二个参数）</code>的数据到<code>[指定内存地址]（第一个参数）</code>，4 字节操作；</li>
-<li><code>MOV [00402000], AX</code>：复制<code>AX（第二个参数）</code>的数据到<code>[指定内存地址]（第一个参数）</code>，2 字节操作；</li>
-<li><code>MOV [00402000], AH</code>：复制<code>AH（第二个参数）</code>的数据到<code>[指定内存地址]（第一个参数）</code>，1 字节操作；</li>
-</ul>
-<h4 id="MOVSX"><a href="#MOVSX" class="headerlink" title="MOVSX"></a>MOVSX</h4><ul>
-<li><code>MOVSX EAX, CX</code>：复制<code>CX（第二个参数）</code>的数据到<code>EAX（第一个参数）</code>，如果<code>EAX（第一个参数）</code>的长度比<code>CX（第二个参数）</code>长，剩余的长度用<code>CX（第二个参数）</code>的符号位填充；</li>
-<li>正数用 0 填充，负数用 F 填充；</li>
-</ul>
-<h4 id="MOVZX"><a href="#MOVZX" class="headerlink" title="MOVZX"></a>MOVZX</h4><ul>
-<li><code>MOVZX EAX, CX</code>：复制<code>CX（第二个参数）</code>的数据到<code>EAX（第一个参数）</code>，如果<code>EAX（第一个参数）</code>的长度比<code>CX（第二个参数）</code>长，剩余的长度用 0 填充；</li>
-<li>带 0 扩展传送命令；</li>
-</ul>
-<h4 id="LEA"><a href="#LEA" class="headerlink" title="LEA"></a>LEA</h4><ul>
-<li>LEA：复制<code>第二个参数的内存地址</code> 或 <code>第二个参数运算后的内存地址</code>到<code>第一个参数</code>；</li>
-<li><code>LEA EAX, [00401000]</code>：第一个参数必须是通用寄存器，第二个参数必须是内存地址；</li>
-<li><code>LEA EAX, [ECX + 16]</code>：第一个参数必须是通用寄存器，第二个参数必须是内存地址；</li>
-</ul>
-<h4 id="XCHG-互换-交换"><a href="#XCHG-互换-交换" class="headerlink" title="XCHG 互换 / 交换"></a>XCHG 互换 / 交换</h4><ul>
-<li><code>XCHG EAX, ECX</code>：第一个参数可以是通用寄存器或内存地址，第二个参数必须是通用寄存器；</li>
-<li><code>XCHG [00401000], ECX</code>：第一个参数可以是通用寄存器或内存地址，第二个参数必须是通用寄存器；</li>
-</ul>
-<h4 id="SHR-二进制右移"><a href="#SHR-二进制右移" class="headerlink" title="SHR 二进制右移"></a>SHR 二进制右移</h4><h4 id="SHL-二进制左移"><a href="#SHL-二进制左移" class="headerlink" title="SHL 二进制左移"></a>SHL 二进制左移</h4><h4 id="CLD"><a href="#CLD" class="headerlink" title="CLD"></a>CLD</h4><ul>
-<li>用来操作方向标志位 DF，CLD 使 DF 复位，即让 DF = 00；</li>
-</ul>
-<h4 id="STD"><a href="#STD" class="headerlink" title="STD"></a>STD</h4><ul>
-<li>用来操作方向标志位 DF，STD 使 DF 置位，即让 DF = 01；</li>
-</ul>
-<h3 id="数学指令"><a href="#数学指令" class="headerlink" title="数学指令"></a>数学指令</h3><h4 id="ADD-SUB-加法-减法"><a href="#ADD-SUB-加法-减法" class="headerlink" title="ADD / SUB | 加法 / 减法"></a>ADD / SUB | 加法 / 减法</h4><ul>
-<li><code>ADD / SUB</code>的返回结果放在第一个参数中；</li>
-</ul>
-<h4 id="ADC-带进位的加法"><a href="#ADC-带进位的加法" class="headerlink" title="ADC 带进位的加法"></a>ADC 带进位的加法</h4><ul>
-<li><code>ADC EAX, ECX</code> = <code>EAX + ECX + 0 | 1</code>：两个参数累加并且加上<code>进位标识符CF</code>的值为最终结果；</li>
-</ul>
-<h4 id="SBB-带进位的减法"><a href="#SBB-带进位的减法" class="headerlink" title="SBB 带进位的减法"></a>SBB 带进位的减法</h4><ul>
-<li><code>SBB EAX, ECX</code> = <code>EAX - ECX - 0 | 1</code>：两个参数相减并且减去<code>进位标识符CF</code>的值为最终结果；</li>
-</ul>
-<h4 id="INC-DEC-自增-自减"><a href="#INC-DEC-自增-自减" class="headerlink" title="INC / DEC | 自增 / 自减"></a>INC / DEC | 自增 / 自减</h4><ul>
-<li><code>INC EAX</code>：每执行一次该指令，参数的值自增 1；</li>
-<li><code>DEC EAX</code>：每执行一次该指令，参数的值自减 1；</li>
-</ul>
-<h4 id="MUL-无符号乘法"><a href="#MUL-无符号乘法" class="headerlink" title="MUL 无符号乘法"></a>MUL 无符号乘法</h4><ul>
-<li><code>MUL ECX</code>：<code>MUL CL | CX | ECX</code>默认和 <code>AL | AX | EAX</code>做乘法运算，运算结果分别存放到<br><code>AL | DX:AX | EDX:EAX</code>中，其中<code>DX 或 EDX</code>存放高位，<code>AX 或 EAX</code>存放低位；</li>
-</ul>
-<h4 id="DIV-无符号除法"><a href="#DIV-无符号除法" class="headerlink" title="DIV 无符号除法"></a>DIV 无符号除法</h4><ul>
-<li><code>DIV CL</code>：默认的被除数为<code>EAX</code>，如果 <code>CL（除数）</code>是 8 位，那么<code>商</code>放在<code>AL</code>中，<code>余数</code>放在<code>AH</code>中；</li>
-<li><code>DIV CX</code>：默认的被除数为<code>EAX</code>，如果 <code>CX（除数）</code>是 16 位，那么<code>商</code>放在<code>AX</code>中，<code>余数</code>放在<code>DX</code>中；</li>
-<li><code>DIV ECX</code>：默认的被除数为<code>EAX</code>，如果 <code>ECX（除数）</code>是 32 位，那么<code>商</code>放在<code>EAX</code>中，<code>余数</code>放在<code>EDX</code>中；</li>
-</ul>
-<h4 id="IMUL-有符号乘法"><a href="#IMUL-有符号乘法" class="headerlink" title="IMUL 有符号乘法"></a>IMUL 有符号乘法</h4><ul>
-<li>立即数：自然数；</li>
-<li>单操作数：<code>IMUL CL | CX | ECX</code>默认和 <code>AL | AX | EAX</code>做乘法运算，运算结果分别存放到<br><code>AL | DX:AX | EDX:EAX</code>中，其中<code>DX 或 EDX</code>存放高位，<code>AX 或 EAX</code>存放低位；</li>
-<li>双操作数：<code>IMUL AX, CX | 0x2</code>：第一个参数必须是通用寄存器，第二个参数可以是通用寄存器、内存地址或立即数，运算结果存放到第一个参数中；</li>
-<li>三操作数：<code>IMUL AX, CX, 0x2</code>：第一个参数必须是通用寄存器，第二个参数可以是通用寄存器或内存地址，第三个参数必须是立即数，将第二个参数和第三个参数的运算结果存放到第一个参数中；</li>
-</ul>
-<h4 id="IDIV-有符号除法"><a href="#IDIV-有符号除法" class="headerlink" title="IDIV 有符号除法"></a>IDIV 有符号除法</h4><ul>
-<li><code>IDIV CL</code>：默认的被除数为<code>EAX</code>，如果 <code>CL（除数）</code>是 8 位，那么<code>商</code>放在<code>AL</code>中，<code>余数</code>放在<code>AH</code>中；</li>
-<li><code>IDIV CX</code>：默认的被除数为<code>EAX</code>，如果 <code>CX（除数）</code>是 16 位，那么<code>商</code>放在<code>AX</code>中，<code>余数</code>放在<code>DX</code>中；</li>
-<li><code>IDIV ECX</code>：默认的被除数为<code>EAX</code>，如果 <code>ECX（除数）</code>是 32 位，那么<code>商</code>放在<code>EAX</code>中，<code>余数</code>放在<code>EDX</code>中；</li>
-</ul>
-<h4 id="XADD-先交换后相加"><a href="#XADD-先交换后相加" class="headerlink" title="XADD 先交换后相加"></a>XADD 先交换后相加</h4><ul>
-<li><code>XADD EAX, ECX</code>：先交换两个参数的值，然后进行加法运算，运算结果保存在第一个参数中；</li>
-</ul>
-<h4 id="NEG-取反"><a href="#NEG-取反" class="headerlink" title="NEG 取反"></a>NEG 取反</h4><ul>
-<li><code>NEG EAX</code>：如题，取反</li>
-</ul>
-<h3 id="逻辑指令"><a href="#逻辑指令" class="headerlink" title="逻辑指令"></a>逻辑指令</h3><h4 id="AND-OR-XOR-NOT"><a href="#AND-OR-XOR-NOT" class="headerlink" title="AND / OR / XOR / NOT"></a>AND / OR / XOR / NOT</h4><ul>
-<li>全部以二进制形式进行比较 / 操作；</li>
-<li><code>AND EAX, ECX</code>：双 1 为 1，否则为 0；</li>
-<li><code>OR EAX, ECX</code>：逢 1 为 1，否则为 0；</li>
-<li><code>XOR EAX, ECX</code>：不同为 1，相同为 0；</li>
-<li><code>NOT EAX</code>：二进制取反；</li>
-</ul>
-<h3 id="比较指令"><a href="#比较指令" class="headerlink" title="比较指令"></a>比较指令</h3><h4 id="CMP"><a href="#CMP" class="headerlink" title="CMP"></a>CMP</h4><ul>
-<li><code>CMP EAX, ECX</code>：两个参数相减进行比较，如果运算结果为 0，则 <code>ZF（0 标志位）</code>为 1；</li>
-<li>通用寄存器、内存地址和立即数之间可以相互比较；</li>
-</ul>
-<h4 id="TEST"><a href="#TEST" class="headerlink" title="TEST"></a>TEST</h4><ul>
-<li><code>TEST EAX, EAX</code>：判断 EAX 自身是否为 0；</li>
-<li>如果运算结果为 0，且 ZF（0 标志位）为 1，则说明 EAX 自身为 0；</li>
-</ul>
-<h3 id="跳转指令"><a href="#跳转指令" class="headerlink" title="跳转指令"></a>跳转指令</h3><h4 id="JMP-无条件跳转"><a href="#JMP-无条件跳转" class="headerlink" title="JMP 无条件跳转"></a>JMP 无条件跳转</h4><ul>
-<li><code>JMP 00401018</code>：无条件跳转；</li>
-</ul>
-<h4 id="JE-JZ"><a href="#JE-JZ" class="headerlink" title="JE / JZ"></a>JE / JZ</h4><ul>
-<li>名称不同，功能相同；</li>
-<li><code>ZF（0 标志位）</code>为 1 则跳转；</li>
-</ul>
-<h4 id="JNE-JNZ"><a href="#JNE-JNZ" class="headerlink" title="JNE / JNZ"></a>JNE / JNZ</h4><ul>
-<li>名称不同，功能相同；</li>
-<li><code>ZF（0 标志位）</code>为 0 则跳转；</li>
-<li>与<code>JE / JZ</code>相反；</li>
-</ul>
-<h4 id="JS"><a href="#JS" class="headerlink" title="JS"></a>JS</h4><ul>
-<li><code>SF（符号位标志位）</code>为 1 则跳转；</li>
-</ul>
-<h4 id="JNS"><a href="#JNS" class="headerlink" title="JNS"></a>JNS</h4><ul>
-<li><code>SF（符号位标志位）</code>为 0 则跳转；</li>
-<li>与<code>JS</code>相反；</li>
-</ul>
-<h4 id="JP-JPE"><a href="#JP-JPE" class="headerlink" title="JP / JPE"></a>JP / JPE</h4><ul>
-<li>名称不同，功能相同；</li>
-<li><code>PF（奇偶标志位）</code>为 1 则跳转；</li>
-</ul>
-<h4 id="JNP-JPO"><a href="#JNP-JPO" class="headerlink" title="JNP / JPO"></a>JNP / JPO</h4><ul>
-<li>名称不同，功能相同；</li>
-<li><code>PF（奇偶标志位）</code>为 0 则跳转；</li>
-<li>与<code>JP / JPE</code>相反；</li>
-</ul>
-<h4 id="JO"><a href="#JO" class="headerlink" title="JO"></a>JO</h4><ul>
-<li><code>OF（溢出标志位）</code>为 1 则跳转；</li>
-</ul>
-<h4 id="JNO"><a href="#JNO" class="headerlink" title="JNO"></a>JNO</h4><ul>
-<li><code>OF（溢出标志位）</code>为 0 则跳转；</li>
-<li>与<code>JO</code>相反；</li>
-</ul>
-<h4 id="JB"><a href="#JB" class="headerlink" title="JB"></a>JB</h4><ul>
-<li><code>CF（进位 / 借位 标志位）</code>为 1 则跳转；</li>
-<li>JB 不关注符号位，只关注无符号位的运算；</li>
-</ul>
-<h4 id="JNB"><a href="#JNB" class="headerlink" title="JNB"></a>JNB</h4><ul>
-<li><code>CF（进位 / 借位 标志位）</code>为 0 则跳转；</li>
-<li>与<code>JB</code>相反；</li>
-</ul>
-<h4 id="JL"><a href="#JL" class="headerlink" title="JL"></a>JL</h4><ul>
-<li><code>SF（）符号位标志位</code>为 1 则跳转；</li>
-<li>与 JB 不同的是，JL 关注有符号位的运算；</li>
-<li>JL 会忽略<code>CF（进位 / 借位 标志位）</code>的变化；</li>
-</ul>
-<h4 id="JBE"><a href="#JBE" class="headerlink" title="JBE"></a>JBE</h4><ul>
-<li><code>OF（溢出标志位）为 1</code>或<code>ZF（0 标志位）为 0</code>则跳转；</li>
-<li>小于等于；</li>
-</ul>
-<h4 id="JNBE-JA"><a href="#JNBE-JA" class="headerlink" title="JNBE / JA"></a>JNBE / JA</h4><ul>
-<li>名称不同，功能相同；</li>
-<li><code>OF（溢出标志位）为 0</code>并且<code>ZF（0 标志位）为 1</code>则跳转；</li>
-<li>必须是大于；</li>
-</ul>
-<h4 id="CALL-RETN"><a href="#CALL-RETN" class="headerlink" title="CALL / RETN"></a>CALL / RETN</h4><ul>
-<li>CALL 可以理解为 CALLBACK；</li>
-<li>CALL 会执行一个子程序，可以理解为执行了一个函数；</li>
-<li>RETN 在 CALL 所执行的子程序中时，会返回该 CALL 所在的主程序，并继续向下执行；</li>
-<li>RETN 与其他指令单独使用时，和 JMP 的功能相同；</li>
-</ul>
-<h3 id="循环指令"><a href="#循环指令" class="headerlink" title="循环指令"></a>循环指令</h3><h4 id="LOOP"><a href="#LOOP" class="headerlink" title="LOOP"></a>LOOP</h4><ul>
-<li><p>LOOP 相当于</p>
-<figure class="highlight mips"><table><tr><td class="code"><pre><span class="line"><span class="keyword">XOR </span>ECX, ECX</span><br><span class="line">MOV ECX, <span class="number">6</span></span><br><span class="line">DEC ECX</span><br><span class="line">// CMP ECX, 0</span><br><span class="line">TEST ECX, ECX</span><br><span class="line"><span class="keyword">JNZ </span>[DEC ECX 所在的地址]</span><br></pre></td></tr></table></figure>
+<li><p>首先，假码 和 可疑字符串 的前 4 个字节的机器码进行比较，不相等跳转到下一步；</p>
 </li>
-<li><p>与以上指令不同的是：LOOP 执行时第一次循环计数器不会自减；</p>
+<li><p>接着，假码 和 可疑字符串 的第 1 个字节的机器码进行比较，不相等跳转到下一步</p>
 </li>
-<li><p>约定俗成：使用 ECX 作为计数器；</p>
+<li><p>最后，恢复寄存器的内容并<code>RETN</code>，然后就杳无音讯了；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1mp4qouej312g0qqdjn.jpg" alt="比较"></p>
 </li>
 </ul>
-<h3 id="寻址方式"><a href="#寻址方式" class="headerlink" title="寻址方式"></a>寻址方式</h3><ul>
-<li>直接寻址：指令后面直接写出此次运算使用的地址，称为直接寻址；</li>
-<li>间接寻址：只有执行到某一行指令才能知道此次运算使用的地址，称为间接寻址；</li>
+</li>
+<li><p>至于正确的序列号，当然就是那串可疑字符串了，那这串字符是怎么来的呢，不能每次都这么找吧：</p>
+<ul>
+<li><p>我们都知道<code>RETN</code>返回的是调用位置的下一行，那跟着<code>RETN</code>去看看：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1mv3jb6bj312i0qnq6f.jpg" alt="调用位置"></p>
+</li>
+<li><p>按照程序的流程走，既然这里是判断，那上面的就是获取和处理了，上面有好几个<code>CALL</code>，哪一个才是我们想要的那个呢，按照先获取后处理的流程来看，离我们最近的那个<code>CALL</code>应该是处理用的，那么这个<code>CALL</code>上面那两行代码应该就是它的参数，在参数上设置断点，看看参数是什么就知道这个<code>CALL</code>的用途了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1n7mrqnaj312i0qp0w5.jpg" alt="重点"></p>
+<p>设置断点，重载程序并运行后，程序中断了，但重点不在<code>反汇编窗口</code>，而是在<code>堆栈窗口</code>，我们发现了可疑字符串也就是正确的序列号，如果我们设置断点的这个<code>CALL</code>是处理函数的话，那么它还没运行怎么会出现正确的序列号呢？取消断点，在它上面那个<code>CALL</code>的参数上设置断点；</p>
+</li>
+<li><p>和上面的情况一样，程序中断后，在<code>堆栈窗口</code>，我们又发现了正确的序列号，再次取消断点，给它上面那个<code>CALL</code>设置断点：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1niua0lfj312g0qrgp0.jpg" alt="新断点"></p>
+<p>这次就好多了，虽然没发现有用的数据但正确的序列号也没有出现，那这个<code>CALL</code>很可能就是生成序列号的函数了，<code>F7</code>跟进去看看，结果很丧气，它也不；</p>
+</li>
+<li><p>那就接着往上呗，终于，在设置好断点，重载并运行程序之后有了欣喜的收获，用户名当作参数传递了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1o2fra1jj312j0qowhy.jpg" alt="真的重点"></p>
+<p>虽然还没有运行代码，但信息窗口已经告诉我们它是什么了；</p>
+</li>
+<li><p>果断<code>F7</code>跟进去看看，都失败那么多次了，不差这一次：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1o7hfyf0j312h0qr0w3.jpg" alt="进CALL"></p>
+<p>进来只有四行代码，但内容非常令人兴奋：这几行代码在检测有没有输入用户名；这就是一个好的开始，因为要操作数据的时候才会检测数据有没有输入；</p>
+</li>
+<li><p>从这个<code>CALl</code>里出来的窗口很熟悉，因为我们在这里已经操作了 3 次了，也失败了 3 次，这次将会是最后一次了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1ofq31sjj312h0qp78t.jpg" alt="多次操作"></p>
+</li>
+<li><p>这手灯下黑玩儿的漂亮，它一直在眼皮子底下计算序列号：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1q8fz1njj312g0qmn0r.jpg" alt="序列号运算"></p>
+<p>这就完了？那序列号呢？嘿嘿，在这里：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1qc14sgtj312i0qn42d.jpg" alt="序列号"></p>
+<p>是的，运算结束后，虽然数据保存到了<code>EBP-C</code>的位置，但我们并没有弹栈，所以<code>EAX</code>没有被覆盖，双击<code>EAX</code>试试，对啦，将运算结果转为 10 进制就是这个用户名对应的序列号；</p>
+</li>
 </ul>
+</li>
+<li><p>序列号的算法：</p>
+<ul>
+<li>用户名最少两位；</li>
+<li>用户名的下标从 1 开始；</li>
+<li>取用户名每个字节和它对应的下标进行异或运算；</li>
+<li>所有字节异或后的结果累加在一起；</li>
+<li>取最后一个字节的机器码，与对应下标进行异或运算后，循环左移 C 位；</li>
+<li>然后把左移的结果和所有字节异或后累加的结果相加；</li>
+<li>最后把最终结果转换成 10 进制就是这个用户名对应的注册码；</li>
+</ul>
+</li>
+<li><p>无图无真相</p>
+<ul>
+<li><p>例如：用户名<code>feng</code>对应的机器码是<code>66 65 6E 67</code>；</p>
+</li>
+<li><p>用户名的下标从 1 开始；</p>
+</li>
+<li><p>每个字节分别与它对应的下标进行异或运算<code>xor 66, 1 &gt;&gt; 67</code>，<code>xor 65, 2 &gt;&gt; 67</code>，<code>xor 6E, 3 &gt;&gt; 6D</code>，<code>xor 67, 4 &gt;&gt; 63</code>;</p>
+</li>
+<li><p>异或后的结果累加<code>67 + 67 + 6D + 63 &gt;&gt; 19E</code>;</p>
+</li>
+<li><p>取最后一个字节的机器码，与对应下标进行异或运算后，循环左移 C 位<code>xor 67, 4 &gt;&gt; 63</code>，<code>ROL 63, C &gt;&gt; 63000</code>;</p>
+</li>
+<li><p>然后把左移的结果和所有字节异或后累加的结果相加<code>63000 + 19E &gt;&gt; 6319E</code>；</p>
+</li>
+<li><p>转换成 10 进制<code>6319E &gt;&gt; 405918</code>；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1qoidbqcj30e409yq41.jpg" alt="真相"></p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
 ]]></content>
       <categories>
         <category>逆向工程</category>
         <category>汇编</category>
+        <category>Windows</category>
       </categories>
       <tags>
-        <tag>汇编指令</tag>
+        <tag>CrackMe</tag>
+        <tag>逆向分析</tag>
+        <tag>软编码</tag>
+        <tag>算法分析</tag>
       </tags>
   </entry>
   <entry>
-    <title>寄存器小记</title>
-    <url>/post/592731679/</url>
-    <content><![CDATA[<h3 id="通用寄存器拆分"><a href="#通用寄存器拆分" class="headerlink" title="通用寄存器拆分"></a>通用寄存器拆分</h3><p>EAX / EBX / ECX / EDX</p>
-<p>例如：</p>
-<ul>
-<li>EAX = 12345678</li>
-<li>&nbsp;&nbsp;&nbsp;AX = &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5678</li>
-<li>&nbsp;&nbsp;&nbsp;AH = &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;56</li>
-<li>&nbsp;&nbsp;&nbsp;AL = &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;78<a id="more"></a></li>
-<li>ESP 永远指向堆栈的最顶端；</li>
-<li>堆栈顶端为 ESP，依次向下为 ESP + 4、ESP + 8 ，以此类推；</li>
-<li>EIP 永远指向 CPU 即将执行的地址；</li>
-<li>寄存器从第 18 位开始，存放的是该寄存器从起始位置依次向后的地址，即第 18 存放的是起始位置的地址；</li>
-</ul>
-<h3 id="标志位寄存器"><a href="#标志位寄存器" class="headerlink" title="标志位寄存器"></a>标志位寄存器</h3><ul>
-<li><p>OF 是<code>溢出标志位</code>;</p>
-<ul>
-<li>当指令改变了符号位且返回错误值的时候，OF 为 1，表示溢出成立；</li>
-<li>运算结果超出机器能够表示的范围称为溢出；</li>
-</ul>
-</li>
-<li><p>PF 是 <code>奇偶标志位</code>；</p>
-<ul>
-<li>当指令的<code>返回值的二进制</code>表现形式中<code>1</code>的个数为偶数个时，PF 为 1；</li>
-<li>运算结果的最低 16 位中含 1 的个数为偶数；</li>
-<li>如：11，101，110，1001，1010，1100，1111</li>
-</ul>
-</li>
-<li><p>ZF 是<code>0 标志符</code>.</p>
-<ul>
-<li>当前指令的运算结果为 0，则 ZF 为 1；</li>
-</ul>
-</li>
-<li><p>SF 是<code>符号位标志符</code>;</p>
-<ul>
-<li>当指令的运算结果为负数时，SF 为 1；</li>
-<li>SF 与运算结果的最高位相同；</li>
-</ul>
-</li>
-<li><p>CF 是<code>进位标志符</code>；</p>
-<ul>
-<li>当指令的无符号运算结果超过最大值时，CF 为 1；</li>
-<li>最高位产生进位或借位；</li>
-</ul>
-</li>
-<li><p>AF 是<code>辅助进位标志符</code>；</p>
-<ul>
-<li>当指令的运算结果的低 4 位向高 4 位有进位或借位时，AF 为 1；</li>
-</ul>
-</li>
-<li><p>TF 是<code>跟踪标志符</code>；</p>
-<ul>
-<li>用于调试单步操作；</li>
-<li>若 TF 为 1，则每条指令执行结束后，产生中断；</li>
-</ul>
-</li>
-<li><p>DF 是<code>方向标志符</code>；</p>
-<ul>
-<li>用来控制串处理指令的处理方向；</li>
-<li>若 DF 为 1，则串处理中地址自动递减，否则自动自增；</li>
-<li>若 DF 为 1，每次操作后使 SI 和 DI 递减，DF 为 0 时则自增；</li>
-</ul>
-</li>
-<li><p>IF 是<code>中断标志符</code>；</p>
-<ul>
-<li>用来控制 CPU 是否响应可屏蔽中断；</li>
-<li>若 IF 为 1 则允许中断，否则禁止中断；</li>
-</ul>
+    <title>逆向分析之软编码寻找序列号（一）</title>
+    <url>/post/4167455493/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li>Ollydg1.1 原版，简称<code>OD</code>；</li>
+<li><code>OD</code>汉化文件来自互联网;</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自<a href="http://xuepojie.com/">学破解论坛</a>，仅供学习使用；</li>
+<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
+
 </li>
 </ul>
+<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
+<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gj0t1wtpivj308z0anmxb.jpg" alt="开始"></p>
+</li>
+<li><p>倒入<code>OD</code>开始分析：</p>
+<ul>
+<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
+</li>
+<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，用的<code>API</code>不多，一眼就看到了<code>GetDlgItemTextA</code>，在<code>GetDlgItemTextA</code>函数上设置断点，然后去<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
+</li>
+<li><p>然后<code>F9</code>运行程序，输入用户名和注册码，点击确定；</p>
+</li>
+<li><p>程序断下来了，在堆栈窗口选择<code>Buffer</code>右键<code>数据窗口中跟随</code>，没有数据，因为断点在行首，<code>Ctrl + F9</code>或者点击菜单栏调试选项，选择<code>执行到返回</code>，再去数据窗口中看看，有数据了，是我们输入的用户名；</p>
+</li>
+<li><p>再次运行程序，程序再次中断，不出意外应该是获取注册码，在堆栈窗口选择<code>Buffer</code>右键<code>数据窗口中跟随</code>，没有数据，<code>Ctrl + F9</code>或者点击菜单栏调试选项，选择<code>执行到返回</code>，再去数据窗口中看看，有数据了，是我们输入的注册码；</p>
+</li>
+<li><p>能获取到数据就是一个好的开始，<code>F7 或 F8</code>单步执行到程序领空，熟悉的字样映入眼帘：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gj0tc5u51bj312e0t3q6p.jpg" alt="程序领空"><br>既有我们输入的内容，也有提示字样，应该就是这里了，那就开始分析；</p>
+</li>
+<li><p>前面的代码是堆栈平衡和清除弹窗的代码，进<code>CALL</code>之后，直接<code>ALT + F9</code>或者点击菜单栏调试选项，选择<code>执行到用户代码</code>；</p>
+</li>
+<li><p>需要分析的代码来了：刚分析了两行，发现了几行特别的代码：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gj0tni2rn6j30oy03hmxm.jpg" alt="发现"></p>
+<p>这几行代码，一个<code>push</code>然后紧跟着一个<code>CALL</code>，而且 push 的是我们输入的内容，这里应该就是关键了；</p>
+</li>
+<li><p><code>F7</code>进第 1 个<code>CALL</code>看看：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gj0tswn8jfj30ox01owee.jpg" alt="用户名call"></p>
+<ul>
+<li><p>刚进来第 1 行代码有困惑的吗？你咋知道是用户名放入<code>ESI 寄存器</code>？</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gj0tvmwgxqj312j0satc7.jpg" alt="第一行"></p>
+<p>很简单，<code>[ESP+4]</code>告诉我的，<code>ESP 寄存器</code>永远指向堆栈的顶端，那<code>[ESP+4]</code>就是下一行喽，看一眼堆栈窗口，第二行的数据不正是我们输入的用户名吗？</p>
+</li>
+<li><p>接着，出现了第 2 处令人疑惑的代码：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj0xi158x1j312n0b0q4t.jpg" alt="疑惑1"></p>
+<p>机器码和<code>41</code>比较，这到底是啥意思？刚开始我也弄不明白，而且后面的逻辑也显示和<code>41</code>半毛钱关系没有，直到无意中在用户名输入了数字，弹出两次<code>注册失败</code>，才好像明白了这里判断的是啥？我们先看看 16 进制的<code>41</code>到底是什么：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj0xochjx2j30b50bs3ys.jpg" alt="41"></p>
+<p>原来<code>41</code>是大写字母<code>A</code>，而后面的<code>5A</code>则是大写字母<code>Z</code>，那我好像明白怎么回事儿了，它应该是在判断用户名是否是英文字母；</p>
+</li>
+<li><p>当字符的机器码大于<code>41</code>并且大于<code>5A</code>时，程序会跳转到一个新的<code>CALL</code>，那它干了什么呢：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj0y7pkvqij312l0sc432.jpg" alt="新CALL"></p>
+<p>可以看到，这里只有 3 行代码，我们分析一下，小写字母的机器码减去<code>20</code>是什么，没错，是对应的大写字母，这三行代码的作用就是：将用户名转换为大写字母，然后用大写字母替换用户名中的小写字母，然后返回：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj0z4k7ifkj312m0sbn3m.jpg" alt="大写"></p>
+<p>当用户名全部转为大写字母之后，又来到了一个<code>CALL</code>，这个<code>CALL</code>又是干什么的呢，<code>F7</code>跟进去看看：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj0zamesrsj312k0sbwic.jpg" alt="新CALL"></p>
+<p>原来，是将转换为大写字母后的用户名的每个字节的机器码累加在一起，然后和<code>5678</code>异或，并把异或后的结果放入<code>EAX</code>并返回：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj0zluaydsj312k0se0xd.jpg" alt="返回"></p>
+</li>
+</ul>
+</li>
+<li><p>用户名处理完了，接下来就是注册码了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj0ztl37fnj30oy03daa7.jpg" alt="比较"></p>
+<p>刚从用户名的连环<code>CALL</code>里出来就这么刺激吗？把用户名运算后的结果和我们输入的注册码都 push 到了这个<code>CALL</code>里面，这里应该就是比较了；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj10dmcv8zj30ox06cwey.jpg" alt="注册码"></p>
+<p>结果很打脸啊，不是验证<code>CALL</code>而是运算注册码的<code>CALL</code>，而第一行的<code>PUSH EAX</code>只是个入栈而已。。。</p>
+</li>
+<li><p>验证环节</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj10q4hzwfj30k6063wf9.jpg" alt="验证"></p>
+<p>根据<code>CALL</code>跳转的位置，轻松知道它的用途；</p>
+</li>
+<li><p>注册码的计算规则：</p>
+<ul>
+<li>用户名必须是字母；</li>
+<li>将每个字母转为大写字母；</li>
+<li>把每个字母的 16 进制累加在一起；</li>
+<li>累加的结果与 5678 异或；</li>
+<li>异或后的结果与 1234 异或；</li>
+<li>将最后的结果转为 10 进制，注册码就出来啦；</li>
+</ul>
+</li>
+<li><p>无图无真相</p>
+<ul>
+<li><p>例如：<code>yang</code>的大写<code>YANG</code>的 16 进制是<code>59 41 4E 47</code>；</p>
+</li>
+<li><p>加在一起是<code>59 + 41 + 4E + 47 &gt;&gt; 12F</code>；</p>
+</li>
+<li><p><code>12F</code>与<code>5678</code>异或<code>xor 12F, 5678 &gt;&gt; 5757</code>；</p>
+</li>
+<li><p><code>5757</code>与<code>1234</code>异或<code>xor 5757, 1234 &gt;&gt; 4563</code>；</p>
+</li>
+<li><p><code>4563</code>转为 10 进制后<code>17763</code>;</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj119l81wcj30b50csdg7.jpg" alt="上图"></p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
 ]]></content>
       <categories>
         <category>逆向工程</category>
         <category>汇编</category>
+        <category>Windows</category>
       </categories>
       <tags>
-        <tag>寄存器</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Hexo 添加 Utterance 评论功能</title>
-    <url>/post/3357819964/</url>
-    <content><![CDATA[<blockquote>
-<p>每逢看到大佬们的精彩文章，感慨甚多之际，不能留言把欢甚是遗憾。<br>缺少了留言支持、请教解惑、互相探讨，总感觉博客没有灵魂。</p>
-</blockquote>
-<a id="more"></a>
-
-<h4 id="废话连篇"><a href="#废话连篇" class="headerlink" title="废话连篇"></a>废话连篇</h4><p>曾记得，2016 年端午节，在<code>Github Pages</code>上写下了人生中的第一篇博客，那时就用的<code>Hexo + Next</code>主题，时至今日，一直对<code>Hexo + Next</code>甚是喜爱，感谢大佬，感谢开源 🙏 。</p>
-<p>期间，经历了换工作、换电脑、换域名、换托管，诸多原因导致博客遗失，不过也是甚好，不能守着过去，要拥抱现在和未来（不应该是拥抱开源吗？）。</p>
-<p>之前使用过<code>网易云跟帖</code>，大家都戏称灌水专用，现在业已关闭。</p>
-<p>接着使用了<code>来必力</code>，一个来自韩国的评论插件，国内访问甚是感人，至于大佬们的反向代理，那时心有余而力不足，遂卒。</p>
-<p>后来使用了<code>valine</code>，依托于<a href="https://www.leancloud.cn/">LeanCloud</a>在国内运营，对用户甚是友好，界面也是简洁清新，让人看一眼就喜爱，而且支持阅读统计等诸多功能，之后便一直使用。</p>
-<p>偶然间，在<code>知乎</code>上闲逛时，发现了一位大兄关于评论插件的分析和感想，现在依稀记得的一句话就是“无论第三方插件的使用有多友好，数据都存在第三方，哪天他们歇业停工了，数据一样丢失。”，之后就对此耿耿于怀（当然不是对说这句话的仁兄耿耿于怀）。</p>
-<p>重建博客之际，对评论插件抱着谨慎的态度选之又选，决定将数据存在<code>Github</code>上，至于歇业停工，既然博客数据都不存在了，还留着评论数据作甚，就让他们同生共死吧。</p>
-<p><code>Gitalk</code>和<code>Gitment</code>最先映入眼帘，之后在<code>Github</code>上发现<code>Gitment</code>好久没有更新了，只剩下一个选择。</p>
-<p><code>Hexo</code>官方集成了<code>Gitalk</code>，轻车熟路的做好设置，<code>hexo clean | g | s</code>三部曲之后，熟悉的框框出现，然鹅，发现每篇文章都要手动初始化，翻阅<a href="https://github.com/gitalk/gitalk/wiki/%E8%AF%84%E8%AE%BA%E5%88%9D%E5%A7%8B%E5%8C%96">官方 Wiki</a>发现了自动初始化的脚本，底部有<a href="https://draveness.me/git-comments-initialize/">原作者</a> 的链接，遂前往，准备学习膜拜一番，看了大佬的思路解析，大呼过瘾之际也感落寞，原因无他，就是自己不会<code>Ruby</code>。在准备留言评论之际，发现又有<a href="https://www.lshell.com/post/use-github-action-and-python-to-automatically-initialize-gitalk-comments/">大佬</a>给出了使用<code>Python</code>初始化的思路，用轮子不是目的，读懂造轮子的思路学习造轮子，岂不快哉。</p>
-<p>进入文章，阅读之际，大佬既感且叹地推荐了一个新的评论插件<code>utterances</code>，揣着疑惑的心去<a href="https://utteranc.es/">官网</a>，去<a href="https://github.com/utterance/utterances">官方仓库</a>查看了一番，发现没有 Wiki，也没有文档，善用搜索引擎的我，搜索一番之后发现，似乎<code>Next</code>主题之前的某个版本集成过，但翻阅了现在的版本又毫无所获，教程都是根据集成时的方法写的，对我无用。</p>
-<p>在这里，不得不提的是<code>Hexo</code>的一项前瞻性功能<code>代替配置文件</code>和<code>代替主题配置文件</code>，再也不用像之前一样，想要实现某个功能就去修改官方文件，它不破坏官方文件的完整性，可以无痛更新，之前最头疼的一件事儿就是<code>拉取官方更新之后合并冲突</code>。</p>
-<p>这次重建博客，所有非官方功能，如 404、音乐、footer，都使用<code>注入</code>实现，我对这项功能的称呼，暂且这么叫吧。</p>
-<p>以上都是废话，下面进入正题：</p>
-<h4 id="首先，需要一个用来存储评论的仓库"><a href="#首先，需要一个用来存储评论的仓库" class="headerlink" title="首先，需要一个用来存储评论的仓库"></a>首先，需要一个用来存储评论的仓库</h4><ul>
-<li>你可以新建一个仓库；</li>
-<li>当然，也可以像我一样，存放在博客仓库的 Issues 中，毕竟我已经承诺了它们同生共死，说到就要做到；</li>
-<li>Issues 无法删除，请谨慎选择，防止过多的无用 Issues 带来烦恼（设置 utterances 的时候，这句话依然有效！）；</li>
-</ul>
-<h4 id="安装-utterances"><a href="#安装-utterances" class="headerlink" title="安装 utterances"></a>安装 utterances</h4><ul>
-<li><p>点击<a href="https://github.com/apps/utterances">这里</a>打开安装页面，然后点击右上角的<code>安装</code>；</p>
-</li>
-<li><p>按下安装按钮，（不不不，不够严谨，按下是 201，抬起才是 202），你会跳转到：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giukvthjlpj30fy0oqtbi.jpg" alt="第二步"></p>
-<p>如图所示的页面，选择第一步中创建的仓库或已有的仓库，然后点击<code>安装</code>，请记住仓库名，因为接下来要用；</p>
-</li>
-<li><p>接下来，会跳转到设置页面；</p>
-</li>
-</ul>
-<h4 id="设置-utterances"><a href="#设置-utterances" class="headerlink" title="设置 utterances"></a>设置 utterances</h4><ul>
-<li><p>在这里，请务必填写你在上一步中选择的仓库，并在前面加上仓库的所有者：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giul8ahfszj30k60bfwfv.jpg" alt="第三步"></p>
-</li>
-<li><p>当然，如果你比较调皮，没有填写上一步中选择的仓库，还是有补救办法的，点击<a href="https://github.com/apps/utterances">这里</a>，其实就是安装页面，你会跳转到安装页面，你发现右上角的<code>安装</code>不见了，取而代之的是<code>配置</code>，就是它了，去配置页面修改吧；</p>
-</li>
-<li><p>至于这里，是配置 utterances 创建新的 Issues 时，给 Issues 起的名儿：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giullxjlwfj30jo0i2q65.jpg" alt="配置"></p>
-<p>请自由发挥，因为使用了<a href="https://github.com/rozbo/hexo-abbrlink">abbrlink</a>，链接并不显示文章名称，所以我就选图中所示的选项了，自由发挥的同学，玩的开心；</p>
-</li>
-<li><p>这里是选填选项，给 utterances 创建的 Issues 设置标签：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giulsj64dxj30jt072dgf.jpg" alt="设置标签"></p>
-</li>
-<li><p><code>Theme</code>就不用说了吧，主题选自己喜欢的，没喜欢的？给官方提交一个新主题；</p>
-</li>
-<li><p>接下来就是重头戏了，上面所有的选项都是为它服务的：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giulyonf3xj30jz09lq41.jpg" alt="script"></p>
-<p>复制 script 并添加到你想要评论出现的地方，bingo！</p>
-</li>
-</ul>
-<h4 id="个人配置"><a href="#个人配置" class="headerlink" title="个人配置"></a>个人配置</h4><p>因为要用<code>注入</code>来实现评论功能，那就不能修改官方的模板，自己撸了个 js 来实现：</p>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="comment">/* utterances 评论插件 */</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 初始化</span></span><br><span class="line"><span class="built_in">window</span>.addEventListener(<span class="string">&quot;DOMContentLoaded&quot;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  query2add();</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">// pjax 使用 pushState() 不会触发 hashchange 事件，需要拦截</span></span><br><span class="line"><span class="keyword">var</span> _wr = <span class="function"><span class="keyword">function</span> (<span class="params">type</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">var</span> orig = history[type];</span><br><span class="line">  <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> e = <span class="keyword">new</span> Event(type);</span><br><span class="line">    e.arguments = <span class="built_in">arguments</span>;</span><br><span class="line">    <span class="built_in">window</span>.dispatchEvent(e);</span><br><span class="line">    <span class="comment">// 注意事件监听在url变更方法调用之前 也就是在事件监听的回调函数中获取的页面链接为跳转前的链接</span></span><br><span class="line">    <span class="keyword">var</span> rv = orig.apply(<span class="built_in">this</span>, <span class="built_in">arguments</span>);</span><br><span class="line">    <span class="keyword">return</span> rv;</span><br><span class="line">  &#125;;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">history.pushState = _wr(<span class="string">&quot;pushState&quot;</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 监听 change 事件</span></span><br><span class="line"><span class="built_in">window</span>.addEventListener(<span class="string">&quot;pushState&quot;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">e</span>) </span>&#123;</span><br><span class="line">  <span class="comment">// e &amp;&amp; e.arguments.length &gt; 2 &amp;&amp; e.arguments[2]</span></span><br><span class="line">  query2add();</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 加载 utterance 插件</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">loadUtterance</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">let</span> js = <span class="built_in">document</span>.createElement(<span class="string">&quot;script&quot;</span>);</span><br><span class="line">  <span class="comment">/* 以下内容改成第三步生成的配置 */</span></span><br><span class="line">  js.setAttribute(<span class="string">&quot;src&quot;</span>, <span class="string">&quot;https://utteranc.es/client.js&quot;</span>);</span><br><span class="line">  js.setAttribute(<span class="string">&quot;repo&quot;</span>, <span class="string">&quot;Undeio/undeio.github.io&quot;</span>);</span><br><span class="line">  js.setAttribute(<span class="string">&quot;issue-term&quot;</span>, <span class="string">&quot;title&quot;</span>);</span><br><span class="line">  js.setAttribute(<span class="string">&quot;theme&quot;</span>, <span class="string">&quot;github-light&quot;</span>);</span><br><span class="line">  js.setAttribute(<span class="string">&quot;crossorigin&quot;</span>, <span class="string">&quot;anonymous&quot;</span>);</span><br><span class="line">  js.setAttribute(<span class="string">&quot;async&quot;</span>, <span class="string">&quot;async&quot;</span>);</span><br><span class="line">  <span class="comment">/* 以上内容需要修改 */</span></span><br><span class="line">  <span class="comment">// 添加到主体部分的末尾</span></span><br><span class="line">  <span class="built_in">document</span>.getElementsByClassName(<span class="string">&quot;main-inner&quot;</span>)[<span class="number">0</span>].appendChild(js);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 是否已存在组件</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">query2add</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="comment">// 只有正文页面才有 post-copyright，也就是最后的版权声明</span></span><br><span class="line">  <span class="comment">// 当然，你也可以找一个自己正文才有的标识进行判断</span></span><br><span class="line">  <span class="keyword">let</span> postCopyRight = <span class="built_in">document</span>.getElementsByClassName(<span class="string">&quot;post-copyright&quot;</span>);</span><br><span class="line">  <span class="keyword">if</span> (postCopyRight &amp;&amp; postCopyRight[<span class="number">0</span>]) &#123;</span><br><span class="line">    <span class="comment">// 存在评论就放弃添加</span></span><br><span class="line">    <span class="keyword">let</span> utterances = <span class="built_in">document</span>.getElementsByClassName(<span class="string">&quot;utterances&quot;</span>);</span><br><span class="line">    <span class="keyword">if</span> (utterances &amp;&amp; utterances[<span class="number">0</span>]) &#123;</span><br><span class="line">      <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    loadUtterance();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>无图无真相</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giumvnbuw0j30gu0hm0vd.jpg" alt="真相"></p>
-<p>最终效果</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giun047pynj30w10admy8.jpg" alt="效果"></p>
-<blockquote>
-<p>才疏学浅，实现比较粗糙，如果你有更好的实现，请给我留言。</p>
-</blockquote>
-]]></content>
-      <categories>
-        <category>Hexo</category>
-      </categories>
-      <tags>
-        <tag>Hexo</tag>
-        <tag>Next</tag>
-        <tag>Utterance</tag>
+        <tag>CrackMe</tag>
+        <tag>逆向分析</tag>
+        <tag>软编码</tag>
+        <tag>算法分析</tag>
       </tags>
   </entry>
 </search>
