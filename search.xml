@@ -1301,75 +1301,6 @@
       </tags>
   </entry>
   <entry>
-    <title>逆向分析之硬编码寻找序列号（五）</title>
-    <url>/post/755681865/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>Ollydg1.1 原版，简称<code>OD</code>；</li>
-<li><code>OD</code>汉化文件来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a> 来自<a href="http://xuepojie.com/">学破解论坛</a>，仅供学习使用；</li>
-<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
-</ul>
-<a id="more"></a>
-
-<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
-<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
-</li>
-<li><p>倒入<code>OD</code>开始分析：</p>
-<ul>
-<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
-</li>
-<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，翻了翻还真不少，善用搜索，<code>GetDlgItemTextA</code>没找到，那就试试<code>GetWindowTextA</code>，还真有，就它了，在<code>GetWindowTextA</code>上设置断点，然后去<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
-</li>
-<li><p><code>F9</code>运行程序，然鹅，输入内容并点击验证按钮后，程序并没有暂停；</p>
-</li>
-<li><p>界面有按钮，试试消息断点，还是没用，又尝试<code>硬件断点</code>以及<code>内存断点</code>均无效之后，只能去翻大佬的教程，以下内容是学习了<a href="http://xuepojie.com/"><code>Shark恒</code></a>大佬的教程之后自己的总结；</p>
-</li>
-<li><p>使用一个特殊的<code>API：TranslateMessage</code>，没错，它的功能就是字面的意思<code>翻译虚拟按键消息为字符消息</code>，很好很强大；</p>
-</li>
-<li><p>在<code>API</code>列表页面搜索，还真有，设置断点，然后在<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，还没有完，在断点上右键<code>断点&gt;&gt;条件记录</code>或者<code>Shift + F4</code>（也就是<code>条件记录断点</code>，毕竟<code>API断点</code>的本质就是<code>CC断点</code>），修改条件：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjea06qzj311u0nfad3.jpg" alt="TranslateMessage"></p>
-</li>
-<li><p>然后运行程序，输入并点击验证，程序在<code>TranslateMessage</code>函数的行首暂停下来，然后<code>Ctrl + F9</code>或者点击菜单栏的调试选项并选择<code>执行到返回</code>，然后<code>F8</code>单步执行到程序领空；</p>
-</li>
-<li><p>然后在<code>内存窗口</code>按下<code>Ctrl + B</code>或者右键选择<code>查找</code>，搜索输入的序列号：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjv4k2qij311w0ngn0d.jpg" alt="查找"></p>
-<p>找到最接近<code>输入的序列号</code>的内容，设置<code>内存访问断点</code>:</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjz6z1umj311m0n7tc9.jpg" alt="内存访问断点"></p>
-</li>
-<li><p>运行程序，程序暂停在了读取序列号的地方，开始分析：<br>好聪明的“程序”，开始转移数据了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizk98xwaej313w0ncdis.jpg" alt="转移数据"></p>
-</li>
-<li><p>既然它都挪窝儿了，咱也别闲着了：在<code>EDI</code>上右键选择<code>数据窗口中跟随</code>,果然，输入的序列号在这里了，选择序列号的数据右键<code>断点&gt;&gt;删除内存访问断点</code>删除第一次设置的<code>内存访问断点</code>，也可以理解为设置在<code>ESI</code>上的<code>内存访问断点</code>，既然数据都转移了，断点也就没意义了，所以要重新设置在<code>EDI</code>上，再次选择序列号的数据右键<code>断点&gt;&gt;内存访问</code>，这样就实时掌握了输入的序列号的动向了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizko5erudj31450o7gpl.jpg" alt="EDI"></p>
-</li>
-<li><p>继续运行程序，终于来到来最关键的地方：比较</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizlfw3ua4j313q0s4dky.jpg" alt="比较"></p>
-<p>分析完毕，逻辑简单粗暴：</p>
-<ul>
-<li>首先，假码 和 可疑字符串 的前 4 个字节的机器码进行比较，不相等跳转到下一步；</li>
-<li>接着，假码 和 可疑字符串 的第 1 个字节的机器码进行比较，不相等跳转到下一步；</li>
-<li>最后，恢复寄存器的内容并<code>RETN</code>，直接弹出错误的弹窗；</li>
-</ul>
-</li>
-<li><p>分析的时候已经发现了正确的序列号，也就是可疑字符串，试一下：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizm3afyiyj30am0btacd.jpg" alt="完工"></p>
-</li>
-</ul>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>汇编</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>CrackMe</tag>
-        <tag>逆向分析</tag>
-        <tag>硬编码</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>逆向分析之硬编码寻找序列号（六）</title>
     <url>/post/1208254864/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -1482,61 +1413,58 @@
       </tags>
   </entry>
   <entry>
-    <title>逆向分析之硬编码寻找序列号（四）</title>
-    <url>/post/1116999438/</url>
+    <title>逆向分析之硬编码寻找序列号（五）</title>
+    <url>/post/755681865/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
 <li>Ollydg1.1 原版，简称<code>OD</code>；</li>
 <li><code>OD</code>汉化文件来自互联网；</li>
-<li><code>OD</code>插件：<code>中文搜索引擎</code>；</li>
 <li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a> 来自<a href="http://xuepojie.com/">学破解论坛</a>，仅供学习使用；</li>
-<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
+<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
 </ul>
-<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><p>事实证明：不能“以貌取人”。</p>
-<p>刚打开软件的时候，心里还想着，这么简陋？分分钟就逆向完毕了，结果，“啪啪啪”实力打脸，针扎的疼。</p>
-<p>嗯，还在学习阶段，等我功力深厚之时，定会找回场子！</p>
-<ol>
+<a id="more"></a>
+
+<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
 <li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
 </li>
 <li><p>倒入<code>OD</code>开始分析：</p>
 <ul>
 <li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
 </li>
-<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，翻了翻，呀呵，看着简陋，用的<code>API</code>还真不少，那就搜索吧，没有<code>GetDlgItemTextA</code>？那就拿<code>GetWindowTextA</code>下手吧：在<code>GetWindowTextA</code>函数上设置断点，然后去<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
+<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，翻了翻还真不少，善用搜索，<code>GetDlgItemTextA</code>没找到，那就试试<code>GetWindowTextA</code>，还真有，就它了，在<code>GetWindowTextA</code>上设置断点，然后去<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
 </li>
-<li><p>然后<code>F9</code>运行程序，“随便输入” 一些字符后点击验证，可以随便输入，但请记住它；</p>
+<li><p><code>F9</code>运行程序，然鹅，输入内容并点击验证按钮后，程序并没有暂停；</p>
 </li>
-<li><p>居然没有断下来，也没有弹窗，这让我很尴尬：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giz8frx378j305905zglj.jpg" alt="尴尬"></p>
+<li><p>界面有按钮，试试消息断点，还是没用，又尝试<code>硬件断点</code>以及<code>内存断点</code>均无效之后，只能去翻大佬的教程，以下内容是学习了<a href="http://xuepojie.com/"><code>Shark恒</code></a>大佬的教程之后自己的总结；</p>
 </li>
-<li><p>嗯，界面有按钮，那就试试消息断点，熟练的设置好<code>消息断点</code>，运行程序，输入，点击按钮，还是没有断下来；</p>
+<li><p>使用一个特殊的<code>API：TranslateMessage</code>，没错，它的功能就是字面的意思<code>翻译虚拟按键消息为字符消息</code>，很好很强大；</p>
 </li>
-<li><p>不怕，还有<code>内存断点</code>、<code>硬件断点</code>，挨个试了一遍之后，没有一个成功的，灰心丧气呀，怎么像刺猬 🦔 一样无从下手？</p>
+<li><p>在<code>API</code>列表页面搜索，还真有，设置断点，然后在<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，还没有完，在断点上右键<code>断点&gt;&gt;条件记录</code>或者<code>Shift + F4</code>（也就是<code>条件记录断点</code>，毕竟<code>API断点</code>的本质就是<code>CC断点</code>），修改条件：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjea06qzj311u0nfad3.jpg" alt="TranslateMessage"></p>
 </li>
-<li><p>等等，看了看程序的界面，猛的想起了大佬说的一个工具：</p>
-<p><code>中文搜索引擎</code>：这玩意儿可以参考，但不要过分依赖，友好的开发者可能只是关闭你的程序不让你调试，至于不友好的，知道为啥要用虚拟机吗？</p>
+<li><p>然后运行程序，输入并点击验证，程序在<code>TranslateMessage</code>函数的行首暂停下来，然后<code>Ctrl + F9</code>或者点击菜单栏的调试选项并选择<code>执行到返回</code>，然后<code>F8</code>单步执行到程序领空；</p>
 </li>
-<li><p>重载程序，在<code>反汇编窗口</code>右键选择<code>中文搜索引擎</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giz8ldzoguj311o0njq5w.jpg" alt="中文搜索引擎"></p>
-<p>然后<code>Ctrl + F</code>搜索熟悉的字眼儿<code>Wrong Code DUDE</code>，果然有，双击来到<code>反汇编窗口</code>，嘿嘿，这里看起来很重要嘛：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giz8xso4qtj30m90by402.jpg" alt="关键"></p>
+<li><p>然后在<code>内存窗口</code>按下<code>Ctrl + B</code>或者右键选择<code>查找</code>，搜索输入的序列号：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjv4k2qij311w0ngn0d.jpg" alt="查找"></p>
+<p>找到最接近<code>输入的序列号</code>的内容，设置<code>内存访问断点</code>:</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjz6z1umj311m0n7tc9.jpg" alt="内存访问断点"></p>
+</li>
+<li><p>运行程序，程序暂停在了读取序列号的地方，开始分析：<br>好聪明的“程序”，开始转移数据了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizk98xwaej313w0ncdis.jpg" alt="转移数据"></p>
+</li>
+<li><p>既然它都挪窝儿了，咱也别闲着了：在<code>EDI</code>上右键选择<code>数据窗口中跟随</code>,果然，输入的序列号在这里了，选择序列号的数据右键<code>断点&gt;&gt;删除内存访问断点</code>删除第一次设置的<code>内存访问断点</code>，也可以理解为设置在<code>ESI</code>上的<code>内存访问断点</code>，既然数据都转移了，断点也就没意义了，所以要重新设置在<code>EDI</code>上，再次选择序列号的数据右键<code>断点&gt;&gt;内存访问</code>，这样就实时掌握了输入的序列号的动向了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizko5erudj31450o7gpl.jpg" alt="EDI"></p>
+</li>
+<li><p>继续运行程序，终于来到来最关键的地方：比较</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizlfw3ua4j313q0s4dky.jpg" alt="比较"></p>
+<p>分析完毕，逻辑简单粗暴：</p>
 <ul>
-<li>一个失败的字样；</li>
-<li>一个成功的字样；</li>
-<li>紧挨着上面有一个跳转：可以猜测，如果跳转的话，可能就显示成功了；</li>
-<li>跳转上面是一个<code>CALL</code>，那它很可能是比较的<code>CALL</code>；</li>
-<li>至于更上面的代码，那肯定是获取用的呗，瞎猜的；</li>
+<li>首先，假码 和 可疑字符串 的前 4 个字节的机器码进行比较，不相等跳转到下一步；</li>
+<li>接着，假码 和 可疑字符串 的第 1 个字节的机器码进行比较，不相等跳转到下一步；</li>
+<li>最后，恢复寄存器的内容并<code>RETN</code>，直接弹出错误的弹窗；</li>
 </ul>
 </li>
-<li><p>既然找到了可疑的代码，那就双击<code>CALL</code>给它下一个<code>CC断点</code>，然后运行程序，输入序列号点击验证后，程序暂停在了<code>CALL</code>的位置，那就<code>F7</code>进<code>CALL</code>看看，验证一下猜测；</p>
-</li>
-<li><p>刚一进<code>CALL</code>，就在寄存器窗口发现了熟悉的字样：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giz99kl1svj311n0nlgoq.jpg" alt="call"></p>
-<p>既然把“序列号”都传进来了，那应该就是比较了，开始分析：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizaftudazj30xb0u0n15.jpg" alt="分析"></p>
-</li>
-<li><p>分析完成，比较的部分是常规方法，就是中断程序有点麻烦！</p>
+<li><p>分析的时候已经发现了正确的序列号，也就是可疑字符串，试一下：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizm3afyiyj30am0btacd.jpg" alt="完工"></p>
 </li>
 </ul>
 </li>
@@ -1662,6 +1590,78 @@
         <tag>逆向分析</tag>
         <tag>软编码</tag>
         <tag>算法分析</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>逆向分析之硬编码寻找序列号（四）</title>
+    <url>/post/1116999438/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li>Ollydg1.1 原版，简称<code>OD</code>；</li>
+<li><code>OD</code>汉化文件来自互联网；</li>
+<li><code>OD</code>插件：<code>中文搜索引擎</code>；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a> 来自<a href="http://xuepojie.com/">学破解论坛</a>，仅供学习使用；</li>
+<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
+
+</li>
+</ul>
+<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><p>事实证明：不能“以貌取人”。</p>
+<p>刚打开软件的时候，心里还想着，这么简陋？分分钟就逆向完毕了，结果，“啪啪啪”实力打脸，针扎的疼。</p>
+<p>嗯，还在学习阶段，等我功力深厚之时，定会找回场子！</p>
+<ol>
+<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
+</li>
+<li><p>倒入<code>OD</code>开始分析：</p>
+<ul>
+<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
+</li>
+<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，翻了翻，呀呵，看着简陋，用的<code>API</code>还真不少，那就搜索吧，没有<code>GetDlgItemTextA</code>？那就拿<code>GetWindowTextA</code>下手吧：在<code>GetWindowTextA</code>函数上设置断点，然后去<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
+</li>
+<li><p>然后<code>F9</code>运行程序，“随便输入” 一些字符后点击验证，可以随便输入，但请记住它；</p>
+</li>
+<li><p>居然没有断下来，也没有弹窗，这让我很尴尬：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giz8frx378j305905zglj.jpg" alt="尴尬"></p>
+</li>
+<li><p>嗯，界面有按钮，那就试试消息断点，熟练的设置好<code>消息断点</code>，运行程序，输入，点击按钮，还是没有断下来；</p>
+</li>
+<li><p>不怕，还有<code>内存断点</code>、<code>硬件断点</code>，挨个试了一遍之后，没有一个成功的，灰心丧气呀，怎么像刺猬 🦔 一样无从下手？</p>
+</li>
+<li><p>等等，看了看程序的界面，猛的想起了大佬说的一个工具：</p>
+<p><code>中文搜索引擎</code>：这玩意儿可以参考，但不要过分依赖，友好的开发者可能只是关闭你的程序不让你调试，至于不友好的，知道为啥要用虚拟机吗？</p>
+</li>
+<li><p>重载程序，在<code>反汇编窗口</code>右键选择<code>中文搜索引擎</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giz8ldzoguj311o0njq5w.jpg" alt="中文搜索引擎"></p>
+<p>然后<code>Ctrl + F</code>搜索熟悉的字眼儿<code>Wrong Code DUDE</code>，果然有，双击来到<code>反汇编窗口</code>，嘿嘿，这里看起来很重要嘛：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giz8xso4qtj30m90by402.jpg" alt="关键"></p>
+<ul>
+<li>一个失败的字样；</li>
+<li>一个成功的字样；</li>
+<li>紧挨着上面有一个跳转：可以猜测，如果跳转的话，可能就显示成功了；</li>
+<li>跳转上面是一个<code>CALL</code>，那它很可能是比较的<code>CALL</code>；</li>
+<li>至于更上面的代码，那肯定是获取用的呗，瞎猜的；</li>
+</ul>
+</li>
+<li><p>既然找到了可疑的代码，那就双击<code>CALL</code>给它下一个<code>CC断点</code>，然后运行程序，输入序列号点击验证后，程序暂停在了<code>CALL</code>的位置，那就<code>F7</code>进<code>CALL</code>看看，验证一下猜测；</p>
+</li>
+<li><p>刚一进<code>CALL</code>，就在寄存器窗口发现了熟悉的字样：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giz99kl1svj311n0nlgoq.jpg" alt="call"></p>
+<p>既然把“序列号”都传进来了，那应该就是比较了，开始分析：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizaftudazj30xb0u0n15.jpg" alt="分析"></p>
+</li>
+<li><p>分析完成，比较的部分是常规方法，就是中断程序有点麻烦！</p>
+</li>
+</ul>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>汇编</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>CrackMe</tag>
+        <tag>逆向分析</tag>
+        <tag>硬编码</tag>
       </tags>
   </entry>
   <entry>

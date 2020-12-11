@@ -9,13 +9,6 @@
   </url>
   
   <url>
-    <loc>https://undeio.me/404/</loc>
-    
-    <lastmod>2020-09-15</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>https://undeio.me/categories/</loc>
     
     <lastmod>2020-09-14</lastmod>
@@ -138,6 +131,13 @@
     <loc>https://undeio.me/post/592731679/</loc>
     
     <lastmod>2020-05-02</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://undeio.me/404/</loc>
+    
+    <lastmod>2020-05-01</lastmod>
     
   </url>
   
