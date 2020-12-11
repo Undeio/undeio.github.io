@@ -576,7 +576,7 @@
 <li><p>根据<code>FindWindowA</code>的用法<code>如果有指定的类名或窗口标题则表示成功返回一个窗口的句柄；否则返回零；</code>，如果接下来<code>Ctrl + F9</code>执行到返回后，<code>EAX</code>是非零的值，是不是意味着找到了与<code>Class = &quot;OllyDbg&quot;</code>指定的类名匹配的窗口，并且拿到了它的句柄？</p>
 </li>
 <li><p>先来看看<code>OD</code>的类名与标题是什么，这里要借助一个软件<code>Greatis WinDowse</code>：</p>
-<p><code>Greatis WinDowse</code>的用法是：将鼠标悬停在需要检测的窗口的标题栏即可；</p>
+<p><code>Greatis WinDowse</code>需要安装；<br><code>Greatis WinDowse</code>的用法是：将鼠标悬停在需要检测的窗口的标题栏即可；</p>
 <p><img data-src="https://ww1.sinaimg.cn/large/7ed7d3dfly1gliohjwd8hj223w18a4ax.jpg" alt="类名与标题"></p>
 <p>可以看到，检测到的标题与窗口标题完全一致，那类名不言而喻；</p>
 </li>
@@ -781,6 +781,157 @@
 <p>了解了这个 API 的用途后，继续运行程序，结果不言而喻：灵光一闪，程序关闭！</p>
 </li>
 </ul>
+</li>
+</ul>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>汇编</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>CrackMe</tag>
+        <tag>逆向分析</tag>
+        <tag>反调试</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>逆向分析之反调试（四）</title>
+    <url>/post/3209676884/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li>Ollydg1.1 原版，简称<code>OD</code>；</li>
+<li><code>OD</code>汉化文件来自互联网;</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自<a href="http://xuepojie.com/">学破解论坛</a>，仅供学习使用；</li>
+<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
+<li>参考教程：<code>反调试之ZwQueryInformationProcess</code>；<a id="more"></a>
+
+</li>
+</ul>
+<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
+<li><p>本节内容理解不是很透彻，也没有以往的<code>链式操作</code>：也就是初始找到切入点，然后根据切入点确定下一步的操作，只能跟随大佬的教程去理解、操作，同时查询微软官方文档，本次使用的 API<code>ZwQueryInformationProcess</code>未来可能会弃用，所以目前暂不做深入研究，有需要之时再做深入；</p>
+</li>
+<li><p>这次使用的反调试 API 很独特：它本身的设计初衷应该是用作异常处理，但却被<code>CrackMe</code>的作者用在了验证方面，不得不说，这位高人对 API 理解的很透彻，很独到，同时也提醒了我，反向思维很重要；</p>
+</li>
+<li><p>这里就说说本次使用的 API：<code>SetUnhandledExceptionFilter</code>、<code>UnhandledExceptionFilter</code>、<code>ZwQueryInformationProcess</code>；</p>
+<ul>
+<li><p>先来说说第二个 API <code>UnhandledExceptionFilter</code>：</p>
+<p>这是官方文档的描述：</p>
+<blockquote>
+<p>An application-defined function that passes unhandled exceptions to the debugger, if the process is being debugged. Otherwise, it optionally displays an Application Error message box and causes the exception handler to be executed. This function can be called only from within the filter expression of an exception handler.</p>
+</blockquote>
+<p>对这段文档的理解：通过判断当前进程是否正在被调试，如果正在被调试，就把异常交给调试器，如果没有，就把异常交给进程的 UnhandledExceptionFilter 处理；</p>
+<p>这里就不禁产生了一个疑问：如何判断当前进程是否正在被调试？</p>
+</li>
+<li><p>再来看第三个 API <code>ZwQueryInformationProcess</code>：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">ZwQueryInformationProcess</span><br><span class="line"></span><br><span class="line">作用</span><br><span class="line">    检索有关指定进程的信息</span><br><span class="line">参数</span><br><span class="line">    ProcessInformationClass：要检索的过程信息的类型</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>在官方说明的开始有这么一段话：</p>
+<blockquote>
+<p><code>[ZwQueryInformationProcess may be altered or unavailable in future versions of Windows. Applications should use the alternate functions listed in this topic.]</code></p>
+</blockquote>
+<p>意思是：这个 API 可能会在未来的 Windows 版本中被更改或弃用，若要开发应用，请使用本文列出的其他替代 API。</p>
+</li>
+<li><p>这个 API 的第二参数<code>ProcessInformationClass</code>：<code>要检索的过程信息的类型</code>，本身有很多可选的值，而<code>ProcessDebugPort，值是 7</code>是我们关注的重点：</p>
+<blockquote>
+<p>Retrieves a DWORD_PTR value that is the port number of the debugger for the process. A nonzero value indicates that the process is being run under the control of a ring 3 debugger.</p>
+</blockquote>
+<p>意思是：检索四子节长度的值，该值是该进程的调试器的端口号。非零值表示该进程正在 Ring 3 调试器的控制下运行。</p>
+<p>也就是说，调用这个函数，在把第二参数设置为<code>7</code>的情况下，只要返回非零值就表示我们正在调试程序，很好很强大，同时也解释了在学习上一个 API 时留下的疑惑；</p>
+</li>
+</ul>
+</li>
+<li><p>最后来看看第一个 API <code>SetUnhandledExceptionFilter</code>：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">SetUnhandledExceptionFilter</span><br><span class="line"></span><br><span class="line">作用</span><br><span class="line">    设置异常捕获函数</span><br><span class="line">参数</span><br><span class="line">    lpTopLevelExceptionFilter：指向顶级异常处理函数的指针，只要 UnhandledExceptionFilter 函数获得控制权且未在调试过程，该指针就会被调用</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>这是官方对 API 的说明；</p>
+<blockquote>
+<p>Enables an application to supersede the top-level exception handler of each thread of a process.</p>
+</blockquote>
+<blockquote>
+<p>After calling this function, if an exception occurs in a process that is not being debugged, and the exception makes it to the unhandled exception filter, that filter will call the exception filter function specified by the lpTopLevelExceptionFilter parameter.</p>
+</blockquote>
+</li>
+<li><p>这是官方对参数<code>lpTopLevelExceptionFilter</code>的说明，请自行理解；</p>
+<blockquote>
+<p>A pointer to a top-level exception filter function that will be called whenever the UnhandledExceptionFilter function gets control, and the process is not being debugged. A value of NULL for this parameter specifies default handling within UnhandledExceptionFilter.</p>
+</blockquote>
+</li>
+</ul>
+</li>
+<li><p>学习完这三个 API，说说自己的理解：</p>
+<ol>
+<li><p><code>SetUnhandledExceptionFilter</code>可以为异常设置处理函数，参数<code>lpTopLevelExceptionFilter</code>指向自定义的异常处理函数，但要触发这个函数，必须满足一个条件：<code>UnhandledExceptionFilter</code>被调用；</p>
+</li>
+<li><p>同时，要想<code>UnhandledExceptionFilter</code>被调用，也得满足两个条件：程序没有被调试，并且这个异常没有被处理；</p>
+</li>
+<li><p>当同时满足以上条件时，就会触发自定义的异常处理函数来处理异常；</p>
+</li>
+<li><p>那么，程序是如何检测程序是否被调试呢？那就要用到<code>ZwQueryInformationProcess</code>了，也就是说，本次的反调试主角其实是<code>ZwQueryInformationProcess</code>（虽然它就要被弃用了）；</p>
+</li>
+</ol>
+</li>
+</ul>
+</li>
+<li><p>下面开始进入正题：</p>
+<ul>
+<li><p>打开<code>CrackMe</code>看看：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gljzea2h39j30h807uaa4.jpg" alt="打开软件"></p>
+<p>很常规的软件，随便输入内容并点击 Check 后，没有任何反馈；</p>
+</li>
+<li><p>倒入<code>OD</code>开始分析：</p>
+<p>既然已经学习了需要的 API，那就不用去 API 窗口看了，直接给三个函数设置断点并做好备注：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gljzq6vknpj31ff0u012b.jpg" alt="设置断点并做好备注"></p>
+<p>其实地址栏已经显示了地址对应的 API 名称，不过无法保证任何时候都会显示，况且，做备注是一个好的习惯，不是吗？</p>
+<p>同时需要先禁用<code>ZwQueryInformationProcess</code>断点，否则程序会多次中断，但不会中断在理想的位置，况且按照对 API 的理解，只有<code>UnhandledExceptionFilter</code>调用它的时候才会检测程序是否被调试，所以，在<code>UnhandledExceptionFilter</code>出现后再启用也为时不晚；</p>
+</li>
+<li><p>接着<code>F9</code>运行程序，程序会中断在<code>SetUnhandledExceptionFilter</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gljzxn8v3hj31ff0u0tkf.jpg" alt="SetUnhandledExceptionFilter"></p>
+<p>同时，根据 API 说明，它的参数指向自定义异常处理函数，那么就在它的参数地址上设置断点，看看我们是否会触发这个自定义函数；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk01ign7fj31ff0u0484.jpg" alt="参数设置断点"></p>
+</li>
+<li><p>继续运行程序，程序窗口会弹出，输入内容并点击 Check 后，程序再次中断，这次是中断在了<code>UnhandledExceptionFilter</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk05cb5zxj31ff0u0k39.jpg" alt="UnhandledExceptionFilter"></p>
+<p>其实，细心的同学一眼就看到了它调用了另一个 API <code>ZwQueryInformationProcess</code>；</p>
+<p>既然它都要调用<code>ZwQueryInformationProcess</code>了，那我们就需要去启用<code>ZwQueryInformationProcess</code>断点了；</p>
+</li>
+<li><p>激活<code>ZwQueryInformationProcess</code>断点并运行程序，程序会再次中断：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk0bobp81j31ff0u04ag.jpg" alt="ZwQueryInformationProcess"></p>
+<p>可以看到，<code>堆栈窗口</code>中，它的第二参数<code>InfoClass=7</code>，那就说明它本次执行的目的就是检测程序是否正在被调试，而它的第三参数<code>Buffer=0012F5E4</code>则存放的是返回值，<code>数据窗口</code>中跟随一下；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk0htm7h8j31ff0u0wq1.jpg" alt="数据窗口"></p>
+<p>事实上，我们确实正在调试这个这个程序，那我们就看看它的返回值是否是非零值；</p>
+</li>
+<li><p>既然要看它的返回值，那就不能直接运行程序了，<code>Ctrl + F9</code>执行到返回，同时查看<code>数据窗口</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk0sudvwnj31ff0u0wpw.jpg" alt="执行到返回"></p>
+<p>果然，返回值是一个非零值，也就说检测到正在调试程序；</p>
+<p>既然检测到了正在调试程序，如何触发自定义的异常处理函数呢？当然是将返回值置 0；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk0xlkckij31ff0u0k2k.jpg" alt="置0"></p>
+<p>选中返回值用 00 填充，直接修改也是可以的；</p>
+</li>
+<li><p>既然已经修改了返回值，也就是绕过了检测，那么<code>ZwQueryInformationProcess</code>断点也就没用了，禁用<code>ZwQueryInformationProcess</code>断点并运行程序，程序会中断在：为<code>SetUnhandledExceptionFilter 的参数</code>设置的断点位置：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk14tbrvij31ff0u0n9e.jpg" alt="参数断点"></p>
+</li>
+<li><p>毫无悬念了，这里就是用来验证的关键代码：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk2bmg6nqj31ff0u0wqc.jpg" alt="验证"></p>
+<p>把我们输入的内容进行一系列操作之后，去和一个指定的内容做比较；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk2h1fpwqj31ff0u0n8f.jpg" alt="比较"></p>
+<p>到这里就可以理解为什么点击 Check 之后没有任何反馈了，是因为验证失败后没有任何操作；</p>
+<p>既然已经知道会跳转到失败，如何看到成功的弹窗呢？当然是修改<code>ZF</code>标志位，让<code>JNZ</code>不成立：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk2n9tg0jj31ff0u0k2k.jpg" alt="修改"></p>
+<p>继续向下执行，期待已久的成功弹窗：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk2rmsxwmj31ff0u0146.jpg" alt="成功"></p>
+</li>
+<li><p>既然已经知道了它的反调试原理，但又不想每次都手动修改，那该如何绕过能，这里需要借助插件：<code>HideDebugger</code>和<code>HideOD</code>，设置如下：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk39bp648j31ff0u0qeb.jpg" alt="插件"></p>
+<p>无图无真相：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk3e9o4irj31ff0u07g4.jpg" alt="无图无真相"></p>
+<p>插件的作用就是永远保持<code>ZwQueryInformationProcess</code>的参数为<code>7</code>时的返回值为 0；</p>
+</li>
+<li><p>总结：不得不说，能人背后有能人，这波操作很清奇，也就是说：如果从事物的多个角度去观察，去思考，可能会有不一样的理解与收获；</p>
+<p>期待自己早日变得更加强大，加油 💪💪💪❗️</p>
 </li>
 </ul>
 </li>
@@ -1218,6 +1369,78 @@
       </tags>
   </entry>
   <entry>
+    <title>逆向分析之硬编码寻找序列号（四）</title>
+    <url>/post/1116999438/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li>Ollydg1.1 原版，简称<code>OD</code>；</li>
+<li><code>OD</code>汉化文件来自互联网;</li>
+<li><code>OD</code>插件：<code>中文搜索引擎</code>；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a> 来自<a href="http://xuepojie.com/">学破解论坛</a>，仅供学习使用；</li>
+<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
+
+</li>
+</ul>
+<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><p>事实证明：不能“以貌取人”。</p>
+<p>刚打开软件的时候，心里还想着，这么简陋？分分钟就逆向完毕了，结果，“啪啪啪”实力打脸，针扎的疼。</p>
+<p>嗯，还在学习阶段，等我功力深厚之时，定会找回场子！</p>
+<ol>
+<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
+</li>
+<li><p>倒入<code>OD</code>开始分析：</p>
+<ul>
+<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
+</li>
+<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，翻了翻，呀呵，看着简陋，用的<code>API</code>还真不少，那就搜索吧，没有<code>GetDlgItemTextA</code>？那就拿<code>GetWindowTextA</code>下手吧：在<code>GetWindowTextA</code>函数上设置断点，然后去<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
+</li>
+<li><p>然后<code>F9</code>运行程序，“随便输入” 一些字符后点击验证，可以随便输入，但请记住它；</p>
+</li>
+<li><p>居然没有断下来，也没有弹窗，这让我很尴尬：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giz8frx378j305905zglj.jpg" alt="尴尬"></p>
+</li>
+<li><p>嗯，界面有按钮，那就试试消息断点，熟练的设置好<code>消息断点</code>，运行程序，输入，点击按钮，还是没有断下来；</p>
+</li>
+<li><p>不怕，还有<code>内存断点</code>、<code>硬件断点</code>，挨个试了一遍之后，没有一个成功的，灰心丧气呀，怎么像刺猬 🦔 一样无从下手？</p>
+</li>
+<li><p>等等，看了看程序的界面，猛的想起了大佬说的一个工具：</p>
+<p><code>中文搜索引擎</code>：这玩意儿可以参考，但不要过分依赖，友好的开发者可能只是关闭你的程序不让你调试，至于不友好的，知道为啥要用虚拟机吗？</p>
+</li>
+<li><p>重载程序，在<code>反汇编窗口</code>右键选择<code>中文搜索引擎</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giz8ldzoguj311o0njq5w.jpg" alt="中文搜索引擎"></p>
+<p>然后<code>Ctrl + F</code>搜索熟悉的字眼儿<code>Wrong Code DUDE</code>，果然有，双击来到<code>反汇编窗口</code>，嘿嘿，这里看起来很重要嘛：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giz8xso4qtj30m90by402.jpg" alt="关键"></p>
+<ul>
+<li>一个失败的字样；</li>
+<li>一个成功的字样；</li>
+<li>紧挨着上面有一个跳转：可以猜测，如果跳转的话，可能就显示成功了；</li>
+<li>跳转上面是一个<code>CALL</code>，那它很可能是比较的<code>CALL</code>；</li>
+<li>至于更上面的代码，那肯定是获取用的呗，瞎猜的；</li>
+</ul>
+</li>
+<li><p>既然找到了可疑的代码，那就双击<code>CALL</code>给它下一个<code>CC断点</code>，然后运行程序，输入序列号点击验证后，程序暂停在了<code>CALL</code>的位置，那就<code>F7</code>进<code>CALL</code>看看，验证一下猜测；</p>
+</li>
+<li><p>刚一进<code>CALL</code>，就在寄存器窗口发现了熟悉的字样：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giz99kl1svj311n0nlgoq.jpg" alt="call"></p>
+<p>既然把“序列号”都传进来了，那应该就是比较了，开始分析：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizaftudazj30xb0u0n15.jpg" alt="分析"></p>
+</li>
+<li><p>分析完成，比较的部分是常规方法，就是中断程序有点麻烦！</p>
+</li>
+</ul>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>汇编</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>CrackMe</tag>
+        <tag>逆向分析</tag>
+        <tag>硬编码</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>逆向分析之硬编码寻找序列号（六）</title>
     <url>/post/1208254864/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -1327,189 +1550,6 @@
         <tag>CrackMe</tag>
         <tag>逆向分析</tag>
         <tag>硬编码</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>逆向分析之硬编码寻找序列号（四）</title>
-    <url>/post/1116999438/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>Ollydg1.1 原版，简称<code>OD</code>；</li>
-<li><code>OD</code>汉化文件来自互联网;</li>
-<li><code>OD</code>插件：<code>中文搜索引擎</code>；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a> 来自<a href="http://xuepojie.com/">学破解论坛</a>，仅供学习使用；</li>
-<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
-</ul>
-<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><p>事实证明：不能“以貌取人”。</p>
-<p>刚打开软件的时候，心里还想着，这么简陋？分分钟就逆向完毕了，结果，“啪啪啪”实力打脸，针扎的疼。</p>
-<p>嗯，还在学习阶段，等我功力深厚之时，定会找回场子！</p>
-<ol>
-<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
-</li>
-<li><p>倒入<code>OD</code>开始分析：</p>
-<ul>
-<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
-</li>
-<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，翻了翻，呀呵，看着简陋，用的<code>API</code>还真不少，那就搜索吧，没有<code>GetDlgItemTextA</code>？那就拿<code>GetWindowTextA</code>下手吧：在<code>GetWindowTextA</code>函数上设置断点，然后去<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
-</li>
-<li><p>然后<code>F9</code>运行程序，“随便输入” 一些字符后点击验证，可以随便输入，但请记住它；</p>
-</li>
-<li><p>居然没有断下来，也没有弹窗，这让我很尴尬：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giz8frx378j305905zglj.jpg" alt="尴尬"></p>
-</li>
-<li><p>嗯，界面有按钮，那就试试消息断点，熟练的设置好<code>消息断点</code>，运行程序，输入，点击按钮，还是没有断下来；</p>
-</li>
-<li><p>不怕，还有<code>内存断点</code>、<code>硬件断点</code>，挨个试了一遍之后，没有一个成功的，灰心丧气呀，怎么像刺猬 🦔 一样无从下手？</p>
-</li>
-<li><p>等等，看了看程序的界面，猛的想起了大佬说的一个工具：</p>
-<p><code>中文搜索引擎</code>：这玩意儿可以参考，但不要过分依赖，友好的开发者可能只是关闭你的程序不让你调试，至于不友好的，知道为啥要用虚拟机吗？</p>
-</li>
-<li><p>重载程序，在<code>反汇编窗口</code>右键选择<code>中文搜索引擎</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giz8ldzoguj311o0njq5w.jpg" alt="中文搜索引擎"></p>
-<p>然后<code>Ctrl + F</code>搜索熟悉的字眼儿<code>Wrong Code DUDE</code>，果然有，双击来到<code>反汇编窗口</code>，嘿嘿，这里看起来很重要嘛：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giz8xso4qtj30m90by402.jpg" alt="关键"></p>
-<ul>
-<li>一个失败的字样；</li>
-<li>一个成功的字样；</li>
-<li>紧挨着上面有一个跳转：可以猜测，如果跳转的话，可能就显示成功了；</li>
-<li>跳转上面是一个<code>CALL</code>，那它很可能是比较的<code>CALL</code>；</li>
-<li>至于更上面的代码，那肯定是获取用的呗，瞎猜的；</li>
-</ul>
-</li>
-<li><p>既然找到了可疑的代码，那就双击<code>CALL</code>给它下一个<code>CC断点</code>，然后运行程序，输入序列号点击验证后，程序暂停在了<code>CALL</code>的位置，那就<code>F7</code>进<code>CALL</code>看看，验证一下猜测；</p>
-</li>
-<li><p>刚一进<code>CALL</code>，就在寄存器窗口发现了熟悉的字样：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giz99kl1svj311n0nlgoq.jpg" alt="call"></p>
-<p>既然把“序列号”都传进来了，那应该就是比较了，开始分析：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizaftudazj30xb0u0n15.jpg" alt="分析"></p>
-</li>
-<li><p>分析完成，比较的部分是常规方法，就是中断程序有点麻烦！</p>
-</li>
-</ul>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>汇编</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>CrackMe</tag>
-        <tag>逆向分析</tag>
-        <tag>硬编码</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>逆向分析之软编码寻找序列号（一）</title>
-    <url>/post/4167455493/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>Ollydg1.1 原版，简称<code>OD</code>；</li>
-<li><code>OD</code>汉化文件来自互联网;</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自<a href="http://xuepojie.com/">学破解论坛</a>，仅供学习使用；</li>
-<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
-</ul>
-<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
-<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gj0t1wtpivj308z0anmxb.jpg" alt="开始"></p>
-</li>
-<li><p>倒入<code>OD</code>开始分析：</p>
-<ul>
-<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
-</li>
-<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，用的<code>API</code>不多，一眼就看到了<code>GetDlgItemTextA</code>，在<code>GetDlgItemTextA</code>函数上设置断点，然后去<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
-</li>
-<li><p>然后<code>F9</code>运行程序，输入用户名和注册码，点击确定；</p>
-</li>
-<li><p>程序断下来了，在堆栈窗口选择<code>Buffer</code>右键<code>数据窗口中跟随</code>，没有数据，因为断点在行首，<code>Ctrl + F9</code>或者点击菜单栏调试选项，选择<code>执行到返回</code>，再去数据窗口中看看，有数据了，是我们输入的用户名；</p>
-</li>
-<li><p>再次运行程序，程序再次中断，不出意外应该是获取注册码，在堆栈窗口选择<code>Buffer</code>右键<code>数据窗口中跟随</code>，没有数据，<code>Ctrl + F9</code>或者点击菜单栏调试选项，选择<code>执行到返回</code>，再去数据窗口中看看，有数据了，是我们输入的注册码；</p>
-</li>
-<li><p>能获取到数据就是一个好的开始，<code>F7 或 F8</code>单步执行到程序领空，熟悉的字样映入眼帘：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gj0tc5u51bj312e0t3q6p.jpg" alt="程序领空"><br>既有我们输入的内容，也有提示字样，应该就是这里了，那就开始分析；</p>
-</li>
-<li><p>前面的代码是堆栈平衡和清除弹窗的代码，进<code>CALL</code>之后，直接<code>ALT + F9</code>或者点击菜单栏调试选项，选择<code>执行到用户代码</code>；</p>
-</li>
-<li><p>需要分析的代码来了：刚分析了两行，发现了几行特别的代码：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gj0tni2rn6j30oy03hmxm.jpg" alt="发现"></p>
-<p>这几行代码，一个<code>push</code>然后紧跟着一个<code>CALL</code>，而且 push 的是我们输入的内容，这里应该就是关键了；</p>
-</li>
-<li><p><code>F7</code>进第 1 个<code>CALL</code>看看：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gj0tswn8jfj30ox01owee.jpg" alt="用户名call"></p>
-<ul>
-<li><p>刚进来第 1 行代码有困惑的吗？你咋知道是用户名放入<code>ESI 寄存器</code>？</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gj0tvmwgxqj312j0satc7.jpg" alt="第一行"></p>
-<p>很简单，<code>[ESP+4]</code>告诉我的，<code>ESP 寄存器</code>永远指向堆栈的顶端，那<code>[ESP+4]</code>就是下一行喽，看一眼堆栈窗口，第二行的数据不正是我们输入的用户名吗？</p>
-</li>
-<li><p>接着，出现了第 2 处令人疑惑的代码：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj0xi158x1j312n0b0q4t.jpg" alt="疑惑1"></p>
-<p>机器码和<code>41</code>比较，这到底是啥意思？刚开始我也弄不明白，而且后面的逻辑也显示和<code>41</code>半毛钱关系没有，直到无意中在用户名输入了数字，弹出两次<code>注册失败</code>，才好像明白了这里判断的是啥？我们先看看 16 进制的<code>41</code>到底是什么：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj0xochjx2j30b50bs3ys.jpg" alt="41"></p>
-<p>原来<code>41</code>是大写字母<code>A</code>，而后面的<code>5A</code>则是大写字母<code>Z</code>，那我好像明白怎么回事儿了，它应该是在判断用户名是否是英文字母；</p>
-</li>
-<li><p>当字符的机器码大于<code>41</code>并且大于<code>5A</code>时，程序会跳转到一个新的<code>CALL</code>，那它干了什么呢：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj0y7pkvqij312l0sc432.jpg" alt="新CALL"></p>
-<p>可以看到，这里只有 3 行代码，我们分析一下，小写字母的机器码减去<code>20</code>是什么，没错，是对应的大写字母，这三行代码的作用就是：将用户名转换为大写字母，然后用大写字母替换用户名中的小写字母，然后返回：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj0z4k7ifkj312m0sbn3m.jpg" alt="大写"></p>
-<p>当用户名全部转为大写字母之后，又来到了一个<code>CALL</code>，这个<code>CALL</code>又是干什么的呢，<code>F7</code>跟进去看看：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj0zamesrsj312k0sbwic.jpg" alt="新CALL"></p>
-<p>原来，是将转换为大写字母后的用户名的每个字节的机器码累加在一起，然后和<code>5678</code>异或，并把异或后的结果放入<code>EAX</code>并返回：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj0zluaydsj312k0se0xd.jpg" alt="返回"></p>
-</li>
-</ul>
-</li>
-<li><p>用户名处理完了，接下来就是注册码了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj0ztl37fnj30oy03daa7.jpg" alt="比较"></p>
-<p>刚从用户名的连环<code>CALL</code>里出来就这么刺激吗？把用户名运算后的结果和我们输入的注册码都 push 到了这个<code>CALL</code>里面，这里应该就是比较了；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj10dmcv8zj30ox06cwey.jpg" alt="注册码"></p>
-<p>结果很打脸啊，不是验证<code>CALL</code>而是运算注册码的<code>CALL</code>，而第一行的<code>PUSH EAX</code>只是个入栈而已。。。</p>
-</li>
-<li><p>验证环节</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj10q4hzwfj30k6063wf9.jpg" alt="验证"></p>
-<p>根据<code>CALL</code>跳转的位置，轻松知道它的用途；</p>
-</li>
-<li><p>注册码的计算规则：</p>
-<ul>
-<li>用户名必须是字母；</li>
-<li>将每个字母转为大写字母；</li>
-<li>把每个字母的 16 进制累加在一起；</li>
-<li>累加的结果与 5678 异或；</li>
-<li>异或后的结果与 1234 异或；</li>
-<li>将最后的结果转为 10 进制，注册码就出来啦；</li>
-</ul>
-</li>
-<li><p>无图无真相</p>
-<ul>
-<li><p>例如：<code>yang</code>的大写<code>YANG</code>的 16 进制是<code>59 41 4E 47</code>；</p>
-</li>
-<li><p>加在一起是<code>59 + 41 + 4E + 47 &gt;&gt; 12F</code>；</p>
-</li>
-<li><p><code>12F</code>与<code>5678</code>异或<code>xor 12F, 5678 &gt;&gt; 5757</code>；</p>
-</li>
-<li><p><code>5757</code>与<code>1234</code>异或<code>xor 5757, 1234 &gt;&gt; 4563</code>；</p>
-</li>
-<li><p><code>4563</code>转为 10 进制后<code>17763</code>;</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj119l81wcj30b50csdg7.jpg" alt="上图"></p>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>汇编</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>CrackMe</tag>
-        <tag>逆向分析</tag>
-        <tag>软编码</tag>
-        <tag>算法分析</tag>
       </tags>
   </entry>
   <entry>
@@ -2025,6 +2065,117 @@
 </li>
 <li><p>转换成 10 进制<code>6319E &gt;&gt; 405918</code>；</p>
 <p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1qoidbqcj30e409yq41.jpg" alt="真相"></p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>汇编</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>CrackMe</tag>
+        <tag>逆向分析</tag>
+        <tag>软编码</tag>
+        <tag>算法分析</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>逆向分析之软编码寻找序列号（一）</title>
+    <url>/post/4167455493/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li>Ollydg1.1 原版，简称<code>OD</code>；</li>
+<li><code>OD</code>汉化文件来自互联网;</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自<a href="http://xuepojie.com/">学破解论坛</a>，仅供学习使用；</li>
+<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
+
+</li>
+</ul>
+<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
+<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gj0t1wtpivj308z0anmxb.jpg" alt="开始"></p>
+</li>
+<li><p>倒入<code>OD</code>开始分析：</p>
+<ul>
+<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
+</li>
+<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，用的<code>API</code>不多，一眼就看到了<code>GetDlgItemTextA</code>，在<code>GetDlgItemTextA</code>函数上设置断点，然后去<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
+</li>
+<li><p>然后<code>F9</code>运行程序，输入用户名和注册码，点击确定；</p>
+</li>
+<li><p>程序断下来了，在堆栈窗口选择<code>Buffer</code>右键<code>数据窗口中跟随</code>，没有数据，因为断点在行首，<code>Ctrl + F9</code>或者点击菜单栏调试选项，选择<code>执行到返回</code>，再去数据窗口中看看，有数据了，是我们输入的用户名；</p>
+</li>
+<li><p>再次运行程序，程序再次中断，不出意外应该是获取注册码，在堆栈窗口选择<code>Buffer</code>右键<code>数据窗口中跟随</code>，没有数据，<code>Ctrl + F9</code>或者点击菜单栏调试选项，选择<code>执行到返回</code>，再去数据窗口中看看，有数据了，是我们输入的注册码；</p>
+</li>
+<li><p>能获取到数据就是一个好的开始，<code>F7 或 F8</code>单步执行到程序领空，熟悉的字样映入眼帘：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gj0tc5u51bj312e0t3q6p.jpg" alt="程序领空"><br>既有我们输入的内容，也有提示字样，应该就是这里了，那就开始分析；</p>
+</li>
+<li><p>前面的代码是堆栈平衡和清除弹窗的代码，进<code>CALL</code>之后，直接<code>ALT + F9</code>或者点击菜单栏调试选项，选择<code>执行到用户代码</code>；</p>
+</li>
+<li><p>需要分析的代码来了：刚分析了两行，发现了几行特别的代码：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gj0tni2rn6j30oy03hmxm.jpg" alt="发现"></p>
+<p>这几行代码，一个<code>push</code>然后紧跟着一个<code>CALL</code>，而且 push 的是我们输入的内容，这里应该就是关键了；</p>
+</li>
+<li><p><code>F7</code>进第 1 个<code>CALL</code>看看：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gj0tswn8jfj30ox01owee.jpg" alt="用户名call"></p>
+<ul>
+<li><p>刚进来第 1 行代码有困惑的吗？你咋知道是用户名放入<code>ESI 寄存器</code>？</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gj0tvmwgxqj312j0satc7.jpg" alt="第一行"></p>
+<p>很简单，<code>[ESP+4]</code>告诉我的，<code>ESP 寄存器</code>永远指向堆栈的顶端，那<code>[ESP+4]</code>就是下一行喽，看一眼堆栈窗口，第二行的数据不正是我们输入的用户名吗？</p>
+</li>
+<li><p>接着，出现了第 2 处令人疑惑的代码：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj0xi158x1j312n0b0q4t.jpg" alt="疑惑1"></p>
+<p>机器码和<code>41</code>比较，这到底是啥意思？刚开始我也弄不明白，而且后面的逻辑也显示和<code>41</code>半毛钱关系没有，直到无意中在用户名输入了数字，弹出两次<code>注册失败</code>，才好像明白了这里判断的是啥？我们先看看 16 进制的<code>41</code>到底是什么：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj0xochjx2j30b50bs3ys.jpg" alt="41"></p>
+<p>原来<code>41</code>是大写字母<code>A</code>，而后面的<code>5A</code>则是大写字母<code>Z</code>，那我好像明白怎么回事儿了，它应该是在判断用户名是否是英文字母；</p>
+</li>
+<li><p>当字符的机器码大于<code>41</code>并且大于<code>5A</code>时，程序会跳转到一个新的<code>CALL</code>，那它干了什么呢：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj0y7pkvqij312l0sc432.jpg" alt="新CALL"></p>
+<p>可以看到，这里只有 3 行代码，我们分析一下，小写字母的机器码减去<code>20</code>是什么，没错，是对应的大写字母，这三行代码的作用就是：将用户名转换为大写字母，然后用大写字母替换用户名中的小写字母，然后返回：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj0z4k7ifkj312m0sbn3m.jpg" alt="大写"></p>
+<p>当用户名全部转为大写字母之后，又来到了一个<code>CALL</code>，这个<code>CALL</code>又是干什么的呢，<code>F7</code>跟进去看看：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj0zamesrsj312k0sbwic.jpg" alt="新CALL"></p>
+<p>原来，是将转换为大写字母后的用户名的每个字节的机器码累加在一起，然后和<code>5678</code>异或，并把异或后的结果放入<code>EAX</code>并返回：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj0zluaydsj312k0se0xd.jpg" alt="返回"></p>
+</li>
+</ul>
+</li>
+<li><p>用户名处理完了，接下来就是注册码了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj0ztl37fnj30oy03daa7.jpg" alt="比较"></p>
+<p>刚从用户名的连环<code>CALL</code>里出来就这么刺激吗？把用户名运算后的结果和我们输入的注册码都 push 到了这个<code>CALL</code>里面，这里应该就是比较了；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj10dmcv8zj30ox06cwey.jpg" alt="注册码"></p>
+<p>结果很打脸啊，不是验证<code>CALL</code>而是运算注册码的<code>CALL</code>，而第一行的<code>PUSH EAX</code>只是个入栈而已。。。</p>
+</li>
+<li><p>验证环节</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj10q4hzwfj30k6063wf9.jpg" alt="验证"></p>
+<p>根据<code>CALL</code>跳转的位置，轻松知道它的用途；</p>
+</li>
+<li><p>注册码的计算规则：</p>
+<ul>
+<li>用户名必须是字母；</li>
+<li>将每个字母转为大写字母；</li>
+<li>把每个字母的 16 进制累加在一起；</li>
+<li>累加的结果与 5678 异或；</li>
+<li>异或后的结果与 1234 异或；</li>
+<li>将最后的结果转为 10 进制，注册码就出来啦；</li>
+</ul>
+</li>
+<li><p>无图无真相</p>
+<ul>
+<li><p>例如：<code>yang</code>的大写<code>YANG</code>的 16 进制是<code>59 41 4E 47</code>；</p>
+</li>
+<li><p>加在一起是<code>59 + 41 + 4E + 47 &gt;&gt; 12F</code>；</p>
+</li>
+<li><p><code>12F</code>与<code>5678</code>异或<code>xor 12F, 5678 &gt;&gt; 5757</code>；</p>
+</li>
+<li><p><code>5757</code>与<code>1234</code>异或<code>xor 5757, 1234 &gt;&gt; 4563</code>；</p>
+</li>
+<li><p><code>4563</code>转为 10 进制后<code>17763</code>;</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj119l81wcj30b50csdg7.jpg" alt="上图"></p>
 </li>
 </ul>
 </li>
