@@ -1,82 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>Hexo 添加 Utterance 评论功能</title>
-    <url>/post/3357819964/</url>
-    <content><![CDATA[<blockquote>
-<p>每逢看到大佬们的精彩文章，感慨甚多之际，不能留言把欢甚是遗憾。<br>缺少了留言支持、请教解惑、互相探讨，总感觉博客没有灵魂。</p>
-</blockquote>
-<a id="more"></a>
-
-<h4 id="废话连篇"><a href="#废话连篇" class="headerlink" title="废话连篇"></a>废话连篇</h4><p>曾记得，2016 年端午节，在<code>Github Pages</code>上写下了人生中的第一篇博客，那时就用的<code>Hexo + Next</code>主题，时至今日，一直对<code>Hexo + Next</code>甚是喜爱，感谢大佬，感谢开源 🙏 。</p>
-<p>期间，经历了换工作、换电脑、换域名、换托管，诸多原因导致博客遗失，不过也是甚好，不能守着过去，要拥抱现在和未来（不应该是拥抱开源吗？）。</p>
-<p>之前使用过<code>网易云跟帖</code>，大家都戏称灌水专用，现在业已关闭。</p>
-<p>接着使用了<code>来必力</code>，一个来自韩国的评论插件，国内访问甚是感人，至于大佬们的反向代理，那时心有余而力不足，遂卒。</p>
-<p>后来使用了<code>valine</code>，依托于<a href="https://www.leancloud.cn/">LeanCloud</a>在国内运营，对用户甚是友好，界面也是简洁清新，让人看一眼就喜爱，而且支持阅读统计等诸多功能，之后便一直使用。</p>
-<p>偶然间，在<code>知乎</code>上闲逛时，发现了一位大兄关于评论插件的分析和感想，现在依稀记得的一句话就是“无论第三方插件的使用有多友好，数据都存在第三方，哪天他们歇业停工了，数据一样丢失。”，之后就对此耿耿于怀（当然不是对说这句话的仁兄耿耿于怀）。</p>
-<p>重建博客之际，对评论插件抱着谨慎的态度选之又选，决定将数据存在<code>Github</code>上，至于歇业停工，既然博客数据都不存在了，还留着评论数据作甚，就让他们同生共死吧。</p>
-<p><code>Gitalk</code>和<code>Gitment</code>最先映入眼帘，之后在<code>Github</code>上发现<code>Gitment</code>好久没有更新了，只剩下一个选择。</p>
-<p><code>Hexo</code>官方集成了<code>Gitalk</code>，轻车熟路的做好设置，<code>hexo clean | g | s</code>三部曲之后，熟悉的框框出现，然鹅，发现每篇文章都要手动初始化，翻阅<a href="https://github.com/gitalk/gitalk/wiki/%E8%AF%84%E8%AE%BA%E5%88%9D%E5%A7%8B%E5%8C%96">官方 Wiki</a>发现了自动初始化的脚本，底部有<a href="https://draveness.me/git-comments-initialize/">原作者</a> 的链接，遂前往，准备学习膜拜一番，看了大佬的思路解析，大呼过瘾之际也感落寞，原因无他，就是自己不会<code>Ruby</code>。在准备留言评论之际，发现又有<a href="https://www.lshell.com/post/use-github-action-and-python-to-automatically-initialize-gitalk-comments/">大佬</a>给出了使用<code>Python</code>初始化的思路，用轮子不是目的，读懂造轮子的思路学习造轮子，岂不快哉。</p>
-<p>进入文章，阅读之际，大佬既感且叹地推荐了一个新的评论插件<code>utterances</code>，揣着疑惑的心去<a href="https://utteranc.es/">官网</a>，去<a href="https://github.com/utterance/utterances">官方仓库</a>查看了一番，发现没有 Wiki，也没有文档，善用搜索引擎的我，搜索一番之后发现，似乎<code>Next</code>主题之前的某个版本集成过，但翻阅了现在的版本又毫无所获，教程都是根据集成时的方法写的，对我无用。</p>
-<p>在这里，不得不提的是<code>Hexo</code>的一项前瞻性功能<code>代替配置文件</code>和<code>代替主题配置文件</code>，再也不用像之前一样，想要实现某个功能就去修改官方文件，它不破坏官方文件的完整性，可以无痛更新，之前最头疼的一件事儿就是<code>拉取官方更新之后合并冲突</code>。</p>
-<p>这次重建博客，所有非官方功能，如 404、音乐、footer，都使用<code>注入</code>实现，我对这项功能的称呼，暂且这么叫吧。</p>
-<p>以上都是废话，下面进入正题：</p>
-<h4 id="首先，需要一个用来存储评论的仓库"><a href="#首先，需要一个用来存储评论的仓库" class="headerlink" title="首先，需要一个用来存储评论的仓库"></a>首先，需要一个用来存储评论的仓库</h4><ul>
-<li>你可以新建一个仓库；</li>
-<li>当然，也可以像我一样，存放在博客仓库的 Issues 中，毕竟我已经承诺了它们同生共死，说到就要做到；</li>
-<li>Issues 无法删除，请谨慎选择，防止过多的无用 Issues 带来烦恼（设置 utterances 的时候，这句话依然有效！）；</li>
-</ul>
-<h4 id="安装-utterances"><a href="#安装-utterances" class="headerlink" title="安装 utterances"></a>安装 utterances</h4><ul>
-<li><p>点击<a href="https://github.com/apps/utterances">这里</a>打开安装页面，然后点击右上角的<code>安装</code>；</p>
-</li>
-<li><p>按下安装按钮，（不不不，不够严谨，按下是 201，抬起才是 202），你会跳转到：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giukvthjlpj30fy0oqtbi.jpg" alt="第二步"></p>
-<p>如图所示的页面，选择第一步中创建的仓库或已有的仓库，然后点击<code>安装</code>，请记住仓库名，因为接下来要用；</p>
-</li>
-<li><p>接下来，会跳转到设置页面；</p>
-</li>
-</ul>
-<h4 id="设置-utterances"><a href="#设置-utterances" class="headerlink" title="设置 utterances"></a>设置 utterances</h4><ul>
-<li><p>在这里，请务必填写你在上一步中选择的仓库，并在前面加上仓库的所有者：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giul8ahfszj30k60bfwfv.jpg" alt="第三步"></p>
-</li>
-<li><p>当然，如果你比较调皮，没有填写上一步中选择的仓库，还是有补救办法的，点击<a href="https://github.com/apps/utterances">这里</a>，其实就是安装页面，你会跳转到安装页面，你发现右上角的<code>安装</code>不见了，取而代之的是<code>配置</code>，就是它了，去配置页面修改吧；</p>
-</li>
-<li><p>至于这里，是配置 utterances 创建新的 Issues 时，给 Issues 起的名儿：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giullxjlwfj30jo0i2q65.jpg" alt="配置"></p>
-<p>请自由发挥，因为使用了<a href="https://github.com/rozbo/hexo-abbrlink">abbrlink</a>，链接并不显示文章名称，所以我就选图中所示的选项了，自由发挥的同学，玩的开心；</p>
-</li>
-<li><p>这里是选填选项，给 utterances 创建的 Issues 设置标签：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giulsj64dxj30jt072dgf.jpg" alt="设置标签"></p>
-</li>
-<li><p><code>Theme</code>就不用说了吧，主题选自己喜欢的，没喜欢的？给官方提交一个新主题；</p>
-</li>
-<li><p>接下来就是重头戏了，上面所有的选项都是为它服务的：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giulyonf3xj30jz09lq41.jpg" alt="script"></p>
-<p>复制 script 并添加到你想要评论出现的地方，bingo！</p>
-</li>
-</ul>
-<h4 id="个人配置"><a href="#个人配置" class="headerlink" title="个人配置"></a>个人配置</h4><p>因为要用<code>注入</code>来实现评论功能，那就不能修改官方的模板，自己撸了个 js 来实现：</p>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="comment">/* utterances 评论插件 */</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 初始化</span></span><br><span class="line"><span class="built_in">window</span>.addEventListener(<span class="string">&quot;DOMContentLoaded&quot;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  query2add();</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">// pjax 使用 pushState() 不会触发 hashchange 事件，需要拦截</span></span><br><span class="line"><span class="keyword">var</span> _wr = <span class="function"><span class="keyword">function</span> (<span class="params">type</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">var</span> orig = history[type];</span><br><span class="line">  <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> e = <span class="keyword">new</span> Event(type);</span><br><span class="line">    e.arguments = <span class="built_in">arguments</span>;</span><br><span class="line">    <span class="built_in">window</span>.dispatchEvent(e);</span><br><span class="line">    <span class="comment">// 注意事件监听在url变更方法调用之前 也就是在事件监听的回调函数中获取的页面链接为跳转前的链接</span></span><br><span class="line">    <span class="keyword">var</span> rv = orig.apply(<span class="built_in">this</span>, <span class="built_in">arguments</span>);</span><br><span class="line">    <span class="keyword">return</span> rv;</span><br><span class="line">  &#125;;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">history.pushState = _wr(<span class="string">&quot;pushState&quot;</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 监听 change 事件</span></span><br><span class="line"><span class="built_in">window</span>.addEventListener(<span class="string">&quot;pushState&quot;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">e</span>) </span>&#123;</span><br><span class="line">  <span class="comment">// e &amp;&amp; e.arguments.length &gt; 2 &amp;&amp; e.arguments[2]</span></span><br><span class="line">  query2add();</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 加载 utterance 插件</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">loadUtterance</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">let</span> js = <span class="built_in">document</span>.createElement(<span class="string">&quot;script&quot;</span>);</span><br><span class="line">  <span class="comment">/* 以下内容改成第三步生成的配置 */</span></span><br><span class="line">  js.setAttribute(<span class="string">&quot;src&quot;</span>, <span class="string">&quot;https://utteranc.es/client.js&quot;</span>);</span><br><span class="line">  js.setAttribute(<span class="string">&quot;repo&quot;</span>, <span class="string">&quot;Undeio/undeio.github.io&quot;</span>);</span><br><span class="line">  js.setAttribute(<span class="string">&quot;issue-term&quot;</span>, <span class="string">&quot;title&quot;</span>);</span><br><span class="line">  js.setAttribute(<span class="string">&quot;theme&quot;</span>, <span class="string">&quot;github-light&quot;</span>);</span><br><span class="line">  js.setAttribute(<span class="string">&quot;crossorigin&quot;</span>, <span class="string">&quot;anonymous&quot;</span>);</span><br><span class="line">  js.setAttribute(<span class="string">&quot;async&quot;</span>, <span class="string">&quot;async&quot;</span>);</span><br><span class="line">  <span class="comment">/* 以上内容需要修改 */</span></span><br><span class="line">  <span class="comment">// 添加到主体部分的末尾</span></span><br><span class="line">  <span class="built_in">document</span>.getElementsByClassName(<span class="string">&quot;main-inner&quot;</span>)[<span class="number">0</span>].appendChild(js);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 是否已存在组件</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">query2add</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="comment">// 只有正文页面才有 post-copyright，也就是最后的版权声明</span></span><br><span class="line">  <span class="comment">// 当然，你也可以找一个自己正文才有的标识进行判断</span></span><br><span class="line">  <span class="keyword">let</span> postCopyRight = <span class="built_in">document</span>.getElementsByClassName(<span class="string">&quot;post-copyright&quot;</span>);</span><br><span class="line">  <span class="keyword">if</span> (postCopyRight &amp;&amp; postCopyRight[<span class="number">0</span>]) &#123;</span><br><span class="line">    <span class="comment">// 存在评论就放弃添加</span></span><br><span class="line">    <span class="keyword">let</span> utterances = <span class="built_in">document</span>.getElementsByClassName(<span class="string">&quot;utterances&quot;</span>);</span><br><span class="line">    <span class="keyword">if</span> (utterances &amp;&amp; utterances[<span class="number">0</span>]) &#123;</span><br><span class="line">      <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    loadUtterance();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>无图无真相</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giumvnbuw0j30gu0hm0vd.jpg" alt="真相"></p>
-<p>最终效果</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giun047pynj30w10admy8.jpg" alt="效果"></p>
-<blockquote>
-<p>才疏学浅，实现比较粗糙，如果你有更好的实现，请给我留言。</p>
-</blockquote>
-]]></content>
-      <categories>
-        <category>Hexo</category>
-      </categories>
-      <tags>
-        <tag>Hexo</tag>
-        <tag>Next</tag>
-        <tag>Utterance</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>寄存器小记</title>
     <url>/post/592731679/</url>
     <content><![CDATA[<h3 id="通用寄存器拆分"><a href="#通用寄存器拆分" class="headerlink" title="通用寄存器拆分"></a>通用寄存器拆分</h3><p>EAX / EBX / ECX / EDX</p>
@@ -154,6 +78,193 @@
       </categories>
       <tags>
         <tag>寄存器</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Hexo 添加 Utterance 评论功能</title>
+    <url>/post/3357819964/</url>
+    <content><![CDATA[<blockquote>
+<p>每逢看到大佬们的精彩文章，感慨甚多之际，不能留言把欢甚是遗憾。<br>缺少了留言支持、请教解惑、互相探讨，总感觉博客没有灵魂。</p>
+</blockquote>
+<a id="more"></a>
+
+<h4 id="废话连篇"><a href="#废话连篇" class="headerlink" title="废话连篇"></a>废话连篇</h4><p>曾记得，2016 年端午节，在<code>Github Pages</code>上写下了人生中的第一篇博客，那时就用的<code>Hexo + Next</code>主题，时至今日，一直对<code>Hexo + Next</code>甚是喜爱，感谢大佬，感谢开源 🙏 。</p>
+<p>期间，经历了换工作、换电脑、换域名、换托管，诸多原因导致博客遗失，不过也是甚好，不能守着过去，要拥抱现在和未来（不应该是拥抱开源吗？）。</p>
+<p>之前使用过<code>网易云跟帖</code>，大家都戏称灌水专用，现在业已关闭。</p>
+<p>接着使用了<code>来必力</code>，一个来自韩国的评论插件，国内访问甚是感人，至于大佬们的反向代理，那时心有余而力不足，遂卒。</p>
+<p>后来使用了<code>valine</code>，依托于<a href="https://www.leancloud.cn/">LeanCloud</a>在国内运营，对用户甚是友好，界面也是简洁清新，让人看一眼就喜爱，而且支持阅读统计等诸多功能，之后便一直使用。</p>
+<p>偶然间，在<code>知乎</code>上闲逛时，发现了一位大兄关于评论插件的分析和感想，现在依稀记得的一句话就是“无论第三方插件的使用有多友好，数据都存在第三方，哪天他们歇业停工了，数据一样丢失。”，之后就对此耿耿于怀（当然不是对说这句话的仁兄耿耿于怀）。</p>
+<p>重建博客之际，对评论插件抱着谨慎的态度选之又选，决定将数据存在<code>Github</code>上，至于歇业停工，既然博客数据都不存在了，还留着评论数据作甚，就让他们同生共死吧。</p>
+<p><code>Gitalk</code>和<code>Gitment</code>最先映入眼帘，之后在<code>Github</code>上发现<code>Gitment</code>好久没有更新了，只剩下一个选择。</p>
+<p><code>Hexo</code>官方集成了<code>Gitalk</code>，轻车熟路的做好设置，<code>hexo clean | g | s</code>三部曲之后，熟悉的框框出现，然鹅，发现每篇文章都要手动初始化，翻阅<a href="https://github.com/gitalk/gitalk/wiki/%E8%AF%84%E8%AE%BA%E5%88%9D%E5%A7%8B%E5%8C%96">官方 Wiki</a>发现了自动初始化的脚本，底部有<a href="https://draveness.me/git-comments-initialize/">原作者</a> 的链接，遂前往，准备学习膜拜一番，看了大佬的思路解析，大呼过瘾之际也感落寞，原因无他，就是自己不会<code>Ruby</code>。在准备留言评论之际，发现又有<a href="https://www.lshell.com/post/use-github-action-and-python-to-automatically-initialize-gitalk-comments/">大佬</a>给出了使用<code>Python</code>初始化的思路，用轮子不是目的，读懂造轮子的思路学习造轮子，岂不快哉。</p>
+<p>进入文章，阅读之际，大佬既感且叹地推荐了一个新的评论插件<code>utterances</code>，揣着疑惑的心去<a href="https://utteranc.es/">官网</a>，去<a href="https://github.com/utterance/utterances">官方仓库</a>查看了一番，发现没有 Wiki，也没有文档，善用搜索引擎的我，搜索一番之后发现，似乎<code>Next</code>主题之前的某个版本集成过，但翻阅了现在的版本又毫无所获，教程都是根据集成时的方法写的，对我无用。</p>
+<p>在这里，不得不提的是<code>Hexo</code>的一项前瞻性功能<code>代替配置文件</code>和<code>代替主题配置文件</code>，再也不用像之前一样，想要实现某个功能就去修改官方文件，它不破坏官方文件的完整性，可以无痛更新，之前最头疼的一件事儿就是<code>拉取官方更新之后合并冲突</code>。</p>
+<p>这次重建博客，所有非官方功能，如 404、音乐、footer，都使用<code>注入</code>实现，我对这项功能的称呼，暂且这么叫吧。</p>
+<p>以上都是废话，下面进入正题：</p>
+<h4 id="首先，需要一个用来存储评论的仓库"><a href="#首先，需要一个用来存储评论的仓库" class="headerlink" title="首先，需要一个用来存储评论的仓库"></a>首先，需要一个用来存储评论的仓库</h4><ul>
+<li>你可以新建一个仓库；</li>
+<li>当然，也可以像我一样，存放在博客仓库的 Issues 中，毕竟我已经承诺了它们同生共死，说到就要做到；</li>
+<li>Issues 无法删除，请谨慎选择，防止过多的无用 Issues 带来烦恼（设置 utterances 的时候，这句话依然有效！）；</li>
+</ul>
+<h4 id="安装-utterances"><a href="#安装-utterances" class="headerlink" title="安装 utterances"></a>安装 utterances</h4><ul>
+<li><p>点击<a href="https://github.com/apps/utterances">这里</a>打开安装页面，然后点击右上角的<code>安装</code>；</p>
+</li>
+<li><p>按下安装按钮，（不不不，不够严谨，按下是 201，抬起才是 202），你会跳转到：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giukvthjlpj30fy0oqtbi.jpg" alt="第二步"></p>
+<p>如图所示的页面，选择第一步中创建的仓库或已有的仓库，然后点击<code>安装</code>，请记住仓库名，因为接下来要用；</p>
+</li>
+<li><p>接下来，会跳转到设置页面；</p>
+</li>
+</ul>
+<h4 id="设置-utterances"><a href="#设置-utterances" class="headerlink" title="设置 utterances"></a>设置 utterances</h4><ul>
+<li><p>在这里，请务必填写你在上一步中选择的仓库，并在前面加上仓库的所有者：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giul8ahfszj30k60bfwfv.jpg" alt="第三步"></p>
+</li>
+<li><p>当然，如果你比较调皮，没有填写上一步中选择的仓库，还是有补救办法的，点击<a href="https://github.com/apps/utterances">这里</a>，其实就是安装页面，你会跳转到安装页面，你发现右上角的<code>安装</code>不见了，取而代之的是<code>配置</code>，就是它了，去配置页面修改吧；</p>
+</li>
+<li><p>至于这里，是配置 utterances 创建新的 Issues 时，给 Issues 起的名儿：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giullxjlwfj30jo0i2q65.jpg" alt="配置"></p>
+<p>请自由发挥，因为使用了<a href="https://github.com/rozbo/hexo-abbrlink">abbrlink</a>，链接并不显示文章名称，所以我就选图中所示的选项了，自由发挥的同学，玩的开心；</p>
+</li>
+<li><p>这里是选填选项，给 utterances 创建的 Issues 设置标签：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giulsj64dxj30jt072dgf.jpg" alt="设置标签"></p>
+</li>
+<li><p><code>Theme</code>就不用说了吧，主题选自己喜欢的，没喜欢的？给官方提交一个新主题；</p>
+</li>
+<li><p>接下来就是重头戏了，上面所有的选项都是为它服务的：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giulyonf3xj30jz09lq41.jpg" alt="script"></p>
+<p>复制 script 并添加到你想要评论出现的地方，bingo！</p>
+</li>
+</ul>
+<h4 id="个人配置"><a href="#个人配置" class="headerlink" title="个人配置"></a>个人配置</h4><p>因为要用<code>注入</code>来实现评论功能，那就不能修改官方的模板，自己撸了个 js 来实现：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="comment">/* utterances 评论插件 */</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 初始化</span></span><br><span class="line"><span class="built_in">window</span>.addEventListener(<span class="string">&quot;DOMContentLoaded&quot;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  query2add();</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">// pjax 使用 pushState() 不会触发 hashchange 事件，需要拦截</span></span><br><span class="line"><span class="keyword">var</span> _wr = <span class="function"><span class="keyword">function</span> (<span class="params">type</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">var</span> orig = history[type];</span><br><span class="line">  <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> e = <span class="keyword">new</span> Event(type);</span><br><span class="line">    e.arguments = <span class="built_in">arguments</span>;</span><br><span class="line">    <span class="built_in">window</span>.dispatchEvent(e);</span><br><span class="line">    <span class="comment">// 注意事件监听在url变更方法调用之前 也就是在事件监听的回调函数中获取的页面链接为跳转前的链接</span></span><br><span class="line">    <span class="keyword">var</span> rv = orig.apply(<span class="built_in">this</span>, <span class="built_in">arguments</span>);</span><br><span class="line">    <span class="keyword">return</span> rv;</span><br><span class="line">  &#125;;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">history.pushState = _wr(<span class="string">&quot;pushState&quot;</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 监听 change 事件</span></span><br><span class="line"><span class="built_in">window</span>.addEventListener(<span class="string">&quot;pushState&quot;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">e</span>) </span>&#123;</span><br><span class="line">  <span class="comment">// e &amp;&amp; e.arguments.length &gt; 2 &amp;&amp; e.arguments[2]</span></span><br><span class="line">  query2add();</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 加载 utterance 插件</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">loadUtterance</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">let</span> js = <span class="built_in">document</span>.createElement(<span class="string">&quot;script&quot;</span>);</span><br><span class="line">  <span class="comment">/* 以下内容改成第三步生成的配置 */</span></span><br><span class="line">  js.setAttribute(<span class="string">&quot;src&quot;</span>, <span class="string">&quot;https://utteranc.es/client.js&quot;</span>);</span><br><span class="line">  js.setAttribute(<span class="string">&quot;repo&quot;</span>, <span class="string">&quot;Undeio/undeio.github.io&quot;</span>);</span><br><span class="line">  js.setAttribute(<span class="string">&quot;issue-term&quot;</span>, <span class="string">&quot;title&quot;</span>);</span><br><span class="line">  js.setAttribute(<span class="string">&quot;theme&quot;</span>, <span class="string">&quot;github-light&quot;</span>);</span><br><span class="line">  js.setAttribute(<span class="string">&quot;crossorigin&quot;</span>, <span class="string">&quot;anonymous&quot;</span>);</span><br><span class="line">  js.setAttribute(<span class="string">&quot;async&quot;</span>, <span class="string">&quot;async&quot;</span>);</span><br><span class="line">  <span class="comment">/* 以上内容需要修改 */</span></span><br><span class="line">  <span class="comment">// 添加到主体部分的末尾</span></span><br><span class="line">  <span class="built_in">document</span>.getElementsByClassName(<span class="string">&quot;main-inner&quot;</span>)[<span class="number">0</span>].appendChild(js);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 是否已存在组件</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">query2add</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="comment">// 只有正文页面才有 post-copyright，也就是最后的版权声明</span></span><br><span class="line">  <span class="comment">// 当然，你也可以找一个自己正文才有的标识进行判断</span></span><br><span class="line">  <span class="keyword">let</span> postCopyRight = <span class="built_in">document</span>.getElementsByClassName(<span class="string">&quot;post-copyright&quot;</span>);</span><br><span class="line">  <span class="keyword">if</span> (postCopyRight &amp;&amp; postCopyRight[<span class="number">0</span>]) &#123;</span><br><span class="line">    <span class="comment">// 存在评论就放弃添加</span></span><br><span class="line">    <span class="keyword">let</span> utterances = <span class="built_in">document</span>.getElementsByClassName(<span class="string">&quot;utterances&quot;</span>);</span><br><span class="line">    <span class="keyword">if</span> (utterances &amp;&amp; utterances[<span class="number">0</span>]) &#123;</span><br><span class="line">      <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    loadUtterance();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>无图无真相</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giumvnbuw0j30gu0hm0vd.jpg" alt="真相"></p>
+<p>最终效果</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giun047pynj30w10admy8.jpg" alt="效果"></p>
+<blockquote>
+<p>才疏学浅，实现比较粗糙，如果你有更好的实现，请给我留言。</p>
+</blockquote>
+]]></content>
+      <categories>
+        <category>Hexo</category>
+      </categories>
+      <tags>
+        <tag>Hexo</tag>
+        <tag>Next</tag>
+        <tag>Utterance</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>逆向分析之反调试（一）</title>
+    <url>/post/1969921723/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li>Ollydg1.1 原版，简称<code>OD</code>；</li>
+<li><code>OD</code>汉化文件来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自<a href="http://xuepojie.com/">学破解论坛</a>，仅供学习使用；</li>
+<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
+<li>参考教程：<code>反调试之IsDebuggerPresent</code>；<a id="more"></a>
+
+</li>
+</ul>
+<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
+<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj7morb9trj3087083mx8.jpg" alt="打开"></p>
+<ul>
+<li>ID 不可输入，应该是根据电脑硬件的某些特征生成的；</li>
+<li>输入随机注册码点击 Check 之后，没有任何反馈；</li>
+</ul>
+</li>
+<li><p>倒入<code>OD</code>开始分析：</p>
+<ul>
+<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
+</li>
+<li><p>既然程序有输入，有按钮，那可用的 API 可就多了。按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，用的<code>API</code>不多，一眼就看到了<code>GetWindowTextA</code>，在<code>GetWindowTextA</code>函数上设置断点，然后去<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
+</li>
+<li><p>然后<code>F9</code>运行程序，嘿嘿，程序窗口一闪而过，而且<code>OD</code>的右下角也显示了程序的状态：<code>已终止</code>，;</p>
+</li>
+<li><p>如果说程序损坏的话，那么刚开始的时候应该也是打不开的；</p>
+</li>
+<li><p>如果说<code>OD</code>出现了问题，那么程序应该倒入不进来，而且查看不了 API 列表；</p>
+</li>
+<li><p>到底是什么问题呢？不绕弯子，程序有反调试，至于是如何反调试的？它就是今天的主角儿<code>IsDebuggerPresent</code>:</p>
+<ul>
+<li><p>先了解一下这个 API：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">IsDebuggerPresent</span><br><span class="line"></span><br><span class="line">作用</span><br><span class="line">     确定调用进程是否由用户模式的调试器调试。</span><br><span class="line"> 返回值</span><br><span class="line">     如果当前进程运行在调试器的上下文，返回值为非零值。</span><br><span class="line">     如果当前进程没有运行在调试器的上下文，返回值为零。</span><br></pre></td></tr></table></figure>
+
+<p>看着好绕，大白话：检测当前程序是否正在被调试，没有被调试返回 0，只要返回值不是 0，那就表示程序正在被调试；</p>
+</li>
+</ul>
+</li>
+<li><p>既然知道它是一个 Windows API，那我们不妨按下<code>Ctrl + N</code>去函数列表看看这个程序是否调用了<code>IsDebuggerPresent</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj7nnd0jurj316d0n974i.jpg" alt="API"></p>
+<p>果然，在函数列表中发现了<code>IsDebuggerPresent</code>，不过，怎么证明它被调用了，而不是放在函数列表中迷惑我们呢？</p>
+</li>
+<li><p>很简单，给它设置一个断点，然后运行程序，没有意外，程序中断了，那就说明程序调用了这个 API：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj7o1rwvmpj316b0n8dgl.jpg" alt="中断"></p>
+<p>我们都知道<code>API 断点</code>会中断在函数的行首，也就是说，<code>IsDebuggerPresent</code>这个函数并没有执行，如果<code>Ctrl + F9</code>执行到返回，这个函数才算执行完毕了，而一旦它执行完毕，就意味着程序是否被调试它已经检测完成了，但从代码上看，只有区区 4 行，它是如何检测的呢，分析一下；</p>
+</li>
+<li><p>分析一下这 4 行代码：</p>
+<figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">FS</span>:[<span class="number">18</span>]       <span class="comment">; 将 FS:[18] 中的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">30</span>]   <span class="comment">; 将 EAX 中的地址加 0x30 之后的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOVZX</span> <span class="built_in">EAX</span>,<span class="built_in">BYTE</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">2</span>]   <span class="comment">; 将 EAX 中的地址，存储的第 2 个字节的数据拷贝到 EAX</span></span><br><span class="line"><span class="keyword">RETN</span>                            <span class="comment">; 返回</span></span><br></pre></td></tr></table></figure>
+
+<p>嘛意思？往下分析；</p>
+<ul>
+<li><p><code>FS:[18]</code>中的<code>FS 寄存器</code>的地址是什么呢？</p>
+<p><code>SF 标志位</code>指向<code>FS 寄存器</code>的地址；</p>
+</li>
+<li><p>开始分析代码，先是第 1 行代码<code>MOV EAX,DWORD PTR FS:[18]</code>：将<code>FS:[18]</code>中的地址拷贝到 <code>EAX</code>；</p>
+<blockquote>
+<p><code>FS 寄存器</code>从第 18 位开始，存放的是该寄存器从起始位置依次向后的地址，即第 18 存放的是起始位置的地址；</p>
+</blockquote>
+<p>对这句话很困惑？那我们按下<code>Ctrl + G</code>跟随一下这个地址，在这里，我的机器上，<code>FS</code>的地址是<code>7FFDF000</code>，那<code>FS:[18]</code>的地址就显而易见了，是<code>7FFDF018</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj7pi19cnvj316d0nz0ua.jpg" alt="FS"></p>
+<p><code>FS:[18]</code>的地址是<code>7FFDF018</code>，按下<code>F7</code>，单步执行代码，同时查看<code>EAX 寄存器</code>，丝毫不差，<code>FS:[18]</code>存放的正是<code>FS 寄存器</code>的起始地址<code>7FFDF000</code>，既然第 1 行代码搞定，那就开始分析第二行；</p>
+</li>
+<li><p>第 2 行代码<code>MOV EAX,DWORD PTR DS:[EAX+30]</code>：将 EAX 中的地址加 0x30 之后的地址拷贝到<code>EAX</code>；</p>
+<p>与上一步相同，按下<code>Ctrl + G</code>跟随<code>7FFDF030</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj7puc1wkhj316e0o0ta1.jpg" alt="加30"></p>
+<p>没有意外，运行结果与我们分析的一致：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj7pzqqa7hj316f0o0t9r.jpg" alt="运行后"></p>
+</li>
+<li><p>第 3 行代码<code>MOVZX EAX,BYTE PTR DS:[EAX+2]</code>：将 EAX 中的地址，存储的第 2 个字节的数据拷贝到 EAX；</p>
+<p>跟随一下这个地址，看看它存储的是什么内容：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj7q63xhhtj316c0ncwfo.jpg" alt="数据"></p>
+<p>它存储的数据很简单，第二个字节是<code>01</code>，而根据<code>没有被调试返回 0，只要返回值不是 0，那就表示程序正在被调试</code>这句话来看，很明显，它检测到我们正在调试程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj7q9nu35cj316b0nzgmb.jpg" alt="返回"></p>
+<p>至此，恍然大明白，原来这 4 行代码就可以检测程序有没有被调试，至于为什么这里存放的是<code>01</code>这个数据，不得而知；</p>
+</li>
+<li><p>顺带提一嘴，如果程序倒入<code>OD</code>没有运行，那么<code>EBX 寄存器</code>指向的地址就是以上三行代码执行后需要取出数据的地址，也就是存放 01 的地址；</p>
+</li>
+</ul>
+</li>
+<li><p>既然已经明白了它是如何检测的以及知道了它的返回值，那如何绕过呢？</p>
+<p>当然是修改返回值，也就是<code>EAX 寄存器</code>的值喽，没有调试返回 0，那返回 0 就是没有调试；</p>
+</li>
+<li><p>原理也明白了，也能绕过了，那么，它检测到程序被调试后，是如何退出程序的呢？意犹未尽；</p>
+<p>不修改返回值，跟随一下<code>RETN</code>，看看它接下来会做什么？</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj7qkxbg5mj31690nbq3n.jpg" alt="退出消息"></p>
+<p>哦豁，它用<code>PostQuitMessage</code>提交了退出消息，接着跟；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj7qpagltqj316a0ncwf9.jpg" alt="退出进程"></p>
+<p>然后，调用退出进程函数<code>ExitProcess</code>，再运行一下下，结束！</p>
+</li>
+<li><p>由于本文重点是了解反调试，那么分析找到对应用户名的序列号之后就到此为止吧；</p>
+</li>
+<li><p>至于序列号的算法，既然用户名都是计算出来的，那肯定是软编码喽；不过，换个角度，在机器没有任何变动的情况下，相对于这台机器，它是硬编码；</p>
+</li>
+</ul>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>汇编</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>CrackMe</tag>
+        <tag>逆向分析</tag>
+        <tag>反调试</tag>
       </tags>
   </entry>
   <entry>
@@ -367,117 +478,6 @@
       </categories>
       <tags>
         <tag>汇编指令</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>逆向分析之反调试（一）</title>
-    <url>/post/1969921723/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>Ollydg1.1 原版，简称<code>OD</code>；</li>
-<li><code>OD</code>汉化文件来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自<a href="http://xuepojie.com/">学破解论坛</a>，仅供学习使用；</li>
-<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
-<li>参考教程：<code>反调试之IsDebuggerPresent</code>；<a id="more"></a>
-
-</li>
-</ul>
-<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
-<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj7morb9trj3087083mx8.jpg" alt="打开"></p>
-<ul>
-<li>ID 不可输入，应该是根据电脑硬件的某些特征生成的；</li>
-<li>输入随机注册码点击 Check 之后，没有任何反馈；</li>
-</ul>
-</li>
-<li><p>倒入<code>OD</code>开始分析：</p>
-<ul>
-<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
-</li>
-<li><p>既然程序有输入，有按钮，那可用的 API 可就多了。按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，用的<code>API</code>不多，一眼就看到了<code>GetWindowTextA</code>，在<code>GetWindowTextA</code>函数上设置断点，然后去<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
-</li>
-<li><p>然后<code>F9</code>运行程序，嘿嘿，程序窗口一闪而过，而且<code>OD</code>的右下角也显示了程序的状态：<code>已终止</code>，;</p>
-</li>
-<li><p>如果说程序损坏的话，那么刚开始的时候应该也是打不开的；</p>
-</li>
-<li><p>如果说<code>OD</code>出现了问题，那么程序应该倒入不进来，而且查看不了 API 列表；</p>
-</li>
-<li><p>到底是什么问题呢？不绕弯子，程序有反调试，至于是如何反调试的？它就是今天的主角儿<code>IsDebuggerPresent</code>:</p>
-<ul>
-<li><p>先了解一下这个 API：</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">IsDebuggerPresent</span><br><span class="line"></span><br><span class="line">作用</span><br><span class="line">     确定调用进程是否由用户模式的调试器调试。</span><br><span class="line"> 返回值</span><br><span class="line">     如果当前进程运行在调试器的上下文，返回值为非零值。</span><br><span class="line">     如果当前进程没有运行在调试器的上下文，返回值为零。</span><br></pre></td></tr></table></figure>
-
-<p>看着好绕，大白话：检测当前程序是否正在被调试，没有被调试返回 0，只要返回值不是 0，那就表示程序正在被调试；</p>
-</li>
-</ul>
-</li>
-<li><p>既然知道它是一个 Windows API，那我们不妨按下<code>Ctrl + N</code>去函数列表看看这个程序是否调用了<code>IsDebuggerPresent</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj7nnd0jurj316d0n974i.jpg" alt="API"></p>
-<p>果然，在函数列表中发现了<code>IsDebuggerPresent</code>，不过，怎么证明它被调用了，而不是放在函数列表中迷惑我们呢？</p>
-</li>
-<li><p>很简单，给它设置一个断点，然后运行程序，没有意外，程序中断了，那就说明程序调用了这个 API：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj7o1rwvmpj316b0n8dgl.jpg" alt="中断"></p>
-<p>我们都知道<code>API 断点</code>会中断在函数的行首，也就是说，<code>IsDebuggerPresent</code>这个函数并没有执行，如果<code>Ctrl + F9</code>执行到返回，这个函数才算执行完毕了，而一旦它执行完毕，就意味着程序是否被调试它已经检测完成了，但从代码上看，只有区区 4 行，它是如何检测的呢，分析一下；</p>
-</li>
-<li><p>分析一下这 4 行代码：</p>
-<figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">FS</span>:[<span class="number">18</span>]       <span class="comment">; 将 FS:[18] 中的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">30</span>]   <span class="comment">; 将 EAX 中的地址加 0x30 之后的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOVZX</span> <span class="built_in">EAX</span>,<span class="built_in">BYTE</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">2</span>]   <span class="comment">; 将 EAX 中的地址，存储的第 2 个字节的数据拷贝到 EAX</span></span><br><span class="line"><span class="keyword">RETN</span>                            <span class="comment">; 返回</span></span><br></pre></td></tr></table></figure>
-
-<p>嘛意思？往下分析；</p>
-<ul>
-<li><p><code>FS:[18]</code>中的<code>FS 寄存器</code>的地址是什么呢？</p>
-<p><code>SF 标志位</code>指向<code>FS 寄存器</code>的地址；</p>
-</li>
-<li><p>开始分析代码，先是第 1 行代码<code>MOV EAX,DWORD PTR FS:[18]</code>：将<code>FS:[18]</code>中的地址拷贝到 <code>EAX</code>；</p>
-<blockquote>
-<p><code>FS 寄存器</code>从第 18 位开始，存放的是该寄存器从起始位置依次向后的地址，即第 18 存放的是起始位置的地址；</p>
-</blockquote>
-<p>对这句话很困惑？那我们按下<code>Ctrl + G</code>跟随一下这个地址，在这里，我的机器上，<code>FS</code>的地址是<code>7FFDF000</code>，那<code>FS:[18]</code>的地址就显而易见了，是<code>7FFDF018</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj7pi19cnvj316d0nz0ua.jpg" alt="FS"></p>
-<p><code>FS:[18]</code>的地址是<code>7FFDF018</code>，按下<code>F7</code>，单步执行代码，同时查看<code>EAX 寄存器</code>，丝毫不差，<code>FS:[18]</code>存放的正是<code>FS 寄存器</code>的起始地址<code>7FFDF000</code>，既然第 1 行代码搞定，那就开始分析第二行；</p>
-</li>
-<li><p>第 2 行代码<code>MOV EAX,DWORD PTR DS:[EAX+30]</code>：将 EAX 中的地址加 0x30 之后的地址拷贝到<code>EAX</code>；</p>
-<p>与上一步相同，按下<code>Ctrl + G</code>跟随<code>7FFDF030</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj7puc1wkhj316e0o0ta1.jpg" alt="加30"></p>
-<p>没有意外，运行结果与我们分析的一致：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj7pzqqa7hj316f0o0t9r.jpg" alt="运行后"></p>
-</li>
-<li><p>第 3 行代码<code>MOVZX EAX,BYTE PTR DS:[EAX+2]</code>：将 EAX 中的地址，存储的第 2 个字节的数据拷贝到 EAX；</p>
-<p>跟随一下这个地址，看看它存储的是什么内容：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj7q63xhhtj316c0ncwfo.jpg" alt="数据"></p>
-<p>它存储的数据很简单，第二个字节是<code>01</code>，而根据<code>没有被调试返回 0，只要返回值不是 0，那就表示程序正在被调试</code>这句话来看，很明显，它检测到我们正在调试程序：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj7q9nu35cj316b0nzgmb.jpg" alt="返回"></p>
-<p>至此，恍然大明白，原来这 4 行代码就可以检测程序有没有被调试，至于为什么这里存放的是<code>01</code>这个数据，不得而知；</p>
-</li>
-<li><p>顺带提一嘴，如果程序倒入<code>OD</code>没有运行，那么<code>EBX 寄存器</code>指向的地址就是以上三行代码执行后需要取出数据的地址，也就是存放 01 的地址；</p>
-</li>
-</ul>
-</li>
-<li><p>既然已经明白了它是如何检测的以及知道了它的返回值，那如何绕过呢？</p>
-<p>当然是修改返回值，也就是<code>EAX 寄存器</code>的值喽，没有调试返回 0，那返回 0 就是没有调试；</p>
-</li>
-<li><p>原理也明白了，也能绕过了，那么，它检测到程序被调试后，是如何退出程序的呢？意犹未尽；</p>
-<p>不修改返回值，跟随一下<code>RETN</code>，看看它接下来会做什么？</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj7qkxbg5mj31690nbq3n.jpg" alt="退出消息"></p>
-<p>哦豁，它用<code>PostQuitMessage</code>提交了退出消息，接着跟；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj7qpagltqj316a0ncwf9.jpg" alt="退出进程"></p>
-<p>然后，调用退出进程函数<code>ExitProcess</code>，再运行一下下，结束！</p>
-</li>
-<li><p>由于本文重点是了解反调试，那么分析找到对应用户名的序列号之后就到此为止吧；</p>
-</li>
-<li><p>至于序列号的算法，既然用户名都是计算出来的，那肯定是软编码喽；不过，换个角度，在机器没有任何变动的情况下，相对于这台机器，它是硬编码；</p>
-</li>
-</ul>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>汇编</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>CrackMe</tag>
-        <tag>逆向分析</tag>
-        <tag>反调试</tag>
       </tags>
   </entry>
   <entry>
@@ -800,6 +800,73 @@
       </tags>
   </entry>
   <entry>
+    <title>逆向分析之断点</title>
+    <url>/post/2731277808/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li>Ollydg1.1 原版；</li>
+<li>简称<code>OD</code>；</li>
+</ul>
+<a id="more"></a>
+
+<h4 id="断点的分类"><a href="#断点的分类" class="headerlink" title="断点的分类"></a>断点的分类</h4><h5 id="F2-断点"><a href="#F2-断点" class="headerlink" title="F2 断点"></a>F2 断点</h5><ul>
+<li><code>F2断点</code>又叫<code>普通断点</code>、<code>CC断点</code>、<code>int3断点</code>；</li>
+<li>在<code>OD</code>反汇编窗口（<code>C</code>窗口）中，双击语句的某一行或按下 F2 会设置（触发）一个<code>int3 断点</code>；</li>
+<li><code>int3</code>是一个断点（中断）指令，在汇编中机器码是<code>CC</code>，所以，<code>F2断点</code>又可以称为<code>int3断点</code>或<code>CC断点</code>；</li>
+<li>在使用 F2 设置断点后，CPU 会引发一个异常，而 OD 会捕获这个异常，从而中断程序；</li>
+<li>可以使用命令<code>bp xxxxxxxx</code>快速设置一个<code>CC断点</code>；</li>
+<li><code>bp</code>可以为内存地址设置断点，也就是为某条语句设置断点；</li>
+<li><code>bp</code>当然也可以为<code>API（函数）</code>设置一个断点，如<code>bp MessageBoxA</code>，断点会设置在 API 的行首，也就是函数的第一行；</li>
+<li>通常情况下，当使用<code>bp</code>为<code>API</code>设置断点时，该<code>API</code>应该是可见的，也就是在反汇编窗口按下<code>Ctrl + N</code>后，在函数窗口能找得到时，才能使用<code>bp</code>设置断点，不过偶尔在找不到的情况下，也能使用<code>bp</code>设置断点，这种情况时可以买一注彩票；</li>
+<li>使用<code>bp MessageBoxA</code>也就是为<code>API</code>设置断点后，会在系统领空下，这个<code>API</code>的行首设置断点；</li>
+<li>使用<code>bpx MessageBoxA</code>也就是为<code>API</code>设置断点后，会在程序领空下，所有调用这个<code>API</code>的位置设置断点；</li>
+<li><code>F2断点</code>的设置没有数量限制，可以设置无数个；</li>
+<li><code>F2断点</code>很容易被检测，从而触发反调试；</li>
+<li><code>F2断点</code>重载程序后不会丢失；</li>
+</ul>
+<h5 id="内存断点"><a href="#内存断点" class="headerlink" title="内存断点"></a>内存断点</h5><ul>
+<li><code>内存断点</code>是通过修改内存属性为不可访问、不可执行来实现的；</li>
+<li><code>内存断点</code>同时只能存在一个；</li>
+<li><code>内存断点</code>在重载程序后会丢失，需要重新设置；</li>
+<li><code>内存断点</code>会影响程序的运行速度；</li>
+</ul>
+<h5 id="硬件断点"><a href="#硬件断点" class="headerlink" title="硬件断点"></a>硬件断点</h5><ul>
+<li><code>硬件断点</code>最多可以设置 4 个；</li>
+<li><code>硬件断点</code>在设置位置的下一条指令中断；</li>
+<li>可以使用命令<code>HE xxxxxxxx</code>快速设置一个<code>硬件断点</code>；</li>
+<li>可以使用命令<code>HE MessageBoxA</code>在<code>API</code>的行首快速设置一个<code>硬件断点</code>；</li>
+</ul>
+<h5 id="条件断点"><a href="#条件断点" class="headerlink" title="条件断点"></a>条件断点</h5><ul>
+<li>满足某个条件的<code>CC断点</code>;</li>
+<li>使用<code>shift + F2</code>快速设置条件断点；</li>
+</ul>
+<h5 id="条件记录断点"><a href="#条件记录断点" class="headerlink" title="条件记录断点"></a>条件记录断点</h5><ul>
+<li>和条件断点类似，多了记录日志等功能，更加详细的设置条件；</li>
+<li>使用<code>shift + F4</code>快速设置条件断点；</li>
+</ul>
+<h5 id="API-断点"><a href="#API-断点" class="headerlink" title="API 断点"></a>API 断点</h5><ul>
+<li>给系统提供的 API 设置的<code>CC断点</code>；</li>
+<li><code>MessageBoxA</code>中的<code>A</code>表示使用<code>ASCII</code>编码；</li>
+<li><code>MessageBoxW</code>中的<code>W</code>表示使用<code>Unicode</code>编码；</li>
+</ul>
+<h5 id="消息断点"><a href="#消息断点" class="headerlink" title="消息断点"></a>消息断点</h5><ul>
+<li>消息断点实际上就是条件记录断点；</li>
+<li>在操作窗口或控件时，都会发送一个消息；</li>
+<li>在<code>OD</code>的<code>W</code>窗口刷新来获取交互消息；</li>
+<li>检测交互（消息循环）来设置<code>消息断点</code>，如<code>101 按键抬起</code>、<code>202 鼠标左键抬起</code>等；</li>
+<li>断点生效后，修改条件来记录操作日志，在<code>OD</code>的<code>L</code>窗口查看记录的日志或将日志输出到指定文件来进一步进行分析；</li>
+</ul>
+<p>未完待续。。。</p>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>汇编</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>断点</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>逆向分析之反调试（四）</title>
     <url>/post/3209676884/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -947,73 +1014,6 @@
         <tag>CrackMe</tag>
         <tag>逆向分析</tag>
         <tag>反调试</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>逆向分析之断点</title>
-    <url>/post/2731277808/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>Ollydg1.1 原版；</li>
-<li>简称<code>OD</code>；</li>
-</ul>
-<a id="more"></a>
-
-<h4 id="断点的分类"><a href="#断点的分类" class="headerlink" title="断点的分类"></a>断点的分类</h4><h5 id="F2-断点"><a href="#F2-断点" class="headerlink" title="F2 断点"></a>F2 断点</h5><ul>
-<li><code>F2断点</code>又叫<code>普通断点</code>、<code>CC断点</code>、<code>int3断点</code>；</li>
-<li>在<code>OD</code>反汇编窗口（<code>C</code>窗口）中，双击语句的某一行或按下 F2 会设置（触发）一个<code>int3 断点</code>；</li>
-<li><code>int3</code>是一个断点（中断）指令，在汇编中机器码是<code>CC</code>，所以，<code>F2断点</code>又可以称为<code>int3断点</code>或<code>CC断点</code>；</li>
-<li>在使用 F2 设置断点后，CPU 会引发一个异常，而 OD 会捕获这个异常，从而中断程序；</li>
-<li>可以使用命令<code>bp xxxxxxxx</code>快速设置一个<code>CC断点</code>；</li>
-<li><code>bp</code>可以为内存地址设置断点，也就是为某条语句设置断点；</li>
-<li><code>bp</code>当然也可以为<code>API（函数）</code>设置一个断点，如<code>bp MessageBoxA</code>，断点会设置在 API 的行首，也就是函数的第一行；</li>
-<li>通常情况下，当使用<code>bp</code>为<code>API</code>设置断点时，该<code>API</code>应该是可见的，也就是在反汇编窗口按下<code>Ctrl + N</code>后，在函数窗口能找得到时，才能使用<code>bp</code>设置断点，不过偶尔在找不到的情况下，也能使用<code>bp</code>设置断点，这种情况时可以买一注彩票；</li>
-<li>使用<code>bp MessageBoxA</code>也就是为<code>API</code>设置断点后，会在系统领空下，这个<code>API</code>的行首设置断点；</li>
-<li>使用<code>bpx MessageBoxA</code>也就是为<code>API</code>设置断点后，会在程序领空下，所有调用这个<code>API</code>的位置设置断点；</li>
-<li><code>F2断点</code>的设置没有数量限制，可以设置无数个；</li>
-<li><code>F2断点</code>很容易被检测，从而触发反调试；</li>
-<li><code>F2断点</code>重载程序后不会丢失；</li>
-</ul>
-<h5 id="内存断点"><a href="#内存断点" class="headerlink" title="内存断点"></a>内存断点</h5><ul>
-<li><code>内存断点</code>是通过修改内存属性为不可访问、不可执行来实现的；</li>
-<li><code>内存断点</code>同时只能存在一个；</li>
-<li><code>内存断点</code>在重载程序后会丢失，需要重新设置；</li>
-<li><code>内存断点</code>会影响程序的运行速度；</li>
-</ul>
-<h5 id="硬件断点"><a href="#硬件断点" class="headerlink" title="硬件断点"></a>硬件断点</h5><ul>
-<li><code>硬件断点</code>最多可以设置 4 个；</li>
-<li><code>硬件断点</code>在设置位置的下一条指令中断；</li>
-<li>可以使用命令<code>HE xxxxxxxx</code>快速设置一个<code>硬件断点</code>；</li>
-<li>可以使用命令<code>HE MessageBoxA</code>在<code>API</code>的行首快速设置一个<code>硬件断点</code>；</li>
-</ul>
-<h5 id="条件断点"><a href="#条件断点" class="headerlink" title="条件断点"></a>条件断点</h5><ul>
-<li>满足某个条件的<code>CC断点</code>;</li>
-<li>使用<code>shift + F2</code>快速设置条件断点；</li>
-</ul>
-<h5 id="条件记录断点"><a href="#条件记录断点" class="headerlink" title="条件记录断点"></a>条件记录断点</h5><ul>
-<li>和条件断点类似，多了记录日志等功能，更加详细的设置条件；</li>
-<li>使用<code>shift + F4</code>快速设置条件断点；</li>
-</ul>
-<h5 id="API-断点"><a href="#API-断点" class="headerlink" title="API 断点"></a>API 断点</h5><ul>
-<li>给系统提供的 API 设置的<code>CC断点</code>；</li>
-<li><code>MessageBoxA</code>中的<code>A</code>表示使用<code>ASCII</code>编码；</li>
-<li><code>MessageBoxW</code>中的<code>W</code>表示使用<code>Unicode</code>编码；</li>
-</ul>
-<h5 id="消息断点"><a href="#消息断点" class="headerlink" title="消息断点"></a>消息断点</h5><ul>
-<li>消息断点实际上就是条件记录断点；</li>
-<li>在操作窗口或控件时，都会发送一个消息；</li>
-<li>在<code>OD</code>的<code>W</code>窗口刷新来获取交互消息；</li>
-<li>检测交互（消息循环）来设置<code>消息断点</code>，如<code>101 按键抬起</code>、<code>202 鼠标左键抬起</code>等；</li>
-<li>断点生效后，修改条件来记录操作日志，在<code>OD</code>的<code>L</code>窗口查看记录的日志或将日志输出到指定文件来进一步进行分析；</li>
-</ul>
-<p>未完待续。。。</p>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>汇编</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>断点</tag>
       </tags>
   </entry>
   <entry>
@@ -1301,6 +1301,75 @@
       </tags>
   </entry>
   <entry>
+    <title>逆向分析之硬编码寻找序列号（五）</title>
+    <url>/post/755681865/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li>Ollydg1.1 原版，简称<code>OD</code>；</li>
+<li><code>OD</code>汉化文件来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a> 来自<a href="http://xuepojie.com/">学破解论坛</a>，仅供学习使用；</li>
+<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
+</ul>
+<a id="more"></a>
+
+<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
+<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
+</li>
+<li><p>倒入<code>OD</code>开始分析：</p>
+<ul>
+<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
+</li>
+<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，翻了翻还真不少，善用搜索，<code>GetDlgItemTextA</code>没找到，那就试试<code>GetWindowTextA</code>，还真有，就它了，在<code>GetWindowTextA</code>上设置断点，然后去<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
+</li>
+<li><p><code>F9</code>运行程序，然鹅，输入内容并点击验证按钮后，程序并没有暂停；</p>
+</li>
+<li><p>界面有按钮，试试消息断点，还是没用，又尝试<code>硬件断点</code>以及<code>内存断点</code>均无效之后，只能去翻大佬的教程，以下内容是学习了<a href="http://xuepojie.com/"><code>Shark恒</code></a>大佬的教程之后自己的总结；</p>
+</li>
+<li><p>使用一个特殊的<code>API：TranslateMessage</code>，没错，它的功能就是字面的意思<code>翻译虚拟按键消息为字符消息</code>，很好很强大；</p>
+</li>
+<li><p>在<code>API</code>列表页面搜索，还真有，设置断点，然后在<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，还没有完，在断点上右键<code>断点&gt;&gt;条件记录</code>或者<code>Shift + F4</code>（也就是<code>条件记录断点</code>，毕竟<code>API断点</code>的本质就是<code>CC断点</code>），修改条件：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjea06qzj311u0nfad3.jpg" alt="TranslateMessage"></p>
+</li>
+<li><p>然后运行程序，输入并点击验证，程序在<code>TranslateMessage</code>函数的行首暂停下来，然后<code>Ctrl + F9</code>或者点击菜单栏的调试选项并选择<code>执行到返回</code>，然后<code>F8</code>单步执行到程序领空；</p>
+</li>
+<li><p>然后在<code>内存窗口</code>按下<code>Ctrl + B</code>或者右键选择<code>查找</code>，搜索输入的序列号：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjv4k2qij311w0ngn0d.jpg" alt="查找"></p>
+<p>找到最接近<code>输入的序列号</code>的内容，设置<code>内存访问断点</code>:</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjz6z1umj311m0n7tc9.jpg" alt="内存访问断点"></p>
+</li>
+<li><p>运行程序，程序暂停在了读取序列号的地方，开始分析：<br>好聪明的“程序”，开始转移数据了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizk98xwaej313w0ncdis.jpg" alt="转移数据"></p>
+</li>
+<li><p>既然它都挪窝儿了，咱也别闲着了：在<code>EDI</code>上右键选择<code>数据窗口中跟随</code>,果然，输入的序列号在这里了，选择序列号的数据右键<code>断点&gt;&gt;删除内存访问断点</code>删除第一次设置的<code>内存访问断点</code>，也可以理解为设置在<code>ESI</code>上的<code>内存访问断点</code>，既然数据都转移了，断点也就没意义了，所以要重新设置在<code>EDI</code>上，再次选择序列号的数据右键<code>断点&gt;&gt;内存访问</code>，这样就实时掌握了输入的序列号的动向了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizko5erudj31450o7gpl.jpg" alt="EDI"></p>
+</li>
+<li><p>继续运行程序，终于来到来最关键的地方：比较</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizlfw3ua4j313q0s4dky.jpg" alt="比较"></p>
+<p>分析完毕，逻辑简单粗暴：</p>
+<ul>
+<li>首先，假码 和 可疑字符串 的前 4 个字节的机器码进行比较，不相等跳转到下一步；</li>
+<li>接着，假码 和 可疑字符串 的第 1 个字节的机器码进行比较，不相等跳转到下一步；</li>
+<li>最后，恢复寄存器的内容并<code>RETN</code>，直接弹出错误的弹窗；</li>
+</ul>
+</li>
+<li><p>分析的时候已经发现了正确的序列号，也就是可疑字符串，试一下：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizm3afyiyj30am0btacd.jpg" alt="完工"></p>
+</li>
+</ul>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>汇编</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>CrackMe</tag>
+        <tag>逆向分析</tag>
+        <tag>硬编码</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>逆向分析之硬编码寻找序列号（六）</title>
     <url>/post/1208254864/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -1413,58 +1482,61 @@
       </tags>
   </entry>
   <entry>
-    <title>逆向分析之硬编码寻找序列号（五）</title>
-    <url>/post/755681865/</url>
+    <title>逆向分析之硬编码寻找序列号（四）</title>
+    <url>/post/1116999438/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
 <li>Ollydg1.1 原版，简称<code>OD</code>；</li>
 <li><code>OD</code>汉化文件来自互联网；</li>
+<li><code>OD</code>插件：<code>中文搜索引擎</code>；</li>
 <li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a> 来自<a href="http://xuepojie.com/">学破解论坛</a>，仅供学习使用；</li>
-<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
-</ul>
-<a id="more"></a>
+<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
 
-<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
+</li>
+</ul>
+<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><p>事实证明：不能“以貌取人”。</p>
+<p>刚打开软件的时候，心里还想着，这么简陋？分分钟就逆向完毕了，结果，“啪啪啪”实力打脸，针扎的疼。</p>
+<p>嗯，还在学习阶段，等我功力深厚之时，定会找回场子！</p>
+<ol>
 <li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
 </li>
 <li><p>倒入<code>OD</code>开始分析：</p>
 <ul>
 <li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
 </li>
-<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，翻了翻还真不少，善用搜索，<code>GetDlgItemTextA</code>没找到，那就试试<code>GetWindowTextA</code>，还真有，就它了，在<code>GetWindowTextA</code>上设置断点，然后去<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
+<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，翻了翻，呀呵，看着简陋，用的<code>API</code>还真不少，那就搜索吧，没有<code>GetDlgItemTextA</code>？那就拿<code>GetWindowTextA</code>下手吧：在<code>GetWindowTextA</code>函数上设置断点，然后去<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
 </li>
-<li><p><code>F9</code>运行程序，然鹅，输入内容并点击验证按钮后，程序并没有暂停；</p>
+<li><p>然后<code>F9</code>运行程序，“随便输入” 一些字符后点击验证，可以随便输入，但请记住它；</p>
 </li>
-<li><p>界面有按钮，试试消息断点，还是没用，又尝试<code>硬件断点</code>以及<code>内存断点</code>均无效之后，只能去翻大佬的教程，以下内容是学习了<a href="http://xuepojie.com/"><code>Shark恒</code></a>大佬的教程之后自己的总结；</p>
+<li><p>居然没有断下来，也没有弹窗，这让我很尴尬：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giz8frx378j305905zglj.jpg" alt="尴尬"></p>
 </li>
-<li><p>使用一个特殊的<code>API：TranslateMessage</code>，没错，它的功能就是字面的意思<code>翻译虚拟按键消息为字符消息</code>，很好很强大；</p>
+<li><p>嗯，界面有按钮，那就试试消息断点，熟练的设置好<code>消息断点</code>，运行程序，输入，点击按钮，还是没有断下来；</p>
 </li>
-<li><p>在<code>API</code>列表页面搜索，还真有，设置断点，然后在<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，还没有完，在断点上右键<code>断点&gt;&gt;条件记录</code>或者<code>Shift + F4</code>（也就是<code>条件记录断点</code>，毕竟<code>API断点</code>的本质就是<code>CC断点</code>），修改条件：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjea06qzj311u0nfad3.jpg" alt="TranslateMessage"></p>
+<li><p>不怕，还有<code>内存断点</code>、<code>硬件断点</code>，挨个试了一遍之后，没有一个成功的，灰心丧气呀，怎么像刺猬 🦔 一样无从下手？</p>
 </li>
-<li><p>然后运行程序，输入并点击验证，程序在<code>TranslateMessage</code>函数的行首暂停下来，然后<code>Ctrl + F9</code>或者点击菜单栏的调试选项并选择<code>执行到返回</code>，然后<code>F8</code>单步执行到程序领空；</p>
+<li><p>等等，看了看程序的界面，猛的想起了大佬说的一个工具：</p>
+<p><code>中文搜索引擎</code>：这玩意儿可以参考，但不要过分依赖，友好的开发者可能只是关闭你的程序不让你调试，至于不友好的，知道为啥要用虚拟机吗？</p>
 </li>
-<li><p>然后在<code>内存窗口</code>按下<code>Ctrl + B</code>或者右键选择<code>查找</code>，搜索输入的序列号：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjv4k2qij311w0ngn0d.jpg" alt="查找"></p>
-<p>找到最接近<code>输入的序列号</code>的内容，设置<code>内存访问断点</code>:</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjz6z1umj311m0n7tc9.jpg" alt="内存访问断点"></p>
-</li>
-<li><p>运行程序，程序暂停在了读取序列号的地方，开始分析：<br>好聪明的“程序”，开始转移数据了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizk98xwaej313w0ncdis.jpg" alt="转移数据"></p>
-</li>
-<li><p>既然它都挪窝儿了，咱也别闲着了：在<code>EDI</code>上右键选择<code>数据窗口中跟随</code>,果然，输入的序列号在这里了，选择序列号的数据右键<code>断点&gt;&gt;删除内存访问断点</code>删除第一次设置的<code>内存访问断点</code>，也可以理解为设置在<code>ESI</code>上的<code>内存访问断点</code>，既然数据都转移了，断点也就没意义了，所以要重新设置在<code>EDI</code>上，再次选择序列号的数据右键<code>断点&gt;&gt;内存访问</code>，这样就实时掌握了输入的序列号的动向了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizko5erudj31450o7gpl.jpg" alt="EDI"></p>
-</li>
-<li><p>继续运行程序，终于来到来最关键的地方：比较</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizlfw3ua4j313q0s4dky.jpg" alt="比较"></p>
-<p>分析完毕，逻辑简单粗暴：</p>
+<li><p>重载程序，在<code>反汇编窗口</code>右键选择<code>中文搜索引擎</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giz8ldzoguj311o0njq5w.jpg" alt="中文搜索引擎"></p>
+<p>然后<code>Ctrl + F</code>搜索熟悉的字眼儿<code>Wrong Code DUDE</code>，果然有，双击来到<code>反汇编窗口</code>，嘿嘿，这里看起来很重要嘛：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giz8xso4qtj30m90by402.jpg" alt="关键"></p>
 <ul>
-<li>首先，假码 和 可疑字符串 的前 4 个字节的机器码进行比较，不相等跳转到下一步；</li>
-<li>接着，假码 和 可疑字符串 的第 1 个字节的机器码进行比较，不相等跳转到下一步；</li>
-<li>最后，恢复寄存器的内容并<code>RETN</code>，直接弹出错误的弹窗；</li>
+<li>一个失败的字样；</li>
+<li>一个成功的字样；</li>
+<li>紧挨着上面有一个跳转：可以猜测，如果跳转的话，可能就显示成功了；</li>
+<li>跳转上面是一个<code>CALL</code>，那它很可能是比较的<code>CALL</code>；</li>
+<li>至于更上面的代码，那肯定是获取用的呗，瞎猜的；</li>
 </ul>
 </li>
-<li><p>分析的时候已经发现了正确的序列号，也就是可疑字符串，试一下：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizm3afyiyj30am0btacd.jpg" alt="完工"></p>
+<li><p>既然找到了可疑的代码，那就双击<code>CALL</code>给它下一个<code>CC断点</code>，然后运行程序，输入序列号点击验证后，程序暂停在了<code>CALL</code>的位置，那就<code>F7</code>进<code>CALL</code>看看，验证一下猜测；</p>
+</li>
+<li><p>刚一进<code>CALL</code>，就在寄存器窗口发现了熟悉的字样：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giz99kl1svj311n0nlgoq.jpg" alt="call"></p>
+<p>既然把“序列号”都传进来了，那应该就是比较了，开始分析：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizaftudazj30xb0u0n15.jpg" alt="分析"></p>
+</li>
+<li><p>分析完成，比较的部分是常规方法，就是中断程序有点麻烦！</p>
 </li>
 </ul>
 </li>
@@ -1590,78 +1662,6 @@
         <tag>逆向分析</tag>
         <tag>软编码</tag>
         <tag>算法分析</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>逆向分析之硬编码寻找序列号（四）</title>
-    <url>/post/1116999438/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>Ollydg1.1 原版，简称<code>OD</code>；</li>
-<li><code>OD</code>汉化文件来自互联网；</li>
-<li><code>OD</code>插件：<code>中文搜索引擎</code>；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a> 来自<a href="http://xuepojie.com/">学破解论坛</a>，仅供学习使用；</li>
-<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
-</ul>
-<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><p>事实证明：不能“以貌取人”。</p>
-<p>刚打开软件的时候，心里还想着，这么简陋？分分钟就逆向完毕了，结果，“啪啪啪”实力打脸，针扎的疼。</p>
-<p>嗯，还在学习阶段，等我功力深厚之时，定会找回场子！</p>
-<ol>
-<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
-</li>
-<li><p>倒入<code>OD</code>开始分析：</p>
-<ul>
-<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
-</li>
-<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，翻了翻，呀呵，看着简陋，用的<code>API</code>还真不少，那就搜索吧，没有<code>GetDlgItemTextA</code>？那就拿<code>GetWindowTextA</code>下手吧：在<code>GetWindowTextA</code>函数上设置断点，然后去<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
-</li>
-<li><p>然后<code>F9</code>运行程序，“随便输入” 一些字符后点击验证，可以随便输入，但请记住它；</p>
-</li>
-<li><p>居然没有断下来，也没有弹窗，这让我很尴尬：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giz8frx378j305905zglj.jpg" alt="尴尬"></p>
-</li>
-<li><p>嗯，界面有按钮，那就试试消息断点，熟练的设置好<code>消息断点</code>，运行程序，输入，点击按钮，还是没有断下来；</p>
-</li>
-<li><p>不怕，还有<code>内存断点</code>、<code>硬件断点</code>，挨个试了一遍之后，没有一个成功的，灰心丧气呀，怎么像刺猬 🦔 一样无从下手？</p>
-</li>
-<li><p>等等，看了看程序的界面，猛的想起了大佬说的一个工具：</p>
-<p><code>中文搜索引擎</code>：这玩意儿可以参考，但不要过分依赖，友好的开发者可能只是关闭你的程序不让你调试，至于不友好的，知道为啥要用虚拟机吗？</p>
-</li>
-<li><p>重载程序，在<code>反汇编窗口</code>右键选择<code>中文搜索引擎</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giz8ldzoguj311o0njq5w.jpg" alt="中文搜索引擎"></p>
-<p>然后<code>Ctrl + F</code>搜索熟悉的字眼儿<code>Wrong Code DUDE</code>，果然有，双击来到<code>反汇编窗口</code>，嘿嘿，这里看起来很重要嘛：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giz8xso4qtj30m90by402.jpg" alt="关键"></p>
-<ul>
-<li>一个失败的字样；</li>
-<li>一个成功的字样；</li>
-<li>紧挨着上面有一个跳转：可以猜测，如果跳转的话，可能就显示成功了；</li>
-<li>跳转上面是一个<code>CALL</code>，那它很可能是比较的<code>CALL</code>；</li>
-<li>至于更上面的代码，那肯定是获取用的呗，瞎猜的；</li>
-</ul>
-</li>
-<li><p>既然找到了可疑的代码，那就双击<code>CALL</code>给它下一个<code>CC断点</code>，然后运行程序，输入序列号点击验证后，程序暂停在了<code>CALL</code>的位置，那就<code>F7</code>进<code>CALL</code>看看，验证一下猜测；</p>
-</li>
-<li><p>刚一进<code>CALL</code>，就在寄存器窗口发现了熟悉的字样：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giz99kl1svj311n0nlgoq.jpg" alt="call"></p>
-<p>既然把“序列号”都传进来了，那应该就是比较了，开始分析：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizaftudazj30xb0u0n15.jpg" alt="分析"></p>
-</li>
-<li><p>分析完成，比较的部分是常规方法，就是中断程序有点麻烦！</p>
-</li>
-</ul>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>汇编</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>CrackMe</tag>
-        <tag>逆向分析</tag>
-        <tag>硬编码</tag>
       </tags>
   </entry>
   <entry>
