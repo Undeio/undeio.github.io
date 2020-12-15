@@ -23,6 +23,13 @@
   </url>
   
   <url>
+    <loc>https://undeio.me/post/996855490/</loc>
+    
+    <lastmod>2020-06-08</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://undeio.me/post/3051308746/</loc>
     
     <lastmod>2020-06-06</lastmod>
@@ -229,6 +236,13 @@
   
   <url>
     <loc>https://undeio.me/tags/%E6%96%AD%E7%82%B9/</loc>
+    <lastmod>2020-12-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://undeio.me/tags/%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86/</loc>
     <lastmod>2020-12-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
