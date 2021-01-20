@@ -57,22 +57,22 @@
     query2add();</script><script>/* 在网站底部添加访问 ip */
     printIP();
     function printIP() {
-        fetch("https://ipapi.co/json/").then((res) => {
-            if (res.ok) {
-                res
-                    .json()
-                    .then((data) => {
-                        const ip = data.ip;
-                        let foot = document.getElementsByClassName("footer-inner")[0];
-                        let node = document.createElement("div");
-                        node.setAttribute("class", "ip");
-                        node.innerHTML = "本次访问IP: " + ip;
-                        if (foot) {
-                            foot.appendChild(node);
-                        }
-                        return ip;
-                    });
+        fetch('https://ipapi.co/ip/')
+        .then(function(response) {
+        response.text().then(txt => {
+            const ip = txt;
+            let foot = document.getElementsByClassName("footer-inner")[0];
+            let node = document.createElement("div");
+            node.setAttribute("class", "ip");
+            node.innerHTML = "本次访问IP: " + ip;
+            if (foot) {
+                foot.appendChild(node);
             }
+            return ip;
+        });
+        })
+        .catch(function(error) {
+        console.log(error)
         });
     }</script></div></footer><script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script><script src="//cdn.jsdelivr.net/npm/@next-theme/pjax@0.4.0/pjax.min.js"></script><script src="//cdn.jsdelivr.net/npm/medium-zoom@1.0.6/dist/medium-zoom.min.js"></script><script src="//cdn.jsdelivr.net/npm/lozad@1.16.0/dist/lozad.min.js"></script><script src="//cdn.jsdelivr.net/npm/pangu@4.0.7/dist/browser/pangu.min.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script><script>var pjax = new Pjax({
   selectors: [

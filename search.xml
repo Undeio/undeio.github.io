@@ -1293,6 +1293,34 @@
       </tags>
   </entry>
   <entry>
+    <title>逆向分析之异常处理（二）</title>
+    <url>/post/192684570/</url>
+    <content><![CDATA[<h4 id="异常处理流程图"><a href="#异常处理流程图" class="headerlink" title="异常处理流程图"></a>异常处理流程图</h4><p>总结一下异常处理的流程：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">graph TB;</span><br><span class="line"></span><br><span class="line">   A[&quot;系统发现产生了一个异常&quot;] --&gt; B&#123;&quot;程序是否正在被调试&quot;&#125;;</span><br><span class="line">   B -- &quot;是，程序正在被调试&quot; --&gt; C&#123;&quot;权限转给调试器，并判断调试器是否忽略了异常&quot;&#125;;</span><br><span class="line">   C -- &quot;是，忽略了&quot; --&gt; D&#123;&quot;程序是否安装 SEH&quot;&#125;;</span><br><span class="line">   D -- &quot;是，安装了&quot; --&gt; E&#123;&quot;SEH 是否解决异常&quot;&#125;;</span><br><span class="line">   E -- &quot;是，解决了&quot; --&gt; F&#123;&quot;程序可以继续正常运行&quot;&#125;;</span><br><span class="line"></span><br><span class="line">   B -- &quot;否，程序没有被调试&quot; --&gt; D;</span><br><span class="line">   C -- &quot;否，未忽略，但未能解决异常&quot; --&gt; G&#123;&quot;系统默认异常处理流程&quot;&#125;;</span><br><span class="line">   D -- &quot;否，未安装&quot; --&gt; G;</span><br><span class="line">   E -- &quot;否，未解决&quot; --&gt; G;</span><br></pre></td></tr></table></figure>
+<p>已经写好<code>Mermaid</code>的语法，准备输出流程图了，发现<code>Hexo</code>的<code>mermaid</code>插件已是多年前的产物，不兼容最新的版本，无奈只能用<code>draw.io</code>画了张图；</p>
+<a id="more"></a>
+
+<p>图片镇楼：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glprz3752lj31ay0u0tcd.jpg" alt="图片镇楼"></p>
+<p>总结一下，共有 7 种流程：</p>
+<p>1.<code>系统发现异常</code>&gt;&gt;<code>是否调试状态</code>&gt;&gt;<code>是</code>&gt;&gt;<code>交给调试器处理</code>&gt;&gt;<code>调试器是否忽略异常</code>&gt;&gt;<code>是</code>&gt;&gt;<code>检查是否安装 SEH</code>&gt;&gt;<code>已安装</code>&gt;&gt;<code>是否解决异常</code>&gt;&gt;<code>已解决</code>&gt;&gt;<code>程序继续运行</code>；</p>
+<p>2.<code>系统发现异常</code>&gt;&gt;<code>是否调试状态</code>&gt;&gt;<code>是</code>&gt;&gt;<code>交给调试器处理</code>&gt;&gt;<code>调试器是否忽略异常</code>&gt;&gt;<code>是</code>&gt;&gt;<code>检查是否安装 SEH</code>&gt;&gt;<code>已安装</code>&gt;&gt;<code>是否解决异常</code>&gt;&gt;<code>未解决</code>&gt;&gt;<code>系统默认异常处理流程</code>；</p>
+<p>3.<code>系统发现异常</code>&gt;&gt;<code>是否调试状态</code>&gt;&gt;<code>是</code>&gt;&gt;<code>交给调试器处理</code>&gt;&gt;<code>调试器是否忽略异常</code>&gt;&gt;<code>是</code>&gt;&gt;<code>检查是否安装 SEH</code>&gt;&gt;<code>未安装</code>&gt;&gt;<code>系统默认异常处理流程</code>；</p>
+<p>4.<code>系统发现异常</code>&gt;&gt;<code>是否调试状态</code>&gt;&gt;<code>是</code>&gt;&gt;<code>交给调试器处理</code>&gt;&gt;<code>调试器是否忽略异常</code>&gt;&gt;<code>否，但未解决</code>&gt;&gt;<code>系统默认异常处理流程</code>；</p>
+<p>5.<code>系统发现异常</code>&gt;&gt;<code>是否调试状态</code>&gt;&gt;<code>否</code>&gt;&gt;<code>检查是否安装 SEH</code>&gt;&gt;<code>已安装</code>&gt;&gt;<code>是否解决异常</code>&gt;&gt;<code>已解决</code>&gt;&gt;<code>程序继续运行</code>；</p>
+<p>6.<code>系统发现异常</code>&gt;&gt;<code>是否调试状态</code>&gt;&gt;<code>否</code>&gt;&gt;<code>检查是否安装 SEH</code>&gt;&gt;<code>已安装</code>&gt;&gt;<code>是否解决异常</code>&gt;&gt;<code>未解决</code>&gt;&gt;<code>系统默认异常处理流程</code>；</p>
+<p>7.<code>系统发现异常</code>&gt;&gt;<code>是否调试状态</code>&gt;&gt;<code>否</code>&gt;&gt;<code>检查是否安装 SEH</code>&gt;&gt;<code>未安装</code>&gt;&gt;<code>系统默认异常处理流程</code>；</p>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>逆向分析</tag>
+        <tag>异常处理</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>逆向分析之断点</title>
     <url>/post/2731277808/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -1357,34 +1385,6 @@
       </categories>
       <tags>
         <tag>断点</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>逆向分析之异常处理（二）</title>
-    <url>/post/192684570/</url>
-    <content><![CDATA[<h4 id="异常处理流程图"><a href="#异常处理流程图" class="headerlink" title="异常处理流程图"></a>异常处理流程图</h4><p>总结一下异常处理的流程：</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">graph TB;</span><br><span class="line"></span><br><span class="line">   A[&quot;系统发现产生了一个异常&quot;] --&gt; B&#123;&quot;程序是否正在被调试&quot;&#125;;</span><br><span class="line">   B -- &quot;是，程序正在被调试&quot; --&gt; C&#123;&quot;权限转给调试器，并判断调试器是否忽略了异常&quot;&#125;;</span><br><span class="line">   C -- &quot;是，忽略了&quot; --&gt; D&#123;&quot;程序是否安装 SEH&quot;&#125;;</span><br><span class="line">   D -- &quot;是，安装了&quot; --&gt; E&#123;&quot;SEH 是否解决异常&quot;&#125;;</span><br><span class="line">   E -- &quot;是，解决了&quot; --&gt; F&#123;&quot;程序可以继续正常运行&quot;&#125;;</span><br><span class="line"></span><br><span class="line">   B -- &quot;否，程序没有被调试&quot; --&gt; D;</span><br><span class="line">   C -- &quot;否，未忽略，但未能解决异常&quot; --&gt; G&#123;&quot;系统默认异常处理流程&quot;&#125;;</span><br><span class="line">   D -- &quot;否，未安装&quot; --&gt; G;</span><br><span class="line">   E -- &quot;否，未解决&quot; --&gt; G;</span><br></pre></td></tr></table></figure>
-<p>已经写好<code>Mermaid</code>的语法，准备输出流程图了，发现<code>Hexo</code>的<code>mermaid</code>插件已是多年前的产物，不兼容最新的版本，无奈只能用<code>draw.io</code>画了张图；</p>
-<a id="more"></a>
-
-<p>图片镇楼：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glprz3752lj31ay0u0tcd.jpg" alt="图片镇楼"></p>
-<p>总结一下，共有 7 种流程：</p>
-<p>1.<code>系统发现异常</code>&gt;&gt;<code>是否调试状态</code>&gt;&gt;<code>是</code>&gt;&gt;<code>交给调试器处理</code>&gt;&gt;<code>调试器是否忽略异常</code>&gt;&gt;<code>是</code>&gt;&gt;<code>检查是否安装 SEH</code>&gt;&gt;<code>已安装</code>&gt;&gt;<code>是否解决异常</code>&gt;&gt;<code>已解决</code>&gt;&gt;<code>程序继续运行</code>；</p>
-<p>2.<code>系统发现异常</code>&gt;&gt;<code>是否调试状态</code>&gt;&gt;<code>是</code>&gt;&gt;<code>交给调试器处理</code>&gt;&gt;<code>调试器是否忽略异常</code>&gt;&gt;<code>是</code>&gt;&gt;<code>检查是否安装 SEH</code>&gt;&gt;<code>已安装</code>&gt;&gt;<code>是否解决异常</code>&gt;&gt;<code>未解决</code>&gt;&gt;<code>系统默认异常处理流程</code>；</p>
-<p>3.<code>系统发现异常</code>&gt;&gt;<code>是否调试状态</code>&gt;&gt;<code>是</code>&gt;&gt;<code>交给调试器处理</code>&gt;&gt;<code>调试器是否忽略异常</code>&gt;&gt;<code>是</code>&gt;&gt;<code>检查是否安装 SEH</code>&gt;&gt;<code>未安装</code>&gt;&gt;<code>系统默认异常处理流程</code>；</p>
-<p>4.<code>系统发现异常</code>&gt;&gt;<code>是否调试状态</code>&gt;&gt;<code>是</code>&gt;&gt;<code>交给调试器处理</code>&gt;&gt;<code>调试器是否忽略异常</code>&gt;&gt;<code>否，但未解决</code>&gt;&gt;<code>系统默认异常处理流程</code>；</p>
-<p>5.<code>系统发现异常</code>&gt;&gt;<code>是否调试状态</code>&gt;&gt;<code>否</code>&gt;&gt;<code>检查是否安装 SEH</code>&gt;&gt;<code>已安装</code>&gt;&gt;<code>是否解决异常</code>&gt;&gt;<code>已解决</code>&gt;&gt;<code>程序继续运行</code>；</p>
-<p>6.<code>系统发现异常</code>&gt;&gt;<code>是否调试状态</code>&gt;&gt;<code>否</code>&gt;&gt;<code>检查是否安装 SEH</code>&gt;&gt;<code>已安装</code>&gt;&gt;<code>是否解决异常</code>&gt;&gt;<code>未解决</code>&gt;&gt;<code>系统默认异常处理流程</code>；</p>
-<p>7.<code>系统发现异常</code>&gt;&gt;<code>是否调试状态</code>&gt;&gt;<code>否</code>&gt;&gt;<code>检查是否安装 SEH</code>&gt;&gt;<code>未安装</code>&gt;&gt;<code>系统默认异常处理流程</code>；</p>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>逆向分析</tag>
-        <tag>异常处理</tag>
       </tags>
   </entry>
   <entry>
@@ -1579,6 +1579,75 @@
       </tags>
   </entry>
   <entry>
+    <title>逆向分析之硬编码寻找序列号（五）</title>
+    <url>/post/755681865/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li>Ollydg1.1 原版，简称<code>OD</code>；</li>
+<li><code>OD</code>汉化文件来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a> 来自<a href="http://xuepojie.com/">学破解论坛</a>，仅供学习使用；</li>
+<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
+</ul>
+<a id="more"></a>
+
+<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
+<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
+</li>
+<li><p>倒入<code>OD</code>开始分析：</p>
+<ul>
+<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
+</li>
+<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，翻了翻还真不少，善用搜索，<code>GetDlgItemTextA</code>没找到，那就试试<code>GetWindowTextA</code>，还真有，就它了，在<code>GetWindowTextA</code>上设置断点，然后去<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
+</li>
+<li><p><code>F9</code>运行程序，然鹅，输入内容并点击验证按钮后，程序并没有暂停；</p>
+</li>
+<li><p>界面有按钮，试试消息断点，还是没用，又尝试<code>硬件断点</code>以及<code>内存断点</code>均无效之后，只能去翻大佬的教程，以下内容是学习了<a href="http://xuepojie.com/"><code>Shark恒</code></a>大佬的教程之后自己的总结；</p>
+</li>
+<li><p>使用一个特殊的<code>API：TranslateMessage</code>，没错，它的功能就是字面的意思<code>翻译虚拟按键消息为字符消息</code>，很好很强大；</p>
+</li>
+<li><p>在<code>API</code>列表页面搜索，还真有，设置断点，然后在<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，还没有完，在断点上右键<code>断点&gt;&gt;条件记录</code>或者<code>Shift + F4</code>（也就是<code>条件记录断点</code>，毕竟<code>API断点</code>的本质就是<code>CC断点</code>），修改条件：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjea06qzj311u0nfad3.jpg" alt="TranslateMessage"></p>
+</li>
+<li><p>然后运行程序，输入并点击验证，程序在<code>TranslateMessage</code>函数的行首暂停下来，然后<code>Ctrl + F9</code>或者点击菜单栏的调试选项并选择<code>执行到返回</code>，然后<code>F8</code>单步执行到程序领空；</p>
+</li>
+<li><p>然后在<code>内存窗口</code>按下<code>Ctrl + B</code>或者右键选择<code>查找</code>，搜索输入的序列号：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjv4k2qij311w0ngn0d.jpg" alt="查找"></p>
+<p>找到最接近<code>输入的序列号</code>的内容，设置<code>内存访问断点</code>:</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjz6z1umj311m0n7tc9.jpg" alt="内存访问断点"></p>
+</li>
+<li><p>运行程序，程序暂停在了读取序列号的地方，开始分析：<br>好聪明的“程序”，开始转移数据了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizk98xwaej313w0ncdis.jpg" alt="转移数据"></p>
+</li>
+<li><p>既然它都挪窝儿了，咱也别闲着了：在<code>EDI</code>上右键选择<code>数据窗口中跟随</code>,果然，输入的序列号在这里了，选择序列号的数据右键<code>断点&gt;&gt;删除内存访问断点</code>删除第一次设置的<code>内存访问断点</code>，也可以理解为设置在<code>ESI</code>上的<code>内存访问断点</code>，既然数据都转移了，断点也就没意义了，所以要重新设置在<code>EDI</code>上，再次选择序列号的数据右键<code>断点&gt;&gt;内存访问</code>，这样就实时掌握了输入的序列号的动向了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizko5erudj31450o7gpl.jpg" alt="EDI"></p>
+</li>
+<li><p>继续运行程序，终于来到来最关键的地方：比较</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizlfw3ua4j313q0s4dky.jpg" alt="比较"></p>
+<p>分析完毕，逻辑简单粗暴：</p>
+<ul>
+<li>首先，假码 和 可疑字符串 的前 4 个字节的机器码进行比较，不相等跳转到下一步；</li>
+<li>接着，假码 和 可疑字符串 的第 1 个字节的机器码进行比较，不相等跳转到下一步；</li>
+<li>最后，恢复寄存器的内容并<code>RETN</code>，直接弹出错误的弹窗；</li>
+</ul>
+</li>
+<li><p>分析的时候已经发现了正确的序列号，也就是可疑字符串，试一下：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizm3afyiyj30am0btacd.jpg" alt="完工"></p>
+</li>
+</ul>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>汇编</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>CrackMe</tag>
+        <tag>逆向分析</tag>
+        <tag>硬编码</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>逆向分析之硬编码寻找序列号（二）</title>
     <url>/post/3097998650/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -1655,75 +1724,6 @@
 </li>
 <li><p>最后，完整的分析图：</p>
 <p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giyciwo9jqj30y80u0tf0.jpg" alt="完整图"></p>
-</li>
-</ul>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>汇编</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>CrackMe</tag>
-        <tag>逆向分析</tag>
-        <tag>硬编码</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>逆向分析之硬编码寻找序列号（五）</title>
-    <url>/post/755681865/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>Ollydg1.1 原版，简称<code>OD</code>；</li>
-<li><code>OD</code>汉化文件来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a> 来自<a href="http://xuepojie.com/">学破解论坛</a>，仅供学习使用；</li>
-<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
-</ul>
-<a id="more"></a>
-
-<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
-<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
-</li>
-<li><p>倒入<code>OD</code>开始分析：</p>
-<ul>
-<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
-</li>
-<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，翻了翻还真不少，善用搜索，<code>GetDlgItemTextA</code>没找到，那就试试<code>GetWindowTextA</code>，还真有，就它了，在<code>GetWindowTextA</code>上设置断点，然后去<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
-</li>
-<li><p><code>F9</code>运行程序，然鹅，输入内容并点击验证按钮后，程序并没有暂停；</p>
-</li>
-<li><p>界面有按钮，试试消息断点，还是没用，又尝试<code>硬件断点</code>以及<code>内存断点</code>均无效之后，只能去翻大佬的教程，以下内容是学习了<a href="http://xuepojie.com/"><code>Shark恒</code></a>大佬的教程之后自己的总结；</p>
-</li>
-<li><p>使用一个特殊的<code>API：TranslateMessage</code>，没错，它的功能就是字面的意思<code>翻译虚拟按键消息为字符消息</code>，很好很强大；</p>
-</li>
-<li><p>在<code>API</code>列表页面搜索，还真有，设置断点，然后在<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，还没有完，在断点上右键<code>断点&gt;&gt;条件记录</code>或者<code>Shift + F4</code>（也就是<code>条件记录断点</code>，毕竟<code>API断点</code>的本质就是<code>CC断点</code>），修改条件：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjea06qzj311u0nfad3.jpg" alt="TranslateMessage"></p>
-</li>
-<li><p>然后运行程序，输入并点击验证，程序在<code>TranslateMessage</code>函数的行首暂停下来，然后<code>Ctrl + F9</code>或者点击菜单栏的调试选项并选择<code>执行到返回</code>，然后<code>F8</code>单步执行到程序领空；</p>
-</li>
-<li><p>然后在<code>内存窗口</code>按下<code>Ctrl + B</code>或者右键选择<code>查找</code>，搜索输入的序列号：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjv4k2qij311w0ngn0d.jpg" alt="查找"></p>
-<p>找到最接近<code>输入的序列号</code>的内容，设置<code>内存访问断点</code>:</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjz6z1umj311m0n7tc9.jpg" alt="内存访问断点"></p>
-</li>
-<li><p>运行程序，程序暂停在了读取序列号的地方，开始分析：<br>好聪明的“程序”，开始转移数据了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizk98xwaej313w0ncdis.jpg" alt="转移数据"></p>
-</li>
-<li><p>既然它都挪窝儿了，咱也别闲着了：在<code>EDI</code>上右键选择<code>数据窗口中跟随</code>,果然，输入的序列号在这里了，选择序列号的数据右键<code>断点&gt;&gt;删除内存访问断点</code>删除第一次设置的<code>内存访问断点</code>，也可以理解为设置在<code>ESI</code>上的<code>内存访问断点</code>，既然数据都转移了，断点也就没意义了，所以要重新设置在<code>EDI</code>上，再次选择序列号的数据右键<code>断点&gt;&gt;内存访问</code>，这样就实时掌握了输入的序列号的动向了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizko5erudj31450o7gpl.jpg" alt="EDI"></p>
-</li>
-<li><p>继续运行程序，终于来到来最关键的地方：比较</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizlfw3ua4j313q0s4dky.jpg" alt="比较"></p>
-<p>分析完毕，逻辑简单粗暴：</p>
-<ul>
-<li>首先，假码 和 可疑字符串 的前 4 个字节的机器码进行比较，不相等跳转到下一步；</li>
-<li>接着，假码 和 可疑字符串 的第 1 个字节的机器码进行比较，不相等跳转到下一步；</li>
-<li>最后，恢复寄存器的内容并<code>RETN</code>，直接弹出错误的弹窗；</li>
-</ul>
-</li>
-<li><p>分析的时候已经发现了正确的序列号，也就是可疑字符串，试一下：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizm3afyiyj30am0btacd.jpg" alt="完工"></p>
 </li>
 </ul>
 </li>
