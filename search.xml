@@ -226,12 +226,12 @@
       </tags>
   </entry>
   <entry>
-    <title>VB 调试之分析 N-Code</title>
+    <title>VB 调试之分析 N-Code（一）</title>
     <url>/post/1203909517/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
 <li>OllyDbg 1.1 修改版，简称<code>OD</code>；</li>
 <li><code>OD</code>修改版设置的<code>内存访问断点</code>只在执行时中断，不会在访问时中断；</li>
-<li><code>OD</code>和<code>插件</code>均来自互联网；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
 <li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自<a href="http://xuepojie.com/">学破解论坛</a>，仅供学习使用；</li>
 <li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
 
@@ -348,6 +348,108 @@
       </tags>
   </entry>
   <entry>
+    <title>VB 调试之分析 N-Code（二）</title>
+    <url>/post/3794155287/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自<a href="http://xuepojie.com/">学破解论坛</a>，仅供学习使用；</li>
+<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
+</ul>
+<blockquote>
+<p>之前分析过这个 CrackMe（参见：VB 调试之分析 N-Code（一）），需要借助修改版的 OD 才能去除 NAG 窗口，在阅读<a href="https://reversecore.com/">逆向工程核心原理</a>一书后，学到了一种新的技巧，记录下来；</p>
+</blockquote>
+<a id="more"></a>
+
+<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
+<li><p>将<code>CrackMe</code>倒入<code>OD</code>，查找<code>rtcMsgBox</code>并设置断点：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpdqgghp6j31b80u0jun.jpg" alt="查找"><br><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpdsakoemj31b40u0jv4.jpg" alt="设置断点"></p>
+</li>
+<li><p>然后<code>F9</code>运行程序，程序会中断在调用位置，与直接给 API 设置的断点不同，这样设置的断点会中断在调用位置，而给 API 设置的断点会中断在<code>rtcMsgBox</code>函数的行首：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpdxeqg7cj31b20u0n0o.jpg" alt="调用位置"></p>
+</li>
+<li><p>向上滚动代码，找到函数栈帧，然后设置断点：</p>
+<p>至于什么是栈帧？</p>
+<p>ESP 始终指向栈的顶端，程序运行中，ESP 寄存器的值随时变化，访问栈中函数的局部变量、参数时，若以 ESP 的值为基准会十分困难，使 CPU 很难引用到准确的位置；</p>
+<p>所以，调用函数时，先要把作为基准点（函数起始地址）的 ESP 值保存到 EBP，并维持在函数内部，这样，无论 ESP 如何变化，以 EBP 的值为基准总是能够安全的访问到相关函数的局部变量、参数、返回地址，这就是栈帧；</p>
+<p>也就是说，ESP 寄存器承担着栈顶指针的作用，而 EBP 寄存器则负责行使栈帧指针的职能；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpedvtcsej31b40u0tcb.jpg" alt="函数栈帧"></p>
+</li>
+<li><p>取消其它断点，重载并运行程序，程序会在断点处中断：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpeifwm5kj31b40u078b.jpg" alt="断点处中断"></p>
+<p>然后在<code>堆栈窗口</code>选择<code>反汇编窗口中跟随</code>到调用位置；</p>
+</li>
+<li><p>给调用位置和返回位置设置<code>F2</code>断点并取消其它断点：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpemqmyx6j31b40u0q6s.jpg" alt="设置两个断点"></p>
+</li>
+<li><p>重载并运行程序，程序中断在调用位置设置的断点处：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpepoqti8j31b40u078f.jpg" alt="调用位置栈顶指针"></p>
+<p>记录调用位置栈顶指针的地址；</p>
+</li>
+<li><p><code>F9</code>运行程序，NAG 窗口弹出，点击确定，程序中断在函数的返回位置：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpeuabiakj31au0u0wil.jpg" alt="返回位置栈顶指针"></p>
+<p>记录返回位置栈顶指针的地址；</p>
+</li>
+<li><p>用返回位置的栈顶指针也就是 ESP 的值减去调用位置 ESP 的值；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpey3glw9j30pk0go0tj.jpg" alt="ESP相减"></p>
+<p>以图为例：<code>0012FA10 - 0012FA08 = 8(16 进制)</code>，是不是可以这么理解：在调用函数中使用了 8 个字节的栈内存；</p>
+</li>
+<li><p>Win32 API 使用的函数调用约定是 stdcall 方式，这种方式的栈内存由被调用者清理，在这里就是由被调用的函数清理，如果在函数的起始位置直接清理栈内存，函数就不会被执行，也就不会弹出 NAG 窗口了；</p>
+<p>函数调用约定参见：寄存器小记</p>
+</li>
+<li><p>重载并运行程序，程序中断在调用位置，<code>F7</code>单步步入到函数内部：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpfnfbtjvj31b50u0wik.jpg" alt="再次中断"></p>
+<p>然后来到了 VB 程序类似于交通枢纽的位置，继续<code>F7</code>，跳转到创建 NAG 窗口的函数内部；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpfqj3wzxj31b60u0juw.jpg" alt="交通枢纽"></p>
+<p>创建 NAG 窗口的函数：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpfuhpl8ij31b70u041w.jpg" alt="创建 NAG 窗口的函数"></p>
+<p>咦，好眼熟啊，是的，这里就是设置程序第 1 个断点的函数，调用<code>rtcMsgBox</code>的函数；</p>
+</li>
+<li><p>之前的步骤终于派上用场了，根据计算，调用创建 NAG 窗口的函数会使用 8 个字节的栈内存，所以，修改函数的行首，清理栈内存：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpg1bxiquj31b40u0q6s.jpg" alt="清理栈内存"></p>
+<p>然后运行程序，没有 NAG 窗口，直接弹出程序主窗体；</p>
+</li>
+<li><p>保存修改到可执行文件，然后运行程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpg54qpa0j30f00eut95.jpg" alt="运行程序"></p>
+</li>
+<li><p>将修改后的 CrackMe 倒入<code>OD</code>，开始处理序列号的问题，然后发现，给<code>rtcMsgBox</code>设置断点后，程序并不会中断，怎么办？</p>
+<p>既然程序在输入错误的序列号后会弹出错误弹窗，那么程序内部肯定验证了序列号，那就查找关于字符串比较的函数：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpghdpk83j31b80u0adv.jpg" alt="vbastrcmp"></p>
+<p>找到<code>__vbaStrCmp</code>并设置断点，然后<code>F9</code>运行程序；</p>
+</li>
+<li><p>程序中断在调用<code>__vbaStrCmp</code>的位置，然后，在 EAX 中发现了输入的随机序列号：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpgllvlhaj31bk0u0787.jpg" alt="发现序列号"></p>
+<p>既然 EAX 是第 2 参数，那么 ECX 中存放的就是第 1 参数，可能就是真正的序列号；</p>
+</li>
+<li><p>数据窗口中跟随 ECX 后发现，西欧文字系统无法显示，就是一堆乱码，既然真实注册码无法使用，那有没有可能让任意字符成为注册码，继续向下分析：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnphe6x02uj31ba0u0q7k.jpg" alt="返回非0"></p>
+<p>首先，向下执行一行代码后，EAX 为非 0 值，这里使用的是<code>__vbaStrCmp</code>，所以非 0 说明不相等；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnphegy116j31bd0u0781.jpg" alt="操作EDI"></p>
+<p>接着，把返回值拷贝到 EDI 中，进行了一系列操作后，来到了一个跳转，这就很可疑了；</p>
+<p>这里对 EDI 进行的一系列操作，如果 EDI 为 0，则没有任何影响，最后的结果是跳转实现，但随机注册码和指定字符串比较，结果肯定不为 0，最终的结果是跳转失败；</p>
+<p>按照这个逻辑来推断，这个跳转应该是关键跳转，如何证明呢？修改<code>JE</code>为<code>JMP</code>，然后运行程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnphla0vxzj31b20u0jvy.jpg" alt="正确弹窗"></p>
+<p>修改<code>JE</code>为<code>JMP</code>并运行程序后，弹出提示序列号正确的弹窗，至于为什么这是正确的弹窗，很简单，因为它和错误弹窗不一样；</p>
+</li>
+<li><p>保存修改到可执行程序，然后运行程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnphohcvjij30si0cudgg.jpg" alt="成功了"></p>
+<p>输入任意字符，点击 OK 后，弹出成功弹窗，结束！</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>VB</category>
+        <category>汇编</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>CrackMe</tag>
+        <tag>逆向分析</tag>
+        <tag>VB 调试</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>VB 调试之初识 VB</title>
     <url>/post/674877238/</url>
     <content><![CDATA[<blockquote>
@@ -377,218 +479,6 @@
       </categories>
       <tags>
         <tag>VB 调试</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>常见的汇编指令</title>
-    <url>/post/1025109479/</url>
-    <content><![CDATA[<h3 id="常见指令"><a href="#常见指令" class="headerlink" title="常见指令"></a>常见指令</h3><h4 id="NOP"><a href="#NOP" class="headerlink" title="NOP"></a>NOP</h4><ul>
-<li>NOP 的机器码是<code>90</code>；</li>
-<li>NOP 是空指令，就是没有操作，无操作；</li>
-<li>使用 <code>NOP</code> 来填充指令执行后多出来的字节，而不是用<code>00</code>来填充；</li>
-</ul>
-<a id="more"></a>
-
-<h4 id="PUSH-压入堆栈"><a href="#PUSH-压入堆栈" class="headerlink" title="PUSH 压入堆栈"></a>PUSH 压入堆栈</h4><p>PUSH 的用法：</p>
-<ul>
-<li><code>PUSH 0x1 / 0xF</code>：把十六进制数字压入堆栈顶部；</li>
-<li><code>PUSH EAX / EBX</code>：把指定寄存器中的数据压入堆栈顶部；</li>
-<li><code>PUSH [00401000]</code>：把指定内存地址中的数据压入堆栈顶部；</li>
-</ul>
-<h4 id="POP-弹出堆栈"><a href="#POP-弹出堆栈" class="headerlink" title="POP 弹出堆栈"></a>POP 弹出堆栈</h4><p>POP 的用法：</p>
-<ul>
-<li><code>POP EAX / EBX</code>：将堆栈顶部的内容弹出并放入指定的寄存器；</li>
-</ul>
-<h4 id="PUSHAD"><a href="#PUSHAD" class="headerlink" title="PUSHAD"></a>PUSHAD</h4><ul>
-<li>通用寄存器指：EAX / ECX / EDX / EBX / ESP / EBP / ESI / EDI；</li>
-<li>PUSHAD 保护现场 / 备份现场，将通用寄存器的数据自上而下依次压入堆栈，最后一个寄存器的数据处于堆栈顶部；</li>
-<li>PUSHAD 是 32 位操作；</li>
-<li><code>PUSHAD</code> 相当于是<code>PUSH EAX, PUSH ECX, PUSH EDX, PUSH EBX, PUSH ESP, PUSH EBP, PUSH ESI, PUSH EDI</code>八条命令的合集；</li>
-</ul>
-<h4 id="POPAD"><a href="#POPAD" class="headerlink" title="POPAD"></a>POPAD</h4><ul>
-<li>通用寄存器指：EAX / ECX / EDX / EBX / ESP / EBP / ESI / EDI；</li>
-<li>POPAD 还原现场，将堆栈顶部的数据依次弹出并自下而上依次填充到通用寄存器；</li>
-<li>POPAD 是 32 位操作；</li>
-<li><code>POPAD</code> 相当于是<code>POP EDI, POP ESI, POP EBP, POP ESP, POP EBX, POP EDX, POP ECX, POP EAX</code>八条命令的合集；</li>
-</ul>
-<h4 id="PUSHA"><a href="#PUSHA" class="headerlink" title="PUSHA"></a>PUSHA</h4><ul>
-<li>PUSHA 和 PUSHAD 功能相同，用于备份现场；</li>
-<li>PUSHA 是 16 位操作；</li>
-<li><code>PUSHA</code> 相当于是<code>PUSH AX, PUSH CX, PUSH DX, PUSH BX, PUSH SP, PUSH BP, PUSH SI, PUSH DI</code>八条命令的合集；</li>
-</ul>
-<h4 id="POPA"><a href="#POPA" class="headerlink" title="POPA"></a>POPA</h4><ul>
-<li>POPA 和 POPAD 功能相同，用于还原现场；</li>
-<li>POPA 是 16 位操作；</li>
-<li><code>POPA</code> 相当于是<code>POP DI, POP SI, POP BP, POP SP, POP BX, POP DX, POP CX, POP AX</code>八条命令的合集；</li>
-</ul>
-<h4 id="MOV"><a href="#MOV" class="headerlink" title="MOV"></a>MOV</h4><ul>
-<li>MOV 本意为<code>move，移动</code>，但功能相当于复制/赋值；</li>
-<li><code>MOV EAX, ECX</code>：两个操作数的长度必须相同；</li>
-<li><code>MOV EAX, ECX</code>：复制<code>ECX（第二个参数）</code>的数据到<code>EAX（第一个参数）</code>，4 字节操作；</li>
-<li><code>MOV AX, CX</code>：复制<code>CX（第二个参数）</code>的数据到<code>AX（第一个参数）</code>，2 字节操作；</li>
-<li><code>MOV AL, CL</code>：复制<code>CL（第二个参数）</code>的数据到<code>AL（第一个参数）</code>，1 字节操作；</li>
-<li><code>MOV [00402000], EAX</code>：复制<code>EAX（第二个参数）</code>的数据到<code>[指定内存地址]（第一个参数）</code>，4 字节操作；</li>
-<li><code>MOV [00402000], AX</code>：复制<code>AX（第二个参数）</code>的数据到<code>[指定内存地址]（第一个参数）</code>，2 字节操作；</li>
-<li><code>MOV [00402000], AH</code>：复制<code>AH（第二个参数）</code>的数据到<code>[指定内存地址]（第一个参数）</code>，1 字节操作；</li>
-</ul>
-<h4 id="MOVSX"><a href="#MOVSX" class="headerlink" title="MOVSX"></a>MOVSX</h4><ul>
-<li><code>MOVSX EAX, CX</code>：复制<code>CX（第二个参数）</code>的数据到<code>EAX（第一个参数）</code>，如果<code>EAX（第一个参数）</code>的长度比<code>CX（第二个参数）</code>长，剩余的长度用<code>CX（第二个参数）</code>的符号位填充；</li>
-<li>正数用 0 填充，负数用 F 填充；</li>
-</ul>
-<h4 id="MOVZX"><a href="#MOVZX" class="headerlink" title="MOVZX"></a>MOVZX</h4><ul>
-<li><code>MOVZX EAX, CX</code>：复制<code>CX（第二个参数）</code>的数据到<code>EAX（第一个参数）</code>，如果<code>EAX（第一个参数）</code>的长度比<code>CX（第二个参数）</code>长，剩余的长度用 0 填充；</li>
-<li>带 0 扩展传送命令；</li>
-</ul>
-<h4 id="LEA"><a href="#LEA" class="headerlink" title="LEA"></a>LEA</h4><ul>
-<li>LEA：复制<code>第二个参数的内存地址</code> 或 <code>第二个参数运算后的内存地址</code>到<code>第一个参数</code>；</li>
-<li><code>LEA EAX, [00401000]</code>：第一个参数必须是通用寄存器，第二个参数必须是内存地址；</li>
-<li><code>LEA EAX, [ECX + 16]</code>：第一个参数必须是通用寄存器，第二个参数必须是内存地址；</li>
-</ul>
-<h4 id="XCHG-互换-交换"><a href="#XCHG-互换-交换" class="headerlink" title="XCHG 互换 / 交换"></a>XCHG 互换 / 交换</h4><ul>
-<li><code>XCHG EAX, ECX</code>：第一个参数可以是通用寄存器或内存地址，第二个参数必须是通用寄存器；</li>
-<li><code>XCHG [00401000], ECX</code>：第一个参数可以是通用寄存器或内存地址，第二个参数必须是通用寄存器；</li>
-</ul>
-<h4 id="SHR-二进制右移"><a href="#SHR-二进制右移" class="headerlink" title="SHR 二进制右移"></a>SHR 二进制右移</h4><h4 id="SHL-二进制左移"><a href="#SHL-二进制左移" class="headerlink" title="SHL 二进制左移"></a>SHL 二进制左移</h4><h4 id="CLD"><a href="#CLD" class="headerlink" title="CLD"></a>CLD</h4><ul>
-<li>用来操作方向标志位 DF，CLD 使 DF 复位，即让 DF = 00；</li>
-</ul>
-<h4 id="STD"><a href="#STD" class="headerlink" title="STD"></a>STD</h4><ul>
-<li>用来操作方向标志位 DF，STD 使 DF 置位，即让 DF = 01；</li>
-</ul>
-<h3 id="数学指令"><a href="#数学指令" class="headerlink" title="数学指令"></a>数学指令</h3><h4 id="ADD-SUB-加法-减法"><a href="#ADD-SUB-加法-减法" class="headerlink" title="ADD / SUB | 加法 / 减法"></a>ADD / SUB | 加法 / 减法</h4><ul>
-<li><code>ADD / SUB</code>的返回结果放在第一个参数中；</li>
-</ul>
-<h4 id="ADC-带进位的加法"><a href="#ADC-带进位的加法" class="headerlink" title="ADC 带进位的加法"></a>ADC 带进位的加法</h4><ul>
-<li><code>ADC EAX, ECX</code> = <code>EAX + ECX + 0 | 1</code>：两个参数累加并且加上<code>进位标识符CF</code>的值为最终结果；</li>
-</ul>
-<h4 id="SBB-带进位的减法"><a href="#SBB-带进位的减法" class="headerlink" title="SBB 带进位的减法"></a>SBB 带进位的减法</h4><ul>
-<li><code>SBB EAX, ECX</code> = <code>EAX - ECX - 0 | 1</code>：两个参数相减并且减去<code>进位标识符CF</code>的值为最终结果；</li>
-</ul>
-<h4 id="INC-DEC-自增-自减"><a href="#INC-DEC-自增-自减" class="headerlink" title="INC / DEC | 自增 / 自减"></a>INC / DEC | 自增 / 自减</h4><ul>
-<li><code>INC EAX</code>：每执行一次该指令，参数的值自增 1；</li>
-<li><code>DEC EAX</code>：每执行一次该指令，参数的值自减 1；</li>
-</ul>
-<h4 id="MUL-无符号乘法"><a href="#MUL-无符号乘法" class="headerlink" title="MUL 无符号乘法"></a>MUL 无符号乘法</h4><ul>
-<li><code>MUL ECX</code>：<code>MUL CL | CX | ECX</code>默认和 <code>AL | AX | EAX</code>做乘法运算，运算结果分别存放到<br><code>AL | DX:AX | EDX:EAX</code>中，其中<code>DX 或 EDX</code>存放高位，<code>AX 或 EAX</code>存放低位；</li>
-</ul>
-<h4 id="DIV-无符号除法"><a href="#DIV-无符号除法" class="headerlink" title="DIV 无符号除法"></a>DIV 无符号除法</h4><ul>
-<li><code>DIV CL</code>：默认的被除数为<code>EAX</code>，如果 <code>CL（除数）</code>是 8 位，那么<code>商</code>放在<code>AL</code>中，<code>余数</code>放在<code>AH</code>中；</li>
-<li><code>DIV CX</code>：默认的被除数为<code>EAX</code>，如果 <code>CX（除数）</code>是 16 位，那么<code>商</code>放在<code>AX</code>中，<code>余数</code>放在<code>DX</code>中；</li>
-<li><code>DIV ECX</code>：默认的被除数为<code>EAX</code>，如果 <code>ECX（除数）</code>是 32 位，那么<code>商</code>放在<code>EAX</code>中，<code>余数</code>放在<code>EDX</code>中；</li>
-</ul>
-<h4 id="IMUL-有符号乘法"><a href="#IMUL-有符号乘法" class="headerlink" title="IMUL 有符号乘法"></a>IMUL 有符号乘法</h4><ul>
-<li>立即数：自然数；</li>
-<li>单操作数：<code>IMUL CL | CX | ECX</code>默认和 <code>AL | AX | EAX</code>做乘法运算，运算结果分别存放到<br><code>AL | DX:AX | EDX:EAX</code>中，其中<code>DX 或 EDX</code>存放高位，<code>AX 或 EAX</code>存放低位；</li>
-<li>双操作数：<code>IMUL AX, CX | 0x2</code>：第一个参数必须是通用寄存器，第二个参数可以是通用寄存器、内存地址或立即数，运算结果存放到第一个参数中；</li>
-<li>三操作数：<code>IMUL AX, CX, 0x2</code>：第一个参数必须是通用寄存器，第二个参数可以是通用寄存器或内存地址，第三个参数必须是立即数，将第二个参数和第三个参数的运算结果存放到第一个参数中；</li>
-</ul>
-<h4 id="IDIV-有符号除法"><a href="#IDIV-有符号除法" class="headerlink" title="IDIV 有符号除法"></a>IDIV 有符号除法</h4><ul>
-<li><code>IDIV CL</code>：默认的被除数为<code>EAX</code>，如果 <code>CL（除数）</code>是 8 位，那么<code>商</code>放在<code>AL</code>中，<code>余数</code>放在<code>AH</code>中；</li>
-<li><code>IDIV CX</code>：默认的被除数为<code>EAX</code>，如果 <code>CX（除数）</code>是 16 位，那么<code>商</code>放在<code>AX</code>中，<code>余数</code>放在<code>DX</code>中；</li>
-<li><code>IDIV ECX</code>：默认的被除数为<code>EAX</code>，如果 <code>ECX（除数）</code>是 32 位，那么<code>商</code>放在<code>EAX</code>中，<code>余数</code>放在<code>EDX</code>中；</li>
-</ul>
-<h4 id="XADD-先交换后相加"><a href="#XADD-先交换后相加" class="headerlink" title="XADD 先交换后相加"></a>XADD 先交换后相加</h4><ul>
-<li><code>XADD EAX, ECX</code>：先交换两个参数的值，然后进行加法运算，运算结果保存在第一个参数中；</li>
-</ul>
-<h4 id="NEG-取反"><a href="#NEG-取反" class="headerlink" title="NEG 取反"></a>NEG 取反</h4><ul>
-<li><code>NEG EAX</code>：如题，取反</li>
-</ul>
-<h3 id="逻辑指令"><a href="#逻辑指令" class="headerlink" title="逻辑指令"></a>逻辑指令</h3><h4 id="AND-OR-XOR-NOT"><a href="#AND-OR-XOR-NOT" class="headerlink" title="AND / OR / XOR / NOT"></a>AND / OR / XOR / NOT</h4><ul>
-<li>全部以二进制形式进行比较 / 操作；</li>
-<li><code>AND EAX, ECX</code>：双 1 为 1，否则为 0；</li>
-<li><code>OR EAX, ECX</code>：逢 1 为 1，否则为 0；</li>
-<li><code>XOR EAX, ECX</code>：不同为 1，相同为 0；</li>
-<li><code>NOT EAX</code>：二进制取反；</li>
-</ul>
-<h3 id="比较指令"><a href="#比较指令" class="headerlink" title="比较指令"></a>比较指令</h3><h4 id="CMP"><a href="#CMP" class="headerlink" title="CMP"></a>CMP</h4><ul>
-<li><code>CMP EAX, ECX</code>：两个参数相减进行比较，如果运算结果为 0，则 <code>ZF（0 标志位）</code>为 1；</li>
-<li>通用寄存器、内存地址和立即数之间可以相互比较；</li>
-</ul>
-<h4 id="TEST"><a href="#TEST" class="headerlink" title="TEST"></a>TEST</h4><ul>
-<li><code>TEST EAX, EAX</code>：判断 EAX 自身是否为 0；</li>
-<li>如果运算结果为 0，且 ZF（0 标志位）为 1，则说明 EAX 自身为 0；</li>
-</ul>
-<h3 id="跳转指令"><a href="#跳转指令" class="headerlink" title="跳转指令"></a>跳转指令</h3><h4 id="JMP-无条件跳转"><a href="#JMP-无条件跳转" class="headerlink" title="JMP 无条件跳转"></a>JMP 无条件跳转</h4><ul>
-<li><code>JMP 00401018</code>：无条件跳转；</li>
-</ul>
-<h4 id="JE-JZ"><a href="#JE-JZ" class="headerlink" title="JE / JZ"></a>JE / JZ</h4><ul>
-<li>名称不同，功能相同；</li>
-<li><code>ZF（0 标志位）</code>为 1 则跳转；</li>
-</ul>
-<h4 id="JNE-JNZ"><a href="#JNE-JNZ" class="headerlink" title="JNE / JNZ"></a>JNE / JNZ</h4><ul>
-<li>名称不同，功能相同；</li>
-<li><code>ZF（0 标志位）</code>为 0 则跳转；</li>
-<li>与<code>JE / JZ</code>相反；</li>
-</ul>
-<h4 id="JS"><a href="#JS" class="headerlink" title="JS"></a>JS</h4><ul>
-<li><code>SF（符号位标志位）</code>为 1 则跳转；</li>
-</ul>
-<h4 id="JNS"><a href="#JNS" class="headerlink" title="JNS"></a>JNS</h4><ul>
-<li><code>SF（符号位标志位）</code>为 0 则跳转；</li>
-<li>与<code>JS</code>相反；</li>
-</ul>
-<h4 id="JP-JPE"><a href="#JP-JPE" class="headerlink" title="JP / JPE"></a>JP / JPE</h4><ul>
-<li>名称不同，功能相同；</li>
-<li><code>PF（奇偶标志位）</code>为 1 则跳转；</li>
-</ul>
-<h4 id="JNP-JPO"><a href="#JNP-JPO" class="headerlink" title="JNP / JPO"></a>JNP / JPO</h4><ul>
-<li>名称不同，功能相同；</li>
-<li><code>PF（奇偶标志位）</code>为 0 则跳转；</li>
-<li>与<code>JP / JPE</code>相反；</li>
-</ul>
-<h4 id="JO"><a href="#JO" class="headerlink" title="JO"></a>JO</h4><ul>
-<li><code>OF（溢出标志位）</code>为 1 则跳转；</li>
-</ul>
-<h4 id="JNO"><a href="#JNO" class="headerlink" title="JNO"></a>JNO</h4><ul>
-<li><code>OF（溢出标志位）</code>为 0 则跳转；</li>
-<li>与<code>JO</code>相反；</li>
-</ul>
-<h4 id="JB"><a href="#JB" class="headerlink" title="JB"></a>JB</h4><ul>
-<li><code>CF（进位 / 借位 标志位）</code>为 1 则跳转；</li>
-<li>JB 不关注符号位，只关注无符号位的运算；</li>
-</ul>
-<h4 id="JNB"><a href="#JNB" class="headerlink" title="JNB"></a>JNB</h4><ul>
-<li><code>CF（进位 / 借位 标志位）</code>为 0 则跳转；</li>
-<li>与<code>JB</code>相反；</li>
-</ul>
-<h4 id="JL"><a href="#JL" class="headerlink" title="JL"></a>JL</h4><ul>
-<li><code>SF（）符号位标志位</code>为 1 则跳转；</li>
-<li>与 JB 不同的是，JL 关注有符号位的运算；</li>
-<li>JL 会忽略<code>CF（进位 / 借位 标志位）</code>的变化；</li>
-</ul>
-<h4 id="JBE"><a href="#JBE" class="headerlink" title="JBE"></a>JBE</h4><ul>
-<li><code>OF（溢出标志位）为 1</code>或<code>ZF（0 标志位）为 0</code>则跳转；</li>
-<li>小于等于；</li>
-</ul>
-<h4 id="JNBE-JA"><a href="#JNBE-JA" class="headerlink" title="JNBE / JA"></a>JNBE / JA</h4><ul>
-<li>名称不同，功能相同；</li>
-<li><code>OF（溢出标志位）为 0</code>并且<code>ZF（0 标志位）为 1</code>则跳转；</li>
-<li>必须是大于；</li>
-</ul>
-<h4 id="CALL-RETN"><a href="#CALL-RETN" class="headerlink" title="CALL / RETN"></a>CALL / RETN</h4><ul>
-<li>CALL 可以理解为 CALLBACK；</li>
-<li>CALL 会执行一个子程序，可以理解为执行了一个函数；</li>
-<li>RETN 在 CALL 所执行的子程序中时，会返回该 CALL 所在的主程序，并继续向下执行；</li>
-<li>RETN 与其他指令单独使用时，和 JMP 的功能相同；</li>
-</ul>
-<h3 id="循环指令"><a href="#循环指令" class="headerlink" title="循环指令"></a>循环指令</h3><h4 id="LOOP"><a href="#LOOP" class="headerlink" title="LOOP"></a>LOOP</h4><ul>
-<li><p>LOOP 相当于</p>
-<figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">XOR</span> <span class="built_in">ECX</span>, <span class="built_in">ECX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">ECX</span>, <span class="number">6</span></span><br><span class="line"><span class="keyword">DEC</span> <span class="built_in">ECX</span></span><br><span class="line"><span class="comment">; CMP ECX, 0</span></span><br><span class="line"><span class="keyword">TEST</span> <span class="built_in">ECX</span>, <span class="built_in">ECX</span></span><br><span class="line"><span class="keyword">JNZ</span> [<span class="keyword">DEC</span> <span class="built_in">ECX</span> 所在的地址]</span><br></pre></td></tr></table></figure></li>
-<li><p>与以上指令不同的是：LOOP 执行时第一次循环计数器不会自减；</p>
-</li>
-<li><p>约定俗成：使用 ECX 作为计数器；</p>
-</li>
-</ul>
-<h3 id="寻址方式"><a href="#寻址方式" class="headerlink" title="寻址方式"></a>寻址方式</h3><ul>
-<li>直接寻址：指令后面直接写出此次运算使用的地址，称为直接寻址；</li>
-<li>间接寻址：只有执行到某一行指令才能知道此次运算使用的地址，称为间接寻址；</li>
-</ul>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>汇编</category>
-      </categories>
-      <tags>
-        <tag>汇编指令</tag>
       </tags>
   </entry>
   <entry>
@@ -767,7 +657,8 @@
 <p>指令指针寄存器保存着 CPU 要执行的指令地址，其大小为 32 位（4 个字节），由原 16 位 IP 寄存器扩展而来；<br>程序运行时，CPU 会读取 EIP 中一条指令的地址，传送指令到指令缓冲区后，EIP 寄存器的值自动增加，增加的大小即是读取指令的字节大小，这样，CPU 每次执行完一条指令，就会通过 EIP 寄存器读取并执行下一条指令；<br>与通用寄存器不同，不能直接修改 EIP 的值，只能通过其它指令间接修改，这些特定指令包括 JMP、JCC、CALL、RET；<br>还可以通过中断或异常来修改 EIP 的值；</p>
 </li>
 </ul>
-<h3 id="栈"><a href="#栈" class="headerlink" title="栈"></a>栈</h3><p>栈通常用于存储局部变量、传递函数参数、保存函数返回地址等；</p>
+<h3 id="栈"><a href="#栈" class="headerlink" title="栈"></a>栈</h3><p>栈是定义在进程中的一段内存空间，向下（低地址方向）扩展，且其大小被记录在 PE 头中，也就是说，进程运行时确定栈内存的大小；</p>
+<p>栈通常用于存储局部变量、传递函数参数、保存函数返回地址等；</p>
 <p>栈内存在进程中的作用：</p>
 <ul>
 <li>暂时保存函数内的局部变量；</li>
@@ -783,6 +674,32 @@
 <li>栈是由下向上扩展的，栈是逆序扩展的；</li>
 </ul>
 <p>向栈压入数据时，栈指针减小，向低地址移动；从栈中弹出数据时，栈指针增加，向高地址移动；</p>
+<h4 id="函数调用约定"><a href="#函数调用约定" class="headerlink" title="函数调用约定"></a>函数调用约定</h4><p>函数调用约定（Calling Convention）：是对函数调用时如何传递参数的一种约定；</p>
+<ul>
+<li>调用函数前，要先把参数压入栈，然后再传递给函数；</li>
+<li>栈内存是固定的，ESP 用来指示栈的当前位置，若 ESP 指向栈底，则无法再使用该栈；</li>
+<li>函数调用后如何处理 ESP 就是函数调用约定要解决的问题；</li>
+</ul>
+<p>主要的函数调用约定：</p>
+<ul>
+<li><p>cdecl：是主要在 C 语言中使用的方式，调用者负责处理栈；</p>
+<p>如：</p>
+<figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">CALL</span> <span class="number">00401000</span>       <span class="comment">; 调用函数</span></span><br><span class="line"><span class="keyword">ADD</span> <span class="built_in">ESP</span>, <span class="number">8</span>          <span class="comment">; 清理栈</span></span><br></pre></td></tr></table></figure>
+<p>调用函数后，使用<code>ADD ESP, 8</code>命令整理栈；</p>
+<p>调用者直接清理其压入栈的函数参数，这样的方式即是<code>cdecl</code>；</p>
+<p><code>cdecl</code>方式的好处是，它可以像 C 语言的 printf()函数一样，向被调用函数传递长度可变的参数，这种长度可变的参数在其它调用约定中很难实现；</p>
+</li>
+<li><p>stdcall：常用于 Win32 API，该方式由被调用者清理栈；<br>若想在 C 语言中使用，只要使用 _stdcall 关键字即可；</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> stdio.h</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> _stdcall <span class="title">add</span><span class="params">(<span class="keyword">int</span> a, <span class="keyword">int</span> b)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">return</span> (a + b);</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span>* argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">return</span> add(<span class="number">1</span>, <span class="number">2</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>调试：</p>
+<figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="number">00401000</span> <span class="keyword">PUSH</span> <span class="built_in">EBP</span>                       <span class="comment">; add() 函数</span></span><br><span class="line"><span class="number">00401001</span> <span class="keyword">MOV</span> <span class="built_in">EBP</span>, <span class="built_in">ESP</span>                   <span class="comment">; 函数栈帧</span></span><br><span class="line"><span class="number">00401003</span> <span class="keyword">MOV</span> <span class="built_in">EAX</span>, <span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">SS</span>:[<span class="built_in">EBP</span>+<span class="number">8</span>]  <span class="comment">; 参数 2 拷贝到 EAX</span></span><br><span class="line"><span class="number">00401006</span> <span class="keyword">ADD</span> <span class="built_in">EAX</span>, <span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">SS</span>:[<span class="built_in">EBP</span>+C]  <span class="comment">; 参数 1 加上参数 2，结果保存在 EAX</span></span><br><span class="line"><span class="number">00401009</span> <span class="keyword">POP</span> <span class="built_in">EBP</span>                        <span class="comment">; 恢复函数执行前的 EBP</span></span><br><span class="line">0040100A <span class="keyword">RETN</span> <span class="number">8</span>                         <span class="comment">; 恢复函数执行前的 ESP</span></span><br><span class="line"><span class="number">0040100D</span> <span class="keyword">INT3</span></span><br><span class="line">0040100E <span class="keyword">INT3</span></span><br><span class="line">0040100F <span class="keyword">INT3</span></span><br><span class="line"><span class="number">00401010</span> <span class="keyword">PUSH</span> <span class="built_in">EBP</span>                       <span class="comment">; main() 函数</span></span><br><span class="line"><span class="number">00401011</span> <span class="keyword">MOV</span> <span class="built_in">EBP</span>, <span class="built_in">ESP</span>                   <span class="comment">; 函数栈帧</span></span><br><span class="line"><span class="number">00401013</span> <span class="keyword">PUSH</span> <span class="number">2</span>                         <span class="comment">; 参数 2 压栈</span></span><br><span class="line"><span class="number">00401015</span> <span class="keyword">PUSH</span> <span class="number">1</span>                         <span class="comment">; 参数 1 压栈</span></span><br><span class="line"><span class="number">00401017</span> <span class="keyword">CALL</span> <span class="number">00401000</span>                  <span class="comment">; 调用 add() 函数</span></span><br><span class="line">0040101C <span class="keyword">POP</span> <span class="built_in">EBP</span>                        <span class="comment">; 恢复函数执行前的 EBP</span></span><br><span class="line"><span class="number">0040101D</span> <span class="keyword">RETN</span></span><br></pre></td></tr></table></figure>
+<p>栈的清理工作由 add()函数最后的<code>RETN 8</code>命令来执行；<br><code>RETN 8</code>命令的含义为<code>RETN + POP 8 字节</code>，即返回后使 ESP 增加指定大小；<br>像这样在被调用者内部清理栈的方式即为 stdcall 方式；<br>stdcall 方式的好处是相对于每次调用函数都要使用<code>ADD ESP, xxx</code> 的 cdecl 方式代码尺寸小；<br>Win32 API 是使用 C 语言编写的，但使用的是 stdcall 方式，这是为了获得更好的兼容性，使 C 语言以外的其它语言也能直接调用 API；</p>
+</li>
+<li><p>fastcall<br>fastcall 方式与 stdcall 方式基本类似，但该方式通常会使用寄存器而非栈内存，去传递那些需要传递给函数的部分参数（前 2 个）；<br>如：函数有 4 个参数，则前 2 个参数分别使用 ECX 和 EDX 寄存器传递；<br>fastcall 相对于 stdcall 速度快，毕竟 CPU 访问寄存器要比内存快得多，但需要额外的系统开销来管理 ECX 和 EDX 寄存器；</p>
+</li>
+<li><p>不管采用哪种方式，通过栈来传递参数的基本概念是一样的；</p>
+</li>
+</ul>
 ]]></content>
       <categories>
         <category>逆向工程</category>
@@ -790,6 +707,220 @@
       </categories>
       <tags>
         <tag>寄存器</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>常见的汇编指令</title>
+    <url>/post/1025109479/</url>
+    <content><![CDATA[<h3 id="常见指令"><a href="#常见指令" class="headerlink" title="常见指令"></a>常见指令</h3><h4 id="NOP"><a href="#NOP" class="headerlink" title="NOP"></a>NOP</h4><ul>
+<li><code>NOP</code>：No Operation，不执行任何动作的指令，只消耗 CPU 时钟；</li>
+<li>NOP 的机器码是<code>90</code>；</li>
+<li>NOP 是空指令，就是没有操作，无操作；</li>
+<li>使用 <code>NOP</code> 来填充指令执行后多出来的字节，而不是用<code>00</code>来填充；</li>
+</ul>
+<a id="more"></a>
+
+<h4 id="PUSH-压入堆栈"><a href="#PUSH-压入堆栈" class="headerlink" title="PUSH 压入堆栈"></a>PUSH 压入堆栈</h4><p>PUSH 的用法：</p>
+<ul>
+<li><code>PUSH 0x1 / 0xF</code>：把十六进制数字压入堆栈顶部；</li>
+<li><code>PUSH EAX / EBX</code>：把指定寄存器中的数据压入堆栈顶部；</li>
+<li><code>PUSH [00401000]</code>：把指定内存地址中的数据压入堆栈顶部；</li>
+</ul>
+<h4 id="POP-弹出堆栈"><a href="#POP-弹出堆栈" class="headerlink" title="POP 弹出堆栈"></a>POP 弹出堆栈</h4><p>POP 的用法：</p>
+<ul>
+<li><code>POP EAX / EBX</code>：将堆栈顶部的内容弹出并放入指定的寄存器；</li>
+</ul>
+<h4 id="PUSHAD"><a href="#PUSHAD" class="headerlink" title="PUSHAD"></a>PUSHAD</h4><ul>
+<li>通用寄存器指：EAX / ECX / EDX / EBX / ESP / EBP / ESI / EDI；</li>
+<li>PUSHAD 保护现场 / 备份现场，将通用寄存器的数据自上而下依次压入堆栈，最后一个寄存器的数据处于堆栈顶部；</li>
+<li>PUSHAD 是 32 位操作；</li>
+<li><code>PUSHAD</code> 相当于是<code>PUSH EAX, PUSH ECX, PUSH EDX, PUSH EBX, PUSH ESP, PUSH EBP, PUSH ESI, PUSH EDI</code>八条命令的合集；</li>
+</ul>
+<h4 id="POPAD"><a href="#POPAD" class="headerlink" title="POPAD"></a>POPAD</h4><ul>
+<li>通用寄存器指：EAX / ECX / EDX / EBX / ESP / EBP / ESI / EDI；</li>
+<li>POPAD 还原现场，将堆栈顶部的数据依次弹出并自下而上依次填充到通用寄存器；</li>
+<li>POPAD 是 32 位操作；</li>
+<li><code>POPAD</code> 相当于是<code>POP EDI, POP ESI, POP EBP, POP ESP, POP EBX, POP EDX, POP ECX, POP EAX</code>八条命令的合集；</li>
+</ul>
+<h4 id="PUSHA"><a href="#PUSHA" class="headerlink" title="PUSHA"></a>PUSHA</h4><ul>
+<li>PUSHA 和 PUSHAD 功能相同，用于备份现场；</li>
+<li>PUSHA 是 16 位操作；</li>
+<li><code>PUSHA</code> 相当于是<code>PUSH AX, PUSH CX, PUSH DX, PUSH BX, PUSH SP, PUSH BP, PUSH SI, PUSH DI</code>八条命令的合集；</li>
+</ul>
+<h4 id="POPA"><a href="#POPA" class="headerlink" title="POPA"></a>POPA</h4><ul>
+<li>POPA 和 POPAD 功能相同，用于还原现场；</li>
+<li>POPA 是 16 位操作；</li>
+<li><code>POPA</code> 相当于是<code>POP DI, POP SI, POP BP, POP SP, POP BX, POP DX, POP CX, POP AX</code>八条命令的合集；</li>
+</ul>
+<h4 id="MOV"><a href="#MOV" class="headerlink" title="MOV"></a>MOV</h4><ul>
+<li>MOV 本意为<code>move，移动</code>，但功能相当于复制/赋值；</li>
+<li><code>MOV EAX, ECX</code>：两个操作数的长度必须相同；</li>
+<li><code>MOV EAX, ECX</code>：复制<code>ECX（第二个参数）</code>的数据到<code>EAX（第一个参数）</code>，4 字节操作；</li>
+<li><code>MOV AX, CX</code>：复制<code>CX（第二个参数）</code>的数据到<code>AX（第一个参数）</code>，2 字节操作；</li>
+<li><code>MOV AL, CL</code>：复制<code>CL（第二个参数）</code>的数据到<code>AL（第一个参数）</code>，1 字节操作；</li>
+<li><code>MOV [00402000], EAX</code>：复制<code>EAX（第二个参数）</code>的数据到<code>[指定内存地址]（第一个参数）</code>，4 字节操作；</li>
+<li><code>MOV [00402000], AX</code>：复制<code>AX（第二个参数）</code>的数据到<code>[指定内存地址]（第一个参数）</code>，2 字节操作；</li>
+<li><code>MOV [00402000], AH</code>：复制<code>AH（第二个参数）</code>的数据到<code>[指定内存地址]（第一个参数）</code>，1 字节操作；</li>
+</ul>
+<h4 id="MOVSX"><a href="#MOVSX" class="headerlink" title="MOVSX"></a>MOVSX</h4><ul>
+<li><code>MOVSX EAX, CX</code>：复制<code>CX（第二个参数）</code>的数据到<code>EAX（第一个参数）</code>，如果<code>EAX（第一个参数）</code>的长度比<code>CX（第二个参数）</code>长，剩余的长度用<code>CX（第二个参数）</code>的符号位填充；</li>
+<li>正数用 0 填充，负数用 F 填充；</li>
+</ul>
+<h4 id="MOVZX"><a href="#MOVZX" class="headerlink" title="MOVZX"></a>MOVZX</h4><ul>
+<li><code>MOVZX EAX, CX</code>：复制<code>CX（第二个参数）</code>的数据到<code>EAX（第一个参数）</code>，如果<code>EAX（第一个参数）</code>的长度比<code>CX（第二个参数）</code>长，剩余的长度用 0 填充；</li>
+<li>带 0 扩展传送命令；</li>
+</ul>
+<h4 id="LEA"><a href="#LEA" class="headerlink" title="LEA"></a>LEA</h4><ul>
+<li>LEA：复制<code>第二个参数的内存地址</code> 或 <code>第二个参数运算后的内存地址</code>到<code>第一个参数</code>；</li>
+<li><code>LEA EAX, [00401000]</code>：第一个参数必须是通用寄存器，第二个参数必须是内存地址；</li>
+<li><code>LEA EAX, [ECX + 16]</code>：第一个参数必须是通用寄存器，第二个参数必须是内存地址；</li>
+</ul>
+<h4 id="XCHG-互换-交换"><a href="#XCHG-互换-交换" class="headerlink" title="XCHG 互换 / 交换"></a>XCHG 互换 / 交换</h4><ul>
+<li><code>XCHG EAX, ECX</code>：第一个参数可以是通用寄存器或内存地址，第二个参数必须是通用寄存器；</li>
+<li><code>XCHG [00401000], ECX</code>：第一个参数可以是通用寄存器或内存地址，第二个参数必须是通用寄存器；</li>
+</ul>
+<h4 id="SHR-二进制右移"><a href="#SHR-二进制右移" class="headerlink" title="SHR 二进制右移"></a>SHR 二进制右移</h4><h4 id="SHL-二进制左移"><a href="#SHL-二进制左移" class="headerlink" title="SHL 二进制左移"></a>SHL 二进制左移</h4><h4 id="CLD"><a href="#CLD" class="headerlink" title="CLD"></a>CLD</h4><ul>
+<li>用来操作方向标志位 DF，CLD 使 DF 复位，即让 DF = 00；</li>
+</ul>
+<h4 id="STD"><a href="#STD" class="headerlink" title="STD"></a>STD</h4><ul>
+<li>用来操作方向标志位 DF，STD 使 DF 置位，即让 DF = 01；</li>
+</ul>
+<h3 id="数学指令"><a href="#数学指令" class="headerlink" title="数学指令"></a>数学指令</h3><h4 id="ADD-SUB-加法-减法"><a href="#ADD-SUB-加法-减法" class="headerlink" title="ADD / SUB | 加法 / 减法"></a>ADD / SUB | 加法 / 减法</h4><ul>
+<li><code>ADD / SUB</code>的返回结果放在第一个参数中；</li>
+</ul>
+<h4 id="ADC-带进位的加法"><a href="#ADC-带进位的加法" class="headerlink" title="ADC 带进位的加法"></a>ADC 带进位的加法</h4><ul>
+<li><code>ADC EAX, ECX</code> = <code>EAX + ECX + 0 | 1</code>：两个参数累加并且加上<code>进位标识符CF</code>的值为最终结果；</li>
+</ul>
+<h4 id="SBB-带进位的减法"><a href="#SBB-带进位的减法" class="headerlink" title="SBB 带进位的减法"></a>SBB 带进位的减法</h4><ul>
+<li><code>SBB EAX, ECX</code> = <code>EAX - ECX - 0 | 1</code>：两个参数相减并且减去<code>进位标识符CF</code>的值为最终结果；</li>
+</ul>
+<h4 id="INC-DEC-自增-自减"><a href="#INC-DEC-自增-自减" class="headerlink" title="INC / DEC | 自增 / 自减"></a>INC / DEC | 自增 / 自减</h4><ul>
+<li><code>INC EAX</code>：每执行一次该指令，参数的值自增 1；</li>
+<li><code>DEC EAX</code>：每执行一次该指令，参数的值自减 1；</li>
+</ul>
+<h4 id="MUL-无符号乘法"><a href="#MUL-无符号乘法" class="headerlink" title="MUL 无符号乘法"></a>MUL 无符号乘法</h4><ul>
+<li><code>MUL ECX</code>：<code>MUL CL | CX | ECX</code>默认和 <code>AL | AX | EAX</code>做乘法运算，运算结果分别存放到<br><code>AL | DX:AX | EDX:EAX</code>中，其中<code>DX 或 EDX</code>存放高位，<code>AX 或 EAX</code>存放低位；</li>
+</ul>
+<h4 id="DIV-无符号除法"><a href="#DIV-无符号除法" class="headerlink" title="DIV 无符号除法"></a>DIV 无符号除法</h4><ul>
+<li><code>DIV CL</code>：默认的被除数为<code>EAX</code>，如果 <code>CL（除数）</code>是 8 位，那么<code>商</code>放在<code>AL</code>中，<code>余数</code>放在<code>AH</code>中；</li>
+<li><code>DIV CX</code>：默认的被除数为<code>EAX</code>，如果 <code>CX（除数）</code>是 16 位，那么<code>商</code>放在<code>AX</code>中，<code>余数</code>放在<code>DX</code>中；</li>
+<li><code>DIV ECX</code>：默认的被除数为<code>EAX</code>，如果 <code>ECX（除数）</code>是 32 位，那么<code>商</code>放在<code>EAX</code>中，<code>余数</code>放在<code>EDX</code>中；</li>
+</ul>
+<h4 id="IMUL-有符号乘法"><a href="#IMUL-有符号乘法" class="headerlink" title="IMUL 有符号乘法"></a>IMUL 有符号乘法</h4><ul>
+<li>立即数：自然数；</li>
+<li>单操作数：<code>IMUL CL | CX | ECX</code>默认和 <code>AL | AX | EAX</code>做乘法运算，运算结果分别存放到<br><code>AL | DX:AX | EDX:EAX</code>中，其中<code>DX 或 EDX</code>存放高位，<code>AX 或 EAX</code>存放低位；</li>
+<li>双操作数：<code>IMUL AX, CX | 0x2</code>：第一个参数必须是通用寄存器，第二个参数可以是通用寄存器、内存地址或立即数，运算结果存放到第一个参数中；</li>
+<li>三操作数：<code>IMUL AX, CX, 0x2</code>：第一个参数必须是通用寄存器，第二个参数可以是通用寄存器或内存地址，第三个参数必须是立即数，将第二个参数和第三个参数的运算结果存放到第一个参数中；</li>
+</ul>
+<h4 id="IDIV-有符号除法"><a href="#IDIV-有符号除法" class="headerlink" title="IDIV 有符号除法"></a>IDIV 有符号除法</h4><ul>
+<li><code>IDIV CL</code>：默认的被除数为<code>EAX</code>，如果 <code>CL（除数）</code>是 8 位，那么<code>商</code>放在<code>AL</code>中，<code>余数</code>放在<code>AH</code>中；</li>
+<li><code>IDIV CX</code>：默认的被除数为<code>EAX</code>，如果 <code>CX（除数）</code>是 16 位，那么<code>商</code>放在<code>AX</code>中，<code>余数</code>放在<code>DX</code>中；</li>
+<li><code>IDIV ECX</code>：默认的被除数为<code>EAX</code>，如果 <code>ECX（除数）</code>是 32 位，那么<code>商</code>放在<code>EAX</code>中，<code>余数</code>放在<code>EDX</code>中；</li>
+</ul>
+<h4 id="XADD-先交换后相加"><a href="#XADD-先交换后相加" class="headerlink" title="XADD 先交换后相加"></a>XADD 先交换后相加</h4><ul>
+<li><code>XADD EAX, ECX</code>：先交换两个参数的值，然后进行加法运算，运算结果保存在第一个参数中；</li>
+</ul>
+<h4 id="NEG-取反"><a href="#NEG-取反" class="headerlink" title="NEG 取反"></a>NEG 取反</h4><ul>
+<li><code>NEG EAX</code>：如题，取反</li>
+</ul>
+<h3 id="逻辑指令"><a href="#逻辑指令" class="headerlink" title="逻辑指令"></a>逻辑指令</h3><h4 id="AND-OR-XOR-NOT"><a href="#AND-OR-XOR-NOT" class="headerlink" title="AND / OR / XOR / NOT"></a>AND / OR / XOR / NOT</h4><ul>
+<li>全部以二进制形式进行比较 / 操作；</li>
+<li><code>AND EAX, ECX</code>：双 1 为 1，否则为 0；</li>
+<li><code>OR EAX, ECX</code>：逢 1 为 1，否则为 0；</li>
+<li><code>XOR EAX, ECX</code>：不同为 1，相同为 0；</li>
+<li><code>NOT EAX</code>：二进制取反；</li>
+</ul>
+<h3 id="比较指令"><a href="#比较指令" class="headerlink" title="比较指令"></a>比较指令</h3><h4 id="CMP"><a href="#CMP" class="headerlink" title="CMP"></a>CMP</h4><ul>
+<li><code>CMP EAX, ECX</code>：两个参数相减进行比较，如果运算结果为 0，则 <code>ZF（0 标志位）</code>为 1；</li>
+<li>通用寄存器、内存地址和立即数之间可以相互比较；</li>
+</ul>
+<h4 id="TEST"><a href="#TEST" class="headerlink" title="TEST"></a>TEST</h4><ul>
+<li><code>TEST EAX, EAX</code>：判断 EAX 自身是否为 0；</li>
+<li>如果运算结果为 0，且 ZF（0 标志位）为 1，则说明 EAX 自身为 0；</li>
+<li>与<code>AND</code>相同，仅改变标志位而不改变操作数的值，若 2 个操作数中的一个为 0，则运算结果为 0，ZF 置 1；</li>
+</ul>
+<h3 id="跳转指令"><a href="#跳转指令" class="headerlink" title="跳转指令"></a>跳转指令</h3><h4 id="JMP-无条件跳转"><a href="#JMP-无条件跳转" class="headerlink" title="JMP 无条件跳转"></a>JMP 无条件跳转</h4><ul>
+<li><code>JMP 00401018</code>：无条件跳转；</li>
+</ul>
+<h4 id="JE-JZ"><a href="#JE-JZ" class="headerlink" title="JE / JZ"></a>JE / JZ</h4><ul>
+<li>名称不同，功能相同；</li>
+<li><code>ZF（0 标志位）</code>为 1 则跳转；</li>
+</ul>
+<h4 id="JNE-JNZ"><a href="#JNE-JNZ" class="headerlink" title="JNE / JNZ"></a>JNE / JNZ</h4><ul>
+<li>名称不同，功能相同；</li>
+<li><code>ZF（0 标志位）</code>为 0 则跳转；</li>
+<li>与<code>JE / JZ</code>相反；</li>
+</ul>
+<h4 id="JS"><a href="#JS" class="headerlink" title="JS"></a>JS</h4><ul>
+<li><code>SF（符号位标志位）</code>为 1 则跳转；</li>
+</ul>
+<h4 id="JNS"><a href="#JNS" class="headerlink" title="JNS"></a>JNS</h4><ul>
+<li><code>SF（符号位标志位）</code>为 0 则跳转；</li>
+<li>与<code>JS</code>相反；</li>
+</ul>
+<h4 id="JP-JPE"><a href="#JP-JPE" class="headerlink" title="JP / JPE"></a>JP / JPE</h4><ul>
+<li>名称不同，功能相同；</li>
+<li><code>PF（奇偶标志位）</code>为 1 则跳转；</li>
+</ul>
+<h4 id="JNP-JPO"><a href="#JNP-JPO" class="headerlink" title="JNP / JPO"></a>JNP / JPO</h4><ul>
+<li>名称不同，功能相同；</li>
+<li><code>PF（奇偶标志位）</code>为 0 则跳转；</li>
+<li>与<code>JP / JPE</code>相反；</li>
+</ul>
+<h4 id="JO"><a href="#JO" class="headerlink" title="JO"></a>JO</h4><ul>
+<li><code>OF（溢出标志位）</code>为 1 则跳转；</li>
+</ul>
+<h4 id="JNO"><a href="#JNO" class="headerlink" title="JNO"></a>JNO</h4><ul>
+<li><code>OF（溢出标志位）</code>为 0 则跳转；</li>
+<li>与<code>JO</code>相反；</li>
+</ul>
+<h4 id="JB"><a href="#JB" class="headerlink" title="JB"></a>JB</h4><ul>
+<li><code>CF（进位 / 借位 标志位）</code>为 1 则跳转；</li>
+<li>JB 不关注符号位，只关注无符号位的运算；</li>
+</ul>
+<h4 id="JNB"><a href="#JNB" class="headerlink" title="JNB"></a>JNB</h4><ul>
+<li><code>CF（进位 / 借位 标志位）</code>为 0 则跳转；</li>
+<li>与<code>JB</code>相反；</li>
+</ul>
+<h4 id="JL"><a href="#JL" class="headerlink" title="JL"></a>JL</h4><ul>
+<li><code>SF（）符号位标志位</code>为 1 则跳转；</li>
+<li>与 JB 不同的是，JL 关注有符号位的运算；</li>
+<li>JL 会忽略<code>CF（进位 / 借位 标志位）</code>的变化；</li>
+</ul>
+<h4 id="JBE"><a href="#JBE" class="headerlink" title="JBE"></a>JBE</h4><ul>
+<li><code>OF（溢出标志位）为 1</code>或<code>ZF（0 标志位）为 0</code>则跳转；</li>
+<li>小于等于；</li>
+</ul>
+<h4 id="JNBE-JA"><a href="#JNBE-JA" class="headerlink" title="JNBE / JA"></a>JNBE / JA</h4><ul>
+<li>名称不同，功能相同；</li>
+<li><code>OF（溢出标志位）为 0</code>并且<code>ZF（0 标志位）为 1</code>则跳转；</li>
+<li>必须是大于；</li>
+</ul>
+<h4 id="CALL-RETN"><a href="#CALL-RETN" class="headerlink" title="CALL / RETN"></a>CALL / RETN</h4><ul>
+<li>CALL 可以理解为 CALLBACK；</li>
+<li>CALL 会执行一个子程序，可以理解为执行了一个函数；</li>
+<li>RETN 在 CALL 所执行的子程序中时，会返回该 CALL 所在的主程序，并继续向下执行；</li>
+<li>RETN 与其他指令单独使用时，和 JMP 的功能相同；</li>
+</ul>
+<h3 id="循环指令"><a href="#循环指令" class="headerlink" title="循环指令"></a>循环指令</h3><h4 id="LOOP"><a href="#LOOP" class="headerlink" title="LOOP"></a>LOOP</h4><ul>
+<li><p>LOOP 相当于</p>
+<figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">XOR</span> <span class="built_in">ECX</span>, <span class="built_in">ECX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">ECX</span>, <span class="number">6</span></span><br><span class="line"><span class="keyword">DEC</span> <span class="built_in">ECX</span></span><br><span class="line"><span class="comment">; CMP ECX, 0</span></span><br><span class="line"><span class="keyword">TEST</span> <span class="built_in">ECX</span>, <span class="built_in">ECX</span></span><br><span class="line"><span class="keyword">JNZ</span> [<span class="keyword">DEC</span> <span class="built_in">ECX</span> 所在的地址]</span><br></pre></td></tr></table></figure></li>
+<li><p>与以上指令不同的是：LOOP 执行时第一次循环计数器不会自减；</p>
+</li>
+<li><p>约定俗成：使用 ECX 作为计数器；</p>
+</li>
+</ul>
+<h3 id="寻址方式"><a href="#寻址方式" class="headerlink" title="寻址方式"></a>寻址方式</h3><ul>
+<li>直接寻址：指令后面直接写出此次运算使用的地址，称为直接寻址；</li>
+<li>间接寻址：只有执行到某一行指令才能知道此次运算使用的地址，称为间接寻址；</li>
+</ul>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>汇编</category>
+      </categories>
+      <tags>
+        <tag>汇编指令</tag>
       </tags>
   </entry>
   <entry>
@@ -2003,6 +2134,75 @@
       </tags>
   </entry>
   <entry>
+    <title>逆向分析之硬编码寻找序列号（五）</title>
+    <url>/post/755681865/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a> 来自<a href="http://xuepojie.com/">学破解论坛</a>，仅供学习使用；</li>
+<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
+</ul>
+<a id="more"></a>
+
+<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
+<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
+</li>
+<li><p>倒入<code>OD</code>开始分析：</p>
+<ul>
+<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
+</li>
+<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，翻了翻还真不少，善用搜索，<code>GetDlgItemTextA</code>没找到，那就试试<code>GetWindowTextA</code>，还真有，就它了，在<code>GetWindowTextA</code>上设置断点，然后去<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
+</li>
+<li><p><code>F9</code>运行程序，然鹅，输入内容并点击验证按钮后，程序并没有暂停；</p>
+</li>
+<li><p>界面有按钮，试试消息断点，还是没用，又尝试<code>硬件断点</code>以及<code>内存断点</code>均无效之后，只能去翻大佬的教程，以下内容是学习了<a href="http://xuepojie.com/"><code>Shark恒</code></a>大佬的教程之后自己的总结；</p>
+</li>
+<li><p>使用一个特殊的<code>API：TranslateMessage</code>，没错，它的功能就是字面的意思<code>翻译虚拟按键消息为字符消息</code>，很好很强大；</p>
+</li>
+<li><p>在<code>API</code>列表页面搜索，还真有，设置断点，然后在<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，还没有完，在断点上右键<code>断点&gt;&gt;条件记录</code>或者<code>Shift + F4</code>（也就是<code>条件记录断点</code>，毕竟<code>API断点</code>的本质就是<code>CC断点</code>），修改条件：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjea06qzj311u0nfad3.jpg" alt="TranslateMessage"></p>
+</li>
+<li><p>然后运行程序，输入并点击验证，程序在<code>TranslateMessage</code>函数的行首暂停下来，然后<code>Ctrl + F9</code>或者点击菜单栏的调试选项并选择<code>执行到返回</code>，然后<code>F8</code>单步执行到程序领空；</p>
+</li>
+<li><p>然后在<code>内存窗口</code>按下<code>Ctrl + B</code>或者右键选择<code>查找</code>，搜索输入的序列号：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjv4k2qij311w0ngn0d.jpg" alt="查找"></p>
+<p>找到最接近<code>输入的序列号</code>的内容，设置<code>内存访问断点</code>:</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjz6z1umj311m0n7tc9.jpg" alt="内存访问断点"></p>
+</li>
+<li><p>运行程序，程序暂停在了读取序列号的地方，开始分析：<br>好聪明的“程序”，开始转移数据了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizk98xwaej313w0ncdis.jpg" alt="转移数据"></p>
+</li>
+<li><p>既然它都挪窝儿了，咱也别闲着了：在<code>EDI</code>上右键选择<code>数据窗口中跟随</code>,果然，输入的序列号在这里了，选择序列号的数据右键<code>断点&gt;&gt;删除内存访问断点</code>删除第一次设置的<code>内存访问断点</code>，也可以理解为设置在<code>ESI</code>上的<code>内存访问断点</code>，既然数据都转移了，断点也就没意义了，所以要重新设置在<code>EDI</code>上，再次选择序列号的数据右键<code>断点&gt;&gt;内存访问</code>，这样就实时掌握了输入的序列号的动向了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizko5erudj31450o7gpl.jpg" alt="EDI"></p>
+</li>
+<li><p>继续运行程序，终于来到来最关键的地方：比较</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizlfw3ua4j313q0s4dky.jpg" alt="比较"></p>
+<p>分析完毕，逻辑简单粗暴：</p>
+<ul>
+<li>首先，假码 和 可疑字符串 的前 4 个字节的机器码进行比较，不相等跳转到下一步；</li>
+<li>接着，假码 和 可疑字符串 的第 1 个字节的机器码进行比较，不相等跳转到下一步；</li>
+<li>最后，恢复寄存器的内容并<code>RETN</code>，直接弹出错误的弹窗；</li>
+</ul>
+</li>
+<li><p>分析的时候已经发现了正确的序列号，也就是可疑字符串，试一下：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizm3afyiyj30am0btacd.jpg" alt="完工"></p>
+</li>
+</ul>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>汇编</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>CrackMe</tag>
+        <tag>逆向分析</tag>
+        <tag>硬编码</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>逆向分析之硬编码寻找序列号（二）</title>
     <url>/post/3097998650/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -2079,75 +2279,6 @@
 </li>
 <li><p>最后，完整的分析图：</p>
 <p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giyciwo9jqj30y80u0tf0.jpg" alt="完整图"></p>
-</li>
-</ul>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>汇编</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>CrackMe</tag>
-        <tag>逆向分析</tag>
-        <tag>硬编码</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>逆向分析之硬编码寻找序列号（五）</title>
-    <url>/post/755681865/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a> 来自<a href="http://xuepojie.com/">学破解论坛</a>，仅供学习使用；</li>
-<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
-</ul>
-<a id="more"></a>
-
-<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
-<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
-</li>
-<li><p>倒入<code>OD</code>开始分析：</p>
-<ul>
-<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
-</li>
-<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，翻了翻还真不少，善用搜索，<code>GetDlgItemTextA</code>没找到，那就试试<code>GetWindowTextA</code>，还真有，就它了，在<code>GetWindowTextA</code>上设置断点，然后去<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
-</li>
-<li><p><code>F9</code>运行程序，然鹅，输入内容并点击验证按钮后，程序并没有暂停；</p>
-</li>
-<li><p>界面有按钮，试试消息断点，还是没用，又尝试<code>硬件断点</code>以及<code>内存断点</code>均无效之后，只能去翻大佬的教程，以下内容是学习了<a href="http://xuepojie.com/"><code>Shark恒</code></a>大佬的教程之后自己的总结；</p>
-</li>
-<li><p>使用一个特殊的<code>API：TranslateMessage</code>，没错，它的功能就是字面的意思<code>翻译虚拟按键消息为字符消息</code>，很好很强大；</p>
-</li>
-<li><p>在<code>API</code>列表页面搜索，还真有，设置断点，然后在<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，还没有完，在断点上右键<code>断点&gt;&gt;条件记录</code>或者<code>Shift + F4</code>（也就是<code>条件记录断点</code>，毕竟<code>API断点</code>的本质就是<code>CC断点</code>），修改条件：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjea06qzj311u0nfad3.jpg" alt="TranslateMessage"></p>
-</li>
-<li><p>然后运行程序，输入并点击验证，程序在<code>TranslateMessage</code>函数的行首暂停下来，然后<code>Ctrl + F9</code>或者点击菜单栏的调试选项并选择<code>执行到返回</code>，然后<code>F8</code>单步执行到程序领空；</p>
-</li>
-<li><p>然后在<code>内存窗口</code>按下<code>Ctrl + B</code>或者右键选择<code>查找</code>，搜索输入的序列号：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjv4k2qij311w0ngn0d.jpg" alt="查找"></p>
-<p>找到最接近<code>输入的序列号</code>的内容，设置<code>内存访问断点</code>:</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjz6z1umj311m0n7tc9.jpg" alt="内存访问断点"></p>
-</li>
-<li><p>运行程序，程序暂停在了读取序列号的地方，开始分析：<br>好聪明的“程序”，开始转移数据了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizk98xwaej313w0ncdis.jpg" alt="转移数据"></p>
-</li>
-<li><p>既然它都挪窝儿了，咱也别闲着了：在<code>EDI</code>上右键选择<code>数据窗口中跟随</code>,果然，输入的序列号在这里了，选择序列号的数据右键<code>断点&gt;&gt;删除内存访问断点</code>删除第一次设置的<code>内存访问断点</code>，也可以理解为设置在<code>ESI</code>上的<code>内存访问断点</code>，既然数据都转移了，断点也就没意义了，所以要重新设置在<code>EDI</code>上，再次选择序列号的数据右键<code>断点&gt;&gt;内存访问</code>，这样就实时掌握了输入的序列号的动向了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizko5erudj31450o7gpl.jpg" alt="EDI"></p>
-</li>
-<li><p>继续运行程序，终于来到来最关键的地方：比较</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizlfw3ua4j313q0s4dky.jpg" alt="比较"></p>
-<p>分析完毕，逻辑简单粗暴：</p>
-<ul>
-<li>首先，假码 和 可疑字符串 的前 4 个字节的机器码进行比较，不相等跳转到下一步；</li>
-<li>接着，假码 和 可疑字符串 的第 1 个字节的机器码进行比较，不相等跳转到下一步；</li>
-<li>最后，恢复寄存器的内容并<code>RETN</code>，直接弹出错误的弹窗；</li>
-</ul>
-</li>
-<li><p>分析的时候已经发现了正确的序列号，也就是可疑字符串，试一下：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizm3afyiyj30am0btacd.jpg" alt="完工"></p>
 </li>
 </ul>
 </li>
