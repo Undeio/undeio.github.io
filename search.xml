@@ -76,11 +76,12 @@
       </tags>
   </entry>
   <entry>
-    <title>VB 调试之 P-Code 寻找操作数</title>
+    <title>VB 调试之 P-Code 寻找操作码</title>
     <url>/post/3657232687/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
 <li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><code>exdec</code>来自互联网；</li>
 <li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自<a href="http://xuepojie.com/">学破解论坛</a>，仅供学习使用；</li>
 <li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
 
@@ -120,6 +121,94 @@
 <li><p>运行程序，输入注册码，点击 Registrar：</p>
 <p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnmvo4idw0j31b50u0435.jpg" alt="中断在操作码位置"></p>
 <p>程序中断在第 1 操作码的位置；</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>VB</category>
+        <category>汇编</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>CrackMe</tag>
+        <tag>逆向分析</tag>
+        <tag>VB 调试</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>VB 调试之 P-Code 替换操作码</title>
+    <url>/post/3307503664/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe 和 opcode.txt</a>来自<a href="http://xuepojie.com/">学破解论坛</a>，仅供学习使用；</li>
+<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
+
+</li>
+</ul>
+<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
+<li><p>运行程序，程序会先弹出一个 NAG 窗口，点击确定后弹出主窗体：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuyri1qyhj30sy0lcaau.jpg" alt="运行程序"></p>
+</li>
+<li><p>导入<code>OD</code>开始分析，首先按照常规思路，既然有弹窗，肯定会使用 API：<code>rtcMsgBox</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuyuvjmrpj31dv0u0tcb.jpg" alt="查找API"></p>
+<p>查看 API 列表，找到<code>rtcMsgBox</code>设置断点，然后运行程序；</p>
+</li>
+<li><p>程序中断后，在栈窗口<code>反汇编窗口跟随</code>到返回位置：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuywuticyj31dv0u0q6f.jpg" alt="反汇编窗口跟随"></p>
+<p>在调用位置设置断点，然后重载并运行程序；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv2fpugyyj31dx0u078s.jpg" alt="在调用位置设置断点"></p>
+</li>
+<li><p>调用指令是<code>CALL EAX</code>，当前 EAX 值为 401000，<code>Ctrl + G</code> 跳转到 401000，正是<code>rtcMsgBox</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuz7bgembj31dr0u00wd.jpg" alt="401000"></p>
+<p>按下<code>-</code>减号键，回到断点位置，既然是调用函数，CALL 上面的指令就是它的参数，这种传参方式在 P-Code 中很常见，还没有完，继续；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuznpzrsjj31dv0u0n28.jpg" alt="CALL的参数"></p>
+<p>CALL 的参数到底是什么呢？</p>
+<p>根据上面的代码逻辑，获取一个操作码后无条件跳转了，所以，<code>JMP</code>以上的代码与 CALL 无关；</p>
+<p>因此，CALL 的参数应该是<code>JMP</code>向下，直到<code>CALl</code>；</p>
+<p>给参数起始位置设置断点，因为中间包含<code>JE</code>跳转，为了防止跳转，同时给<code>JE</code>也设置断点，重载并运行程序；</p>
+</li>
+<li><p>这里的戏就很精彩了，程序中断在参数位置：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuzxxlr7hj31dy0u0tcz.jpg" alt="程序中断在参数位置"></p>
+<p>然后按下<code>Ctrl + A</code>分析程序，在信息窗口发现跳转至此处的位置太多，如果挨个儿去跟，那就相等精彩了；</p>
+<p>同时，EAX 中有一个操作码<code>OA</code>，为啥它是操作码？因为根据 P-Code 的惯例，接下来既然要获取参数了，且代码没有执行，那 EAX 中存放的就是上一步的结果，而 P-Code 的逻辑就是先获取操作码，紧接着就是获取参数，那就说明，接下来获取的参数既是 CALL 的参数，也是<code>OA</code>操作码的参数，So，<code>OA</code>肯定是一个操作码；</p>
+<p>数据窗口跟随 ESI，发现<code>OA</code>位于当前 ESI 之前，地址是：401AD2；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv0ahg84qj31e00u0n1p.jpg" alt="数据窗口跟随 ESI"></p>
+<p>既然接下来要执行 CALL 也就是<code>rtcMsgBox</code>函数了，那么<code>OA</code>在 P-Code 中是否就是<code>rtcMsgBox</code>呢？</p>
+</li>
+<li><p>继续运行程序，直到将要获取下一个操作码：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv0jiz60tj31dw0u0q6r.jpg" alt="将要获取下一个操作码"></p>
+<p>标志性的获取操作码的语句，接下来要获取的操作码是<code>36</code>，同时也反向说明，在这行代码之前，<code>OA</code>操作码是一直有效的；</p>
+<p>而且，<code>OA</code>的参数是两个：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv10zic33j31e00u0q8d.jpg" alt="OA 的参数是两个"></p>
+<p>因为操作了两次 ESI，同时，位于<code>OA</code>和<code>36</code>之间的数据被分别放入了 ECX 和 EDI；</p>
+</li>
+<li><p>大胆的猜测一下，如果<code>OA</code>就是<code>rtcMsgBox</code>，那么替换它是否就能跳过弹窗呢？</p>
+</li>
+<li><p>重载程序，在数据窗口 goto 到<code>OA</code>，也就是 401AD2：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv0sw66o4j31dz0u0n0r.jpg" alt="goto 到 OA"></p>
+</li>
+<li><p>打开<code>opcode.txt</code>，发现<code>07</code>与<code>OA</code>参数数量和参数大小都相同，且<code>07</code>没有副作用：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv20byaqvj312e0e20sz.jpg" alt="opcode.txt"></p>
+<p>如上图所示：</p>
+<ul>
+<li><code>OA</code>表示调用指针（ptr）指向的函数，且没有返回值，4 字节大小，有 2 个参数，参数一 2 字节，参数二 2 字节（4 2 2 2）；</li>
+<li><code>07</code>表示 PUSH 值到堆栈，4 字节大小，有 2 个参数，参数一 2 字节，参数二 2 字节（4 2 2 2）；</li>
+</ul>
+<p>这里不用 <code>0B</code>替换<code>OA</code>的原因是：CALL 的副作用要比 PUSH 大的多；</p>
+<p>所以，替换<code>0A</code>为<code>07</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv18ioilnj31dz0u0wiv.jpg" alt="替换 OA"></p>
+<p>需要注意的是：替换操作码时，两个操作码的参数数量和参数大小必须相同，且替换的操作码对程序的运行没有副作用；</p>
+<p>这里再次感谢<a href="http://xuepojie.com/">恒大</a>提供的<code>opcode.txt</code>文件；</p>
+</li>
+<li><p>然后运行程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv1e58hd6j31dz0u0n10.jpg" alt="然后运行程序"></p>
+<p>没有出现 NAG 窗口，直接显示程序主窗体；</p>
+</li>
+<li><p>保存修改到可执行文件，运行程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv1hpnkpqj30wa0k23z2.jpg" alt="保存修改到可执行文件"></p>
+<p>修改依然没有问题，完工！</p>
 </li>
 </ol>
 ]]></content>
@@ -348,6 +437,38 @@
       </tags>
   </entry>
   <entry>
+    <title>VB 调试之初识 VB</title>
+    <url>/post/674877238/</url>
+    <content><![CDATA[<blockquote>
+<p>初识简单了解一下 VB，相信随着深入的学习，对它的了解会更多，理解会更深；</p>
+</blockquote>
+<h4 id="P-Code-Packed-Code-压缩代码"><a href="#P-Code-Packed-Code-压缩代码" class="headerlink" title="P-Code Packed Code 压缩代码"></a>P-Code Packed Code 压缩代码</h4><ul>
+<li>4.0 以前</li>
+<li>运行时，动态链接库（DLL）将翻译或解释执行程序中的指令；</li>
+<li>解释器 MSVBVM50.DLL 和 MSVBVM60.DLL</li>
+</ul>
+<h4 id="N-Code-Native-Code-本机代码"><a href="#N-Code-Native-Code-本机代码" class="headerlink" title="N-Code Native Code 本机代码"></a>N-Code Native Code 本机代码</h4><ul>
+<li>5.0 以后</li>
+<li>改善 VB 的运行速度</li>
+<li>但还是需要 MSVBVM60.DLL，因为许多函数本体放在 MSVBVM60.DLL 里面，需要不断地 CALL 其中的函数，不过，这时候的 MSVBVM60.DLL 就不承担解释执行的任务了，只是充当一般的 DLL；</li>
+</ul>
+<h4 id="编译器技术"><a href="#编译器技术" class="headerlink" title="编译器技术"></a>编译器技术</h4><ul>
+<li>编译器的编译技术可以分为native－compile（自然编译）与pcode－compile（伪编译）两种；</li>
+<li>自然编译是编译器将高级语言转换为汇编代码，并经链接生成EXE程序的过程；</li>
+<li>伪编译是编译器将高级语言转换为某种编码后，将能解释、执行此编码的一段程序一同链接，生成EXE程序；</li>
+<li>伪代码p-code，最早应该叫做Pascal-Code，其名称起源于一个pascal编译器使用的“中间代码”编译技术。现在一般作为pseudo-code（伪代码），或packed-code（压缩代码）简称，此项编译技术的出现，最终导致了“虚拟机”的出现。而微软在其编程工具basic、c、vb中都使用了类似的编译技术；</li>
+<li>所谓伪代码，其基本工作原理是编译器先把执行程序编译为比80X86机器码紧凑得多的中间代码形式，然后在链接时把一个小工作引擎嵌入执行程序中，最后在运行时由此工作引擎把P-Code解释为本地机器码实际执行，所以叫做packed-code；同时又由于此代码并不是最终的机器码形式，实际上是“变形的源代码”，所以也被称为pseudo-code。依靠P-code编译技术，使得编程语言不依赖于机器或操作平台成为可能；</li>
+</ul>
+]]></content>
+      <categories>
+        <category>VB</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>VB 调试</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>VB 调试之分析 N-Code（二）</title>
     <url>/post/3794155287/</url>
     <content><![CDATA[<blockquote>
@@ -446,38 +567,6 @@
       <tags>
         <tag>CrackMe</tag>
         <tag>逆向分析</tag>
-        <tag>VB 调试</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>VB 调试之初识 VB</title>
-    <url>/post/674877238/</url>
-    <content><![CDATA[<blockquote>
-<p>初识简单了解一下 VB，相信随着深入的学习，对它的了解会更多，理解会更深；</p>
-</blockquote>
-<h4 id="P-Code-Packed-Code-压缩代码"><a href="#P-Code-Packed-Code-压缩代码" class="headerlink" title="P-Code Packed Code 压缩代码"></a>P-Code Packed Code 压缩代码</h4><ul>
-<li>4.0 以前</li>
-<li>运行时，动态链接库（DLL）将翻译或解释执行程序中的指令；</li>
-<li>解释器 MSVBVM50.DLL 和 MSVBVM60.DLL</li>
-</ul>
-<h4 id="N-Code-Native-Code-本机代码"><a href="#N-Code-Native-Code-本机代码" class="headerlink" title="N-Code Native Code 本机代码"></a>N-Code Native Code 本机代码</h4><ul>
-<li>5.0 以后</li>
-<li>改善 VB 的运行速度</li>
-<li>但还是需要 MSVBVM60.DLL，因为许多函数本体放在 MSVBVM60.DLL 里面，需要不断地 CALL 其中的函数，不过，这时候的 MSVBVM60.DLL 就不承担解释执行的任务了，只是充当一般的 DLL；</li>
-</ul>
-<h4 id="编译器技术"><a href="#编译器技术" class="headerlink" title="编译器技术"></a>编译器技术</h4><ul>
-<li>编译器的编译技术可以分为native－compile（自然编译）与pcode－compile（伪编译）两种；</li>
-<li>自然编译是编译器将高级语言转换为汇编代码，并经链接生成EXE程序的过程；</li>
-<li>伪编译是编译器将高级语言转换为某种编码后，将能解释、执行此编码的一段程序一同链接，生成EXE程序；</li>
-<li>伪代码p-code，最早应该叫做Pascal-Code，其名称起源于一个pascal编译器使用的“中间代码”编译技术。现在一般作为pseudo-code（伪代码），或packed-code（压缩代码）简称，此项编译技术的出现，最终导致了“虚拟机”的出现。而微软在其编程工具basic、c、vb中都使用了类似的编译技术；</li>
-<li>所谓伪代码，其基本工作原理是编译器先把执行程序编译为比80X86机器码紧凑得多的中间代码形式，然后在链接时把一个小工作引擎嵌入执行程序中，最后在运行时由此工作引擎把P-Code解释为本地机器码实际执行，所以叫做packed-code；同时又由于此代码并不是最终的机器码形式，实际上是“变形的源代码”，所以也被称为pseudo-code。依靠P-code编译技术，使得编程语言不依赖于机器或操作平台成为可能；</li>
-</ul>
-]]></content>
-      <categories>
-        <category>VB</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
         <tag>VB 调试</tag>
       </tags>
   </entry>
@@ -3333,7 +3422,7 @@
 <h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
 <li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><code>WinHEX</code>来自互联网；</li>
+<li><code>WinHex</code>来自互联网；</li>
 <li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
 </ul>
 <a id="more"></a>
@@ -4100,7 +4189,7 @@
 </li>
 <li><p>而 IMAGE_OPTIONAL_HEADER32 位于 IMAGE_NT_HEADERS，也就是 PE 头；</p>
 </li>
-<li><p>使用 WinHEX 打开 NOTEPAD.EXE，找到 PE 头的偏移位置（位于从文件开始偏移 3C 字节处）；</p>
+<li><p>使用 WinHex 打开 NOTEPAD.EXE，找到 PE 头的偏移位置（位于从文件开始偏移 3C 字节处）；</p>
 <p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnsqzcsjsnj316r0u041k.jpg" alt="PE头的偏移位置"></p>
 </li>
 <li><p>找到 PE 头后，IMAGE_OPTIONAL_HEADER32 是其的第 3 个成员，所以，直接定位到第 3 个成员，然后找到 DataDirectory：</p>
@@ -4213,7 +4302,7 @@
 <p>AddressOfNameOrdinals 域指向的数组中包含（AddressOfNames 数组中）函数名对应的（在 AddressOfFunctions 数组中的）索引，所以，序数表和名称表的元素数量相同；</p>
 <p>PE 装载器会通过 AddressOfNameOrdinals 域指向的数组获取 AddressOfNames 域指向的数组中的函数名在 AddressOfFunctions 域指向的数组中对应的索引，从而获取函数地址；</p>
 <h4 id="以-KERNEL32-DLL-为例，梳理思路，强化学习"><a href="#以-KERNEL32-DLL-为例，梳理思路，强化学习" class="headerlink" title="以 KERNEL32.DLL 为例，梳理思路，强化学习"></a>以 KERNEL32.DLL 为例，梳理思路，强化学习</h4><ol>
-<li><p>使用 WinHEX 打开 KERNEL32.DLL，找到 IMAGE_EXPORT_DESCRIPTOR，位于 IMAGE_OPTIONAL_HEADER32.DataDirectory[0]；</p>
+<li><p>使用 WinHex 打开 KERNEL32.DLL，找到 IMAGE_EXPORT_DESCRIPTOR，位于 IMAGE_OPTIONAL_HEADER32.DataDirectory[0]；</p>
 <p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gntuzfk614j316s0u0q5d.jpg" alt="IMAGE_EXPORT_DESCRIPTOR"></p>
 <p>可以看到，IMAGE_EXPORT_DESCRIPTOR 的 RVA 为<code>262C</code>，则 RAW 为<code>1A2C</code>;</p>
 </li>
