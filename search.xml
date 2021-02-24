@@ -653,7 +653,7 @@
 <li><p>ECX：（字符串和循环操作的）计数器</p>
 </li>
 <li><p>EDX：（I/O 指针）数据寄存器</p>
-<p>以上 4 个寄存器主要用于算数运算指令中，常常用来保存常量与变量的值；<br>某些汇编指令（MUL、DIV、LODS 等）直接用来操作特定寄存器，执行这些命令后，仅改变特定寄存器中的值；<br>EAX 一般用在函数返回值中，所有 Win32 API 函数都会先把返回值保存到 EAX 再返回；</p>
+<p>以上 4 个寄存器主要用于算数运算指令中，常常用来保存常量与变量的值；<br>某些汇编指令（MUL、DIV、LODS 等）直接用来操作特定寄存器，执行这些命令后，仅改变特定寄存器中的值；<br>EAX 一般用在函数返回值中，所有 Win32 API 函数都会先把返回值保存到 EAX 再返回，如果处理结果的大小超过 EAX’ 寄存器的容量，其高 32 位将会放到 EDX 寄存器中；</p>
 </li>
 <li><p>EBP：（SS 段中栈内数据指针）扩展基址指针寄存器</p>
 </li>
@@ -1205,6 +1205,68 @@
       </tags>
   </entry>
   <entry>
+    <title>脱壳之异常法定位 OEP</title>
+    <url>/post/2614075303/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
+<li>OllyDbg 1.1 修改版，简称<code>OD</code>；</li>
+<li><code>OD</code>修改版设置的<code>内存访问断点</code>只在执行时中断，不会在访问或写入时中断，也可称为<code>内存执行断点</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
+
+</li>
+</ul>
+<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
+<li><p>拿到 CM 后，第 1 想法就是栈平衡，将 CM 导入原版 OD：</p>
+<p>首先弹出警告弹窗，说明程序有壳（这不是废话嘛）</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwou1dw2sj31eb0u0n0j.jpg" alt="将 CM 导入原版 OD"></p>
+<p>然后到达 EP 位置，行首却不是 PUSHAD/PUSHFD，这就让人很尴尬了，不过又想到了栈平衡的第 2 种方法；</p>
+</li>
+<li><p>大胆的猜测一下，如果 OEP 行首是压栈指令，那么压栈的地址就是：0012FFC0:</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwp0hlhrej31eg0u0aez.jpg" alt="压栈的地址"></p>
+<p>所以，给 0012FFC0 设置硬件写入断点，然后运行程序；</p>
+</li>
+<li><p>程序会中断两次，第 2 次才会到达 OEP，因为第 2 中断时才处于代码段：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwp87zzrwj31e70u043k.jpg" alt="OEP"></p>
+</li>
+<li><p>然后又尝试了设置访问断点来到达 OEP，两种方法皆是可行的，不过这 3 种方法并不是今天的重点；</p>
+</li>
+<li><p>将程序导入改版 OD，<code>F9</code>运行程序，待程序主窗体出现后，打开日志窗口（请不要关闭程序主窗体）：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwpf8lzy7j31a80u0diy.jpg" alt="一大堆异常"></p>
+<p>来到日志窗口后，发现程序运行期间，有一大堆异常，但程序却正常运行了，很是奇怪；</p>
+</li>
+<li><p>程序可以正常运行，是因为 OD 的调试选项忽略了所有异常，如果不忽略异常，程序会在每一次异常时暂停，而在最后一次异常后，程序正常运行了；</p>
+<p>如果在最后一次异常时（也可以说是程序运行前）给代码段设置内存访问断点，是否可以到达 OEP 呢？</p>
+</li>
+<li><p>首先设置 OD 调试选项：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwpwb6stlj31ab0u077r.jpg" alt="不忽略异常"></p>
+<p>在日志窗口可以看到，最后一次异常是 INT3，所以取消忽略 INT3 异常，同时取消忽略异常范围选项，因为从 00000000 ～ FFFFFFFF 就忽略了所有异常；</p>
+</li>
+<li><p>然后运行程序，在几次中断后，就来到了最后一次异常所在位置：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwq3u0p0fj31a50u00wx.jpg" alt="最后一次异常"></p>
+</li>
+<li><p>来到内存窗口，给代码段设置<code>内存执行断点</code>，然后按下<code>Shift + F9</code>忽略异常并运行程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwq6yj16mj31a50u077g.jpg" alt="OEP"></p>
+<p>程序到达 OEP，Perfect！</p>
+</li>
+<li><p>既然有那么多方法，问什么要用这么复杂的方法呢？</p>
+<p>是因为，加壳不仅可以隐藏 OEP，还可以反调试，而为了绕过反调试，在执行部分代码后，再设置断点相对会更安全，这是一种好的思路；</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>脱壳技术</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>CrackMe</tag>
+        <tag>脱壳</tag>
+        <tag>OEP</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>脱壳之壳常用函数定位 OEP</title>
     <url>/post/1066637783/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -1258,6 +1320,83 @@
 <li><p>在内存窗口，给代码段设置内存执行断点，然后运行程序：</p>
 <p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnx9k811k6j31a50u0tby.jpg" alt="程序中断在 OEP"></p>
 <p>程序到达 OEP；</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>脱壳技术</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>CrackMe</tag>
+        <tag>脱壳</tag>
+        <tag>OEP</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>脱壳之栈平衡原理定位 OEP</title>
+    <url>/post/810738268/</url>
+    <content><![CDATA[<blockquote>
+<p>加壳软件必须保证外壳初始化的现场环境（各寄存器的值）与原程序的现场环境是相同的；</p>
+<p>加壳后的程序在初始化时保存各寄存器的值，待外壳执行完毕再恢复各寄存器的内容，最后跳转到原程序执行；</p>
+<p>通常，加壳后的程序在开始时使用 PUSHAD/PUSHFD 来保护现场，外壳执行完毕后，使用 POPAD/POPFD 恢复现场；</p>
+<p>也就是说，加壳软件必须遵守栈平衡原理；</p>
+</blockquote>
+<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li>与<code>逆向分析之软编码寻找序列号（一）</code>使用的 CrackMe 相同；</li>
+<li>加壳工具为<a href="https://upx.github.io/">UPX</a>，感谢 🙏 开源；</li>
+<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
+
+</li>
+</ul>
+<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><h4 id="方法一"><a href="#方法一" class="headerlink" title="方法一"></a>方法一</h4><ol>
+<li><p>首先，使用 UPX 压缩 CM；</p>
+</li>
+<li><p>将加壳后的 CM 导入 OD 后，查看 EP 以及 ESP：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnw6ny7gdpj31dy0u0n1f.jpg" alt="查看 EP 以及 ESP"></p>
+<p>EP 处使用 PUSHAD 备份当前各通用寄存器的值，然后将会在外壳执行完毕后再使用 POPAD 恢复各寄存器的值，以保证程序到达 OEP 时，寄存器的内容保持不变；</p>
+<p>此时 ESP 的值为：0012FFC4；</p>
+</li>
+<li><p><code>F7</code>单步执行程序，也就是执行<code>PUSHAD</code>指令后，8 个通用寄存器的内容压入栈：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnw6w8i7qej31dw0u0n1f.jpg" alt="通用寄存器的内容压入栈"></p>
+</li>
+<li><p>加壳程序必须遵守栈平衡原理，所以在执行完毕后，一定会访问栈以恢复各寄存器的内容，所以给处于栈中的任意寄存器内容设置硬件访问断点：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnw766d18oj31e00u0wjp.jpg" alt="硬件访问断点"></p>
+<p>这里以 EAX 寄存器的内容为例，使用<code>HR 12FFC0</code>，设置硬件访问断点；</p>
+<p>设置完毕后，可以在调试菜单，硬件断点选项下看到已经设置的硬件断点；</p>
+</li>
+<li><p>运行程序后， 程序中断：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnw7dshoraj31du0u0wje.jpg" alt="程序中断"></p>
+<p>中断位置的 POPAD 访问了保存在栈中的寄存器内容，触发了断点；</p>
+<p>同时，各寄存器已经恢复到 EP 时的状态，ESP 重新指向 0012FFC4，说明栈中保存的内容被丢弃了，使用后释放，这就是堆栈平衡；</p>
+</li>
+<li><p><code>F7</code>单步执行程序，程序跳转到 OEP：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnw7lk3f4oj31du0u0q6p.jpg" alt="OEP"></p>
+<p>此时各寄存器的内容以及 ESP 的值与程序处于 EP 时保持一致；</p>
+</li>
+<li><p>可以把整个外壳理解为一个函数或子程序，在执行过程中会遵守栈平衡原理，所以当外壳执行完毕跳转到 OEP 时，ESP 的值保持不变；</p>
+</li>
+</ol>
+<h4 id="方法二"><a href="#方法二" class="headerlink" title="方法二"></a>方法二</h4><ol>
+<li><p>大多数程序 OEP 的第 1 行指令都是压栈指令（PUSH）：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnw7w7ivrjj31e30u0teo.jpg" alt="都是压栈指令（PUSH）"></p>
+</li>
+<li><p>向栈压入数据时，栈指针减小，向低地址移动；从栈中弹出数据时，栈指针增加，向高地址移动；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnw832cqgjj31ds0u0wiq.jpg" alt="向栈压入数据时"></p>
+<p>以当前 CM 为例，执行<code>PUSH 0</code>后，ESP 由 0012FFC4 指向 0012FFC0，地址减小了，这是程序到达 OEP 后执行的第 1 条指令；</p>
+</li>
+<li><p>反向思考一下，如果给 0012FFC0 设置写入断点，是不是就可以到达 OEP？</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnw8bcwefcj31du0u079d.jpg" alt="设置硬件写入断点"></p>
+<p>将程序载入 OD 后，程序停留在 EP 位置，此时的 ESP 为 0012FFC4，根据栈平衡原理，外壳执行完毕后，ESP 保持不变，所以，OEP 的第 1 条 PUSH 指令，会将内容写入 0012FFC0（向栈压入数据时，栈指针减小，向低地址移动）；</p>
+<p>确定写入地址后设置硬件写入断点<code>HW 0012FFC0</code>；</p>
+</li>
+<li><p>运行程序后，程序中断在代码段：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnw8jjzzdlj31dy0u0q7q.jpg" alt="程序中断在代码段"></p>
+<p>可以看到，由于<code>PUSH 0</code>指令向 0012FFC0 写入内容，从而触发了硬件写入断点，导致中断，而这里就是 OEP；</p>
 </li>
 </ol>
 ]]></content>
@@ -1352,145 +1491,6 @@
       </categories>
       <tags>
         <tag>脱壳</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>脱壳之异常法定位 OEP</title>
-    <url>/post/2614075303/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
-<li>OllyDbg 1.1 修改版，简称<code>OD</code>；</li>
-<li><code>OD</code>修改版设置的<code>内存访问断点</code>只在执行时中断，不会在访问或写入时中断，也可称为<code>内存执行断点</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
-</ul>
-<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
-<li><p>拿到 CM 后，第 1 想法就是栈平衡，将 CM 导入原版 OD：</p>
-<p>首先弹出警告弹窗，说明程序有壳（这不是废话嘛）</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwou1dw2sj31eb0u0n0j.jpg" alt="将 CM 导入原版 OD"></p>
-<p>然后到达 EP 位置，行首却不是 PUSHAD/PUSHFD，这就让人很尴尬了，不过又想到了栈平衡的第 2 种方法；</p>
-</li>
-<li><p>大胆的猜测一下，如果 OEP 行首是压栈指令，那么压栈的地址就是：0012FFC0:</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwp0hlhrej31eg0u0aez.jpg" alt="压栈的地址"></p>
-<p>所以，给 0012FFC0 设置硬件写入断点，然后运行程序；</p>
-</li>
-<li><p>程序会中断两次，第 2 次才会到达 OEP，因为第 2 中断时才处于代码段：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwp87zzrwj31e70u043k.jpg" alt="OEP"></p>
-</li>
-<li><p>然后又尝试了设置访问断点来到达 OEP，两种方法皆是可行的，不过这 3 种方法并不是今天的重点；</p>
-</li>
-<li><p>将程序导入改版 OD，<code>F9</code>运行程序，待程序主窗体出现后，打开日志窗口（请不要关闭程序主窗体）：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwpf8lzy7j31a80u0diy.jpg" alt="一大堆异常"></p>
-<p>来到日志窗口后，发现程序运行期间，有一大堆异常，但程序却正常运行了，很是奇怪；</p>
-</li>
-<li><p>程序可以正常运行，是因为 OD 的调试选项忽略了所有异常，如果不忽略异常，程序会在每一次异常时暂停，而在最后一次异常后，程序正常运行了；</p>
-<p>如果在最后一次异常时（也可以说是程序运行前）给代码段设置内存访问断点，是否可以到达 OEP 呢？</p>
-</li>
-<li><p>首先设置 OD 调试选项：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwpwb6stlj31ab0u077r.jpg" alt="不忽略异常"></p>
-<p>在日志窗口可以看到，最后一次异常是 INT3，所以取消忽略 INT3 异常，同时取消忽略异常范围选项，因为从 00000000 ～ FFFFFFFF 就忽略了所有异常；</p>
-</li>
-<li><p>然后运行程序，在几次中断后，就来到了最后一次异常所在位置：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwq3u0p0fj31a50u00wx.jpg" alt="最后一次异常"></p>
-</li>
-<li><p>来到内存窗口，给代码段设置<code>内存执行断点</code>，然后按下<code>Shift + F9</code>忽略异常并运行程序：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwq6yj16mj31a50u077g.jpg" alt="OEP"></p>
-<p>程序到达 OEP，Perfect！</p>
-</li>
-<li><p>既然有那么多方法，问什么要用这么复杂的方法呢？</p>
-<p>是因为，加壳不仅可以隐藏 OEP，还可以反调试，而为了绕过反调试，在执行部分代码后，再设置断点相对会更安全，这是一种好的思路；</p>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>脱壳技术</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>CrackMe</tag>
-        <tag>脱壳</tag>
-        <tag>OEP</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>脱壳之栈平衡原理定位 OEP</title>
-    <url>/post/810738268/</url>
-    <content><![CDATA[<blockquote>
-<p>加壳软件必须保证外壳初始化的现场环境（各寄存器的值）与原程序的现场环境是相同的；</p>
-<p>加壳后的程序在初始化时保存各寄存器的值，待外壳执行完毕再恢复各寄存器的内容，最后跳转到原程序执行；</p>
-<p>通常，加壳后的程序在开始时使用 PUSHAD/PUSHFD 来保护现场，外壳执行完毕后，使用 POPAD/POPFD 恢复现场；</p>
-<p>也就是说，加壳软件必须遵守栈平衡原理；</p>
-</blockquote>
-<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>与<code>逆向分析之软编码寻找序列号（一）</code>使用的 CrackMe 相同；</li>
-<li>加壳工具为<a href="https://upx.github.io/">UPX</a>，感谢 🙏 开源；</li>
-<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
-</ul>
-<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><h4 id="方法一"><a href="#方法一" class="headerlink" title="方法一"></a>方法一</h4><ol>
-<li><p>首先，使用 UPX 压缩 CM；</p>
-</li>
-<li><p>将加壳后的 CM 导入 OD 后，查看 EP 以及 ESP：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnw6ny7gdpj31dy0u0n1f.jpg" alt="查看 EP 以及 ESP"></p>
-<p>EP 处使用 PUSHAD 备份当前各通用寄存器的值，然后将会在外壳执行完毕后再使用 POPAD 恢复各寄存器的值，以保证程序到达 OEP 时，寄存器的内容保持不变；</p>
-<p>此时 ESP 的值为：0012FFC4；</p>
-</li>
-<li><p><code>F7</code>单步执行程序，也就是执行<code>PUSHAD</code>指令后，8 个通用寄存器的内容压入栈：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnw6w8i7qej31dw0u0n1f.jpg" alt="通用寄存器的内容压入栈"></p>
-</li>
-<li><p>加壳程序必须遵守栈平衡原理，所以在执行完毕后，一定会访问栈以恢复各寄存器的内容，所以给处于栈中的任意寄存器内容设置硬件访问断点：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnw766d18oj31e00u0wjp.jpg" alt="硬件访问断点"></p>
-<p>这里以 EAX 寄存器的内容为例，使用<code>HR 12FFC0</code>，设置硬件访问断点；</p>
-<p>设置完毕后，可以在调试菜单，硬件断点选项下看到已经设置的硬件断点；</p>
-</li>
-<li><p>运行程序后， 程序中断：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnw7dshoraj31du0u0wje.jpg" alt="程序中断"></p>
-<p>中断位置的 POPAD 访问了保存在栈中的寄存器内容，触发了断点；</p>
-<p>同时，各寄存器已经恢复到 EP 时的状态，ESP 重新指向 0012FFC4，说明栈中保存的内容被丢弃了，使用后释放，这就是堆栈平衡；</p>
-</li>
-<li><p><code>F7</code>单步执行程序，程序跳转到 OEP：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnw7lk3f4oj31du0u0q6p.jpg" alt="OEP"></p>
-<p>此时各寄存器的内容以及 ESP 的值与程序处于 EP 时保持一致；</p>
-</li>
-<li><p>可以把整个外壳理解为一个函数或子程序，在执行过程中会遵守栈平衡原理，所以当外壳执行完毕跳转到 OEP 时，ESP 的值保持不变；</p>
-</li>
-</ol>
-<h4 id="方法二"><a href="#方法二" class="headerlink" title="方法二"></a>方法二</h4><ol>
-<li><p>大多数程序 OEP 的第 1 行指令都是压栈指令（PUSH）：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnw7w7ivrjj31e30u0teo.jpg" alt="都是压栈指令（PUSH）"></p>
-</li>
-<li><p>向栈压入数据时，栈指针减小，向低地址移动；从栈中弹出数据时，栈指针增加，向高地址移动；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnw832cqgjj31ds0u0wiq.jpg" alt="向栈压入数据时"></p>
-<p>以当前 CM 为例，执行<code>PUSH 0</code>后，ESP 由 0012FFC4 指向 0012FFC0，地址减小了，这是程序到达 OEP 后执行的第 1 条指令；</p>
-</li>
-<li><p>反向思考一下，如果给 0012FFC0 设置写入断点，是不是就可以到达 OEP？</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnw8bcwefcj31du0u079d.jpg" alt="设置硬件写入断点"></p>
-<p>将程序载入 OD 后，程序停留在 EP 位置，此时的 ESP 为 0012FFC4，根据栈平衡原理，外壳执行完毕后，ESP 保持不变，所以，OEP 的第 1 条 PUSH 指令，会将内容写入 0012FFC0（向栈压入数据时，栈指针减小，向低地址移动）；</p>
-<p>确定写入地址后设置硬件写入断点<code>HW 0012FFC0</code>；</p>
-</li>
-<li><p>运行程序后，程序中断在代码段：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnw8jjzzdlj31dy0u0q7q.jpg" alt="程序中断在代码段"></p>
-<p>可以看到，由于<code>PUSH 0</code>指令向 0012FFC0 写入内容，从而触发了硬件写入断点，导致中断，而这里就是 OEP；</p>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>脱壳技术</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>CrackMe</tag>
-        <tag>脱壳</tag>
-        <tag>OEP</tag>
       </tags>
   </entry>
   <entry>
@@ -2510,30 +2510,45 @@
 <li><code>F2断点</code>很容易被检测，从而触发反调试；</li>
 <li><code>F2断点</code>重载程序后不会丢失；</li>
 </ul>
+<p>当执行一个 int3 断点时，该地址的内容会被调试器用 int3 指令替换，此时 OD 将 int3 隐藏，显示出来的仍是中断前的指令，实际上已经被替换为 CC；</p>
+<p>当被调试程序执行 int3 命令导致一个异常时，调试器就会捕捉到这个异常，从而停在断点处，然后将断点处的指令恢复成原来的指令；</p>
+<p>由于 int3 断点改变了原程序机器码，所以很容易被软件检测到，躲过检测的方法是将断点设置在函数内部或尾部；</p>
 <h5 id="内存断点"><a href="#内存断点" class="headerlink" title="内存断点"></a>内存断点</h5><ul>
 <li><code>内存断点</code>是通过修改内存属性为不可访问、不可执行来实现的；</li>
 <li><code>内存断点</code>同时只能存在一个；</li>
 <li><code>内存断点</code>在重载程序后会丢失，需要重新设置；</li>
 <li><code>内存断点</code>会影响程序的运行速度；</li>
 </ul>
+<h5 id="内存访问一次性断点"><a href="#内存访问一次性断点" class="headerlink" title="内存访问一次性断点"></a>内存访问一次性断点</h5><p>在内存窗口（Alt + M），每个区段都有相应的权限（属性），选择区段并按下 F2 后，可以设置一次断点，且属性可以单独设置；</p>
+<p>断点生效后会被自动删除，所以叫做一次性断点；</p>
 <h5 id="硬件断点"><a href="#硬件断点" class="headerlink" title="硬件断点"></a>硬件断点</h5><ul>
 <li><code>硬件断点</code>最多可以设置 4 个；</li>
 <li><code>硬件断点</code>在设置位置的下一条指令中断；</li>
-<li>可以使用命令<code>HE xxxxxxxx</code>快速设置一个<code>硬件断点</code>；</li>
-<li>可以使用命令<code>HE MessageBoxA</code>在<code>API</code>的行首快速设置一个<code>硬件断点</code>；</li>
+<li>可以使用命令<code>HE xxxxxxxx</code>快速设置一个<code>硬件执行断点</code>；</li>
+<li>可以使用命令<code>HE MessageBoxA</code>在<code>API</code>的行首快速设置一个<code>硬件执行断点</code>；</li>
+<li><code>HW xxxxxxxx</code>设置<code>硬件写入断点</code>；</li>
+<li><code>HR xxxxxxxx</code>设置<code>硬件读取断点</code>；</li>
+<li>硬件断点只能手动删除或执行删除；</li>
 </ul>
+<p>硬件断点和 DRx 调试寄存器有关；</p>
+<p>DRx 调试器一共有 8 个（DR0 ～ DR7）：</p>
+<ul>
+<li>DR0 ～ DR3:调试地址寄存器，用于保存需要监视的地址，例如设置硬件断点；</li>
+<li>DR4 ～ DR5：保留，未公开具体作用；</li>
+<li>DR6：调试寄存器组状态寄存器；</li>
+<li>DR7：调试寄存器组控制寄存器；</li>
+</ul>
+<p>硬件断点的原理是使用 DR0 ～ DR3 设定地址，并使用 DR7 设定状态，因此最多设置 4 个断点；</p>
+<p>硬件执行断点和 CC 断点的作用一样，但不会修改机器码，所以更难检测；</p>
+<p>硬件断点的优点是速度快，在 int3 断点容易发现的地方设置硬件断点效果更好，缺点是只能设置 4 个；</p>
 <h5 id="条件断点"><a href="#条件断点" class="headerlink" title="条件断点"></a>条件断点</h5><ul>
 <li>满足某个条件的<code>CC断点</code>;</li>
 <li>使用<code>shift + F2</code>快速设置条件断点；</li>
+<li>OD 的条件断点可以按寄存器、存储器、消息等设断；</li>
 </ul>
 <h5 id="条件记录断点"><a href="#条件记录断点" class="headerlink" title="条件记录断点"></a>条件记录断点</h5><ul>
-<li>和条件断点类似，多了记录日志等功能，更加详细的设置条件；</li>
+<li>多了记录断点处函数表达式或参数值的条件断点；</li>
 <li>使用<code>shift + F4</code>快速设置条件记录断点；</li>
-</ul>
-<h5 id="API-断点"><a href="#API-断点" class="headerlink" title="API 断点"></a>API 断点</h5><ul>
-<li>给系统提供的 API 设置的<code>CC断点</code>；</li>
-<li><code>MessageBoxA</code>中的<code>A</code>表示使用<code>ASCII</code>编码；</li>
-<li><code>MessageBoxW</code>中的<code>W</code>表示使用<code>Unicode</code>编码；</li>
 </ul>
 <h5 id="消息断点"><a href="#消息断点" class="headerlink" title="消息断点"></a>消息断点</h5><ul>
 <li>消息断点实际上就是条件记录断点；</li>
@@ -2542,7 +2557,16 @@
 <li>检测交互（消息循环）来设置<code>消息断点</code>，如<code>101 按键抬起</code>、<code>202 鼠标左键抬起</code>等；</li>
 <li>断点生效后，修改条件来记录操作日志，在<code>OD</code>的<code>L</code>窗口查看记录的日志或将日志输出到指定文件来进一步进行分析；</li>
 </ul>
-<p>未完待续。。。</p>
+<p>Windows 本身是由消息驱动的；</p>
+<p>当某个特定窗口函数接收到某个特定消息时，消息断点将使程序中断；</p>
+<p>消息断点与 int3 断点的区别是：int3 断点可以在程序启动前设置，消息断点只有在窗体被创建之后才能设置并拦截消息；</p>
+<p>所有发送的消息都有 4 个参数：1 个窗口句柄（hwnd）、1 个消息编号（msg）和 2 个 32 位长（long）的参数；</p>
+<p>Windows 通过句柄来标识它所代表的对象；</p>
+<h5 id="API-断点"><a href="#API-断点" class="headerlink" title="API 断点"></a>API 断点</h5><ul>
+<li>给系统提供的 API 设置的<code>CC断点</code>；</li>
+<li><code>MessageBoxA</code>中的<code>A</code>表示使用<code>ASCII</code>编码；</li>
+<li><code>MessageBoxW</code>中的<code>W</code>表示使用<code>Unicode</code>编码；</li>
+</ul>
 ]]></content>
       <categories>
         <category>逆向工程</category>
