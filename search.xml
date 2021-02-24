@@ -1205,55 +1205,77 @@
       </tags>
   </entry>
   <entry>
-    <title>脱壳之异常法定位 OEP</title>
-    <url>/post/2614075303/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
-<li>OllyDbg 1.1 修改版，简称<code>OD</code>；</li>
-<li><code>OD</code>修改版设置的<code>内存访问断点</code>只在执行时中断，不会在访问或写入时中断，也可称为<code>内存执行断点</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
+    <title>脱壳之壳的加载过程</title>
+    <url>/post/1754370069/</url>
+    <content><![CDATA[<blockquote>
+<p>记录<a href="https://bbs.pediy.com/forum-99.htm">加密解密</a>一书中对<code>壳的加载过程</code>的描述，第 16 章：16.1；</p>
+<p>眼过千遍，不如手过一遍；</p>
+</blockquote>
+<a id="more"></a>
 
+<h4 id="壳的加载过程"><a href="#壳的加载过程" class="headerlink" title="壳的加载过程"></a>壳的加载过程</h4><p>加壳软件通过修改原程序执行文件的组织结构，从而使壳比原程序代码更早获得控制权，且不影响原程序的正常运行，以下是壳的常见加载过程:</p>
+<ol>
+<li><p>保存入口参数</p>
+<p>加壳程序在初始化时会保存各寄存器的值，待外壳执行完毕，再恢复各寄存器的内容，最后跳到原程序执行，通常使用 PUSHAD/PUSHFD、POPAD/POPFD 指令来保存与恢复现场；</p>
 </li>
-</ul>
-<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
-<li><p>拿到 CM 后，第 1 想法就是栈平衡，将 CM 导入原版 OD：</p>
-<p>首先弹出警告弹窗，说明程序有壳（这不是废话嘛）</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwou1dw2sj31eb0u0n0j.jpg" alt="将 CM 导入原版 OD"></p>
-<p>然后到达 EP 位置，行首却不是 PUSHAD/PUSHFD，这就让人很尴尬了，不过又想到了栈平衡的第 2 种方法；</p>
+<li><p>获取壳本身需要使用的 API 地址</p>
+<p>在一般情况下，外壳的输入表中只有 GetProcAddress、GetModuleHandle 和 LoadLibrary 这 3 个 API 函数，甚至只有 Kernel32.dll 及 GetProcAddress；</p>
+<p>如果需要使用其它 API 函数，可以通过函数 LoadLibraryA（W）或 LoadLibraryExA（W）将 DLL 文件映像映射到调用进程的地址空间中，函数返回的 HINSTANCE 值用于标识文件映像所映射的虚拟内存地址；</p>
+<p>LoadLibrary 函数原型：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">HINSTANCE LoadLibrary(</span><br><span class="line">    LPCTSTR lpLibFileName    // DLL 文件名地址</span><br><span class="line">     );</span><br></pre></td></tr></table></figure>
+<p>返回值：成功则返回模块的句柄，失败返回 NULL；</p>
+<p>如果 DLL 文件已经被映射到调用进程的地址空间中，可以调用 GetModuleHandleA（W）函数获取 DLL 模块的句柄；</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">HMODULE GetModuleHandle(</span><br><span class="line">    LPCTSTR lpModuleName    // DLL 文件名地址</span><br><span class="line">     );</span><br></pre></td></tr></table></figure>
+<p>返回值：成功则返回模块的句柄，失败返回 NULL；</p>
+<p>一旦 DLL 模块被加载，线程就可以调用 GetProcAddress 函数获取输入函数的地址了；</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">FARPROC GetProcAddress(</span><br><span class="line">    HMODULE hModule,        // DLl 模块句柄</span><br><span class="line">    LPCSTR  lpProcName      // 函数名</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+<p>参数 hModule 是 DLL 模块的句柄，是调用 LoadLibrary（Ex） 或 GetModuleHandle 函数的返回值；</p>
+<p>参数 lpProcName 是函数名或函数序数值，如果此参数是序数值，则必须使用低位字；高位必须为零；</p>
+<p>返回值：成功则返回函数地址，失败返回 NULL；</p>
+<p>在外壳中使用的其他函数都是由这 3 个函数调用的；</p>
+<p>有些壳为了提高强度，连系统提供的 GetProcAddress 函数都不使用，而是自己实现一个相同功能的函数来代替 GetProcAddress，从而增加函数调用的隐蔽性；</p>
 </li>
-<li><p>大胆的猜测一下，如果 OEP 行首是压栈指令，那么压栈的地址就是：0012FFC0:</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwp0hlhrej31eg0u0aez.jpg" alt="压栈的地址"></p>
-<p>所以，给 0012FFC0 设置硬件写入断点，然后运行程序；</p>
+<li><p>解密原程序各区块的数据</p>
+<p>出于保护原程序代码和数据的目的，壳一般会加密原程序文件的各个区段；</p>
+<p>在程序执行时，外壳将解密这些区段数据，从而使程序能够正常运行；</p>
+<p>壳一般是按区块加密的，所以解密时也按区块解密，并把解密的区块数据按照区块的定义放入内存中合适的位置；</p>
 </li>
-<li><p>程序会中断两次，第 2 次才会到达 OEP，因为第 2 中断时才处于代码段：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwp87zzrwj31e70u043k.jpg" alt="OEP"></p>
+<li><p>IAT 的初始化</p>
+<p>IAT 的填写本来应该由 PE 装载器实现，但由于在加壳时构造了一个自建输入表，并让 PE 文件头数据目录表中的输入表指针指向自建输入表，PE 装载器会对自建输入表进行填写；</p>
+<p>程序的原始输入表会被外壳变形后存储，IAT 的填写会由外壳程序实现；</p>
+<p>外壳程序要做的就是将这个变形输入表的结构从头到尾扫描一遍，重新获取每个 DLL 引入的所有函数的地址，并将其填写在 IAT 中；</p>
 </li>
-<li><p>然后又尝试了设置访问断点来到达 OEP，两种方法皆是可行的，不过这 3 种方法并不是今天的重点；</p>
+<li><p>重定位项的处理</p>
+<p>文件执行时将被映射到指定内存地址中，这个初始内存地址称为基址，当然，这只是程序文件中声明的，当程序运行时，操作系统一定会满足其要求吗？</p>
+<p>对 EXE 文件来说，操作系统会尽量满足其要求，如：程序声明的基址是 400000，操作系统提供的基址也是 400000，在这种情况下就不需要基址重定位了；</p>
+<p>由于不需要对 EXE 文件进行重定位，加壳软件会删除原程序文件中用于保存重定位信息的区块，使加壳后的程序更小巧；</p>
+<p>对 DLL 的动态链接库文件来说，操作系统无法保证 DLL 每次运行时都提供相同的基址，所以重定位就很重要了；</p>
+<p>此时，壳中也要有用于重定位的代码，否则原程序将无法正常运行；</p>
+<p>所以，加壳的 DLL 比加壳的 EXE 在修正时多了一个重定位表；</p>
 </li>
-<li><p>将程序导入改版 OD，<code>F9</code>运行程序，待程序主窗体出现后，打开日志窗口（请不要关闭程序主窗体）：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwpf8lzy7j31a80u0diy.jpg" alt="一大堆异常"></p>
-<p>来到日志窗口后，发现程序运行期间，有一大堆异常，但程序却正常运行了，很是奇怪；</p>
+<li><p>Hook API<br>在程序文件中，输入表的作用是让 Windows 操作系统在程序运行时将 API 的实际地址提供给程序使用，在程序的第 1 行代码执行前，Windows 操作系统就完成了这项工作；</p>
+<p>壳大都在修改原程序的输入表后，自己模仿 Windows 操作系统的工作流程，向输入表中填充相关的数据，在填充过程中，外壳可以填充 Hook API 代码的地址，从而间接获得程序的控制权；</p>
 </li>
-<li><p>程序可以正常运行，是因为 OD 的调试选项忽略了所有异常，如果不忽略异常，程序会在每一次异常时暂停，而在最后一次异常后，程序正常运行了；</p>
-<p>如果在最后一次异常时（也可以说是程序运行前）给代码段设置内存访问断点，是否可以到达 OEP 呢？</p>
-</li>
-<li><p>首先设置 OD 调试选项：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwpwb6stlj31ab0u077r.jpg" alt="不忽略异常"></p>
-<p>在日志窗口可以看到，最后一次异常是 INT3，所以取消忽略 INT3 异常，同时取消忽略异常范围选项，因为从 00000000 ～ FFFFFFFF 就忽略了所有异常；</p>
-</li>
-<li><p>然后运行程序，在几次中断后，就来到了最后一次异常所在位置：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwq3u0p0fj31a50u00wx.jpg" alt="最后一次异常"></p>
-</li>
-<li><p>来到内存窗口，给代码段设置<code>内存执行断点</code>，然后按下<code>Shift + F9</code>忽略异常并运行程序：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwq6yj16mj31a50u077g.jpg" alt="OEP"></p>
-<p>程序到达 OEP，Perfect！</p>
-</li>
-<li><p>既然有那么多方法，问什么要用这么复杂的方法呢？</p>
-<p>是因为，加壳不仅可以隐藏 OEP，还可以反调试，而为了绕过反调试，在执行部分代码后，再设置断点相对会更安全，这是一种好的思路；</p>
+<li><p>跳转到程序原始入口点（OEP）</p>
+<p>从这个时候起，壳就把控制权还给原程序了，一般的壳在这里会有一条明显的分界线；</p>
+<p>现在越来越多的加密壳先将 OEP 代码段搬到外壳的地址空间里，再将这段代码清除（这种技术称为“Stolen Bytes”），这样，OEP 与外壳之间那条明显的分界线就消失了，脱壳的难度也增加了；</p>
 </li>
 </ol>
+<h4 id="脱壳机"><a href="#脱壳机" class="headerlink" title="脱壳机"></a>脱壳机</h4><p>针对特定的壳开发出来的脱壳软件称为“脱壳机”；</p>
+<p>脱壳就是将加壳后的程序恢复到原来的状态，脱壳成功的标志是文件能正常运行；</p>
+<p>由于脱壳时可能没有将壳本身的代码去除，脱壳后程序的体积通常会比原程序的体积大；</p>
+<p>脱壳机一般分为专用脱壳机和通用脱壳机；</p>
+<p>专用脱壳机是针对某种壳专门编写的，只能脱特定的壳，虽然使用范围小，但效果好；</p>
+<p>通用脱壳机具有通用性，可以脱多种不同类型的壳（主要是压缩壳）；</p>
+<p>在分析一个软件前，可以使用 PEiD 确定壳的种类，再选择合适的脱壳机；</p>
+<h4 id="手动脱壳"><a href="#手动脱壳" class="headerlink" title="手动脱壳"></a>手动脱壳</h4><p>对一些加密壳或修改的壳，没有脱壳机，因此必须要分析外壳并手动脱壳；</p>
+<p>手动脱壳过程一般分为 3 步：</p>
+<ol>
+<li>查找真正的程序入口点（OEP）；</li>
+<li>抓取内存映像文件；</li>
+<li>重建 PE 文件；</li>
+</ol>
+<p>当程序执行时，外壳代码首先获得控制权，模拟 Windows 加载器，将原程序恢复到内存中，这时，内存中的数据就是加壳前的映像文件了，适时将其抓取并修改，即可还原到加壳前的状态；</p>
 ]]></content>
       <categories>
         <category>逆向工程</category>
@@ -1261,9 +1283,7 @@
         <category>Windows</category>
       </categories>
       <tags>
-        <tag>CrackMe</tag>
         <tag>脱壳</tag>
-        <tag>OEP</tag>
       </tags>
   </entry>
   <entry>
@@ -1320,6 +1340,68 @@
 <li><p>在内存窗口，给代码段设置内存执行断点，然后运行程序：</p>
 <p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnx9k811k6j31a50u0tby.jpg" alt="程序中断在 OEP"></p>
 <p>程序到达 OEP；</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>脱壳技术</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>CrackMe</tag>
+        <tag>脱壳</tag>
+        <tag>OEP</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>脱壳之异常法定位 OEP</title>
+    <url>/post/2614075303/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
+<li>OllyDbg 1.1 修改版，简称<code>OD</code>；</li>
+<li><code>OD</code>修改版设置的<code>内存访问断点</code>只在执行时中断，不会在访问或写入时中断，也可称为<code>内存执行断点</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
+
+</li>
+</ul>
+<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
+<li><p>拿到 CM 后，第 1 想法就是栈平衡，将 CM 导入原版 OD：</p>
+<p>首先弹出警告弹窗，说明程序有壳（这不是废话嘛）</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwou1dw2sj31eb0u0n0j.jpg" alt="将 CM 导入原版 OD"></p>
+<p>然后到达 EP 位置，行首却不是 PUSHAD/PUSHFD，这就让人很尴尬了，不过又想到了栈平衡的第 2 种方法；</p>
+</li>
+<li><p>大胆的猜测一下，如果 OEP 行首是压栈指令，那么压栈的地址就是：0012FFC0:</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwp0hlhrej31eg0u0aez.jpg" alt="压栈的地址"></p>
+<p>所以，给 0012FFC0 设置硬件写入断点，然后运行程序；</p>
+</li>
+<li><p>程序会中断两次，第 2 次才会到达 OEP，因为第 2 中断时才处于代码段：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwp87zzrwj31e70u043k.jpg" alt="OEP"></p>
+</li>
+<li><p>然后又尝试了设置访问断点来到达 OEP，两种方法皆是可行的，不过这 3 种方法并不是今天的重点；</p>
+</li>
+<li><p>将程序导入改版 OD，<code>F9</code>运行程序，待程序主窗体出现后，打开日志窗口（请不要关闭程序主窗体）：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwpf8lzy7j31a80u0diy.jpg" alt="一大堆异常"></p>
+<p>来到日志窗口后，发现程序运行期间，有一大堆异常，但程序却正常运行了，很是奇怪；</p>
+</li>
+<li><p>程序可以正常运行，是因为 OD 的调试选项忽略了所有异常，如果不忽略异常，程序会在每一次异常时暂停，而在最后一次异常后，程序正常运行了；</p>
+<p>如果在最后一次异常时（也可以说是程序运行前）给代码段设置内存访问断点，是否可以到达 OEP 呢？</p>
+</li>
+<li><p>首先设置 OD 调试选项：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwpwb6stlj31ab0u077r.jpg" alt="不忽略异常"></p>
+<p>在日志窗口可以看到，最后一次异常是 INT3，所以取消忽略 INT3 异常，同时取消忽略异常范围选项，因为从 00000000 ～ FFFFFFFF 就忽略了所有异常；</p>
+</li>
+<li><p>然后运行程序，在几次中断后，就来到了最后一次异常所在位置：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwq3u0p0fj31a50u00wx.jpg" alt="最后一次异常"></p>
+</li>
+<li><p>来到内存窗口，给代码段设置<code>内存执行断点</code>，然后按下<code>Shift + F9</code>忽略异常并运行程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwq6yj16mj31a50u077g.jpg" alt="OEP"></p>
+<p>程序到达 OEP，Perfect！</p>
+</li>
+<li><p>既然有那么多方法，问什么要用这么复杂的方法呢？</p>
+<p>是因为，加壳不仅可以隐藏 OEP，还可以反调试，而为了绕过反调试，在执行部分代码后，再设置断点相对会更安全，这是一种好的思路；</p>
 </li>
 </ol>
 ]]></content>
@@ -1409,88 +1491,6 @@
         <tag>CrackMe</tag>
         <tag>脱壳</tag>
         <tag>OEP</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>脱壳之壳的加载过程</title>
-    <url>/post/1754370069/</url>
-    <content><![CDATA[<blockquote>
-<p>记录<a href="https://bbs.pediy.com/forum-99.htm">加密解密</a>一书中对<code>壳的加载过程</code>的描述，第 16 章：16.1；</p>
-<p>眼过千遍，不如手过一遍；</p>
-</blockquote>
-<a id="more"></a>
-
-<h4 id="壳的加载过程"><a href="#壳的加载过程" class="headerlink" title="壳的加载过程"></a>壳的加载过程</h4><p>加壳软件通过修改原程序执行文件的组织结构，从而使壳比原程序代码更早获得控制权，且不影响原程序的正常运行，以下是壳的常见加载过程:</p>
-<ol>
-<li><p>保存入口参数</p>
-<p>加壳程序在初始化时会保存各寄存器的值，待外壳执行完毕，再恢复各寄存器的内容，最后跳到原程序执行，通常使用 PUSHAD/PUSHFD、POPAD/POPFD 指令来保存与恢复现场；</p>
-</li>
-<li><p>获取壳本身需要使用的 API 地址</p>
-<p>在一般情况下，外壳的输入表中只有 GetProcAddress、GetModuleHandle 和 LoadLibrary 这 3 个 API 函数，甚至只有 Kernel32.dll 及 GetProcAddress；</p>
-<p>如果需要使用其它 API 函数，可以通过函数 LoadLibraryA（W）或 LoadLibraryExA（W）将 DLL 文件映像映射到调用进程的地址空间中，函数返回的 HINSTANCE 值用于标识文件映像所映射的虚拟内存地址；</p>
-<p>LoadLibrary 函数原型：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">HINSTANCE LoadLibrary(</span><br><span class="line">    LPCTSTR lpLibFileName    // DLL 文件名地址</span><br><span class="line">     );</span><br></pre></td></tr></table></figure>
-<p>返回值：成功则返回模块的句柄，失败返回 NULL；</p>
-<p>如果 DLL 文件已经被映射到调用进程的地址空间中，可以调用 GetModuleHandleA（W）函数获取 DLL 模块的句柄；</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">HMODULE GetModuleHandle(</span><br><span class="line">    LPCTSTR lpModuleName    // DLL 文件名地址</span><br><span class="line">     );</span><br></pre></td></tr></table></figure>
-<p>返回值：成功则返回模块的句柄，失败返回 NULL；</p>
-<p>一旦 DLL 模块被加载，线程就可以调用 GetProcAddress 函数获取输入函数的地址了；</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">FARPROC GetProcAddress(</span><br><span class="line">    HMODULE hModule,        // DLl 模块句柄</span><br><span class="line">    LPCSTR  lpProcName      // 函数名</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
-<p>参数 hModule 是 DLL 模块的句柄，是调用 LoadLibrary（Ex） 或 GetModuleHandle 函数的返回值；</p>
-<p>参数 lpProcName 是函数名或函数序数值，如果此参数是序数值，则必须使用低位字；高位必须为零；</p>
-<p>返回值：成功则返回函数地址，失败返回 NULL；</p>
-<p>在外壳中使用的其他函数都是由这 3 个函数调用的；</p>
-<p>有些壳为了提高强度，连系统提供的 GetProcAddress 函数都不使用，而是自己实现一个相同功能的函数来代替 GetProcAddress，从而增加函数调用的隐蔽性；</p>
-</li>
-<li><p>解密原程序各区块的数据</p>
-<p>出于保护原程序代码和数据的目的，壳一般会加密原程序文件的各个区段；</p>
-<p>在程序执行时，外壳将解密这些区段数据，从而使程序能够正常运行；</p>
-<p>壳一般是按区块加密的，所以解密时也按区块解密，并把解密的区块数据按照区块的定义放入内存中合适的位置；</p>
-</li>
-<li><p>IAT 的初始化</p>
-<p>IAT 的填写本来应该由 PE 装载器实现，但由于在加壳时构造了一个自建输入表，并让 PE 文件头数据目录表中的输入表指针指向自建输入表，PE 装载器会对自建输入表进行填写；</p>
-<p>程序的原始输入表会被外壳变形后存储，IAT 的填写会由外壳程序实现；</p>
-<p>外壳程序要做的就是将这个变形输入表的结构从头到尾扫描一遍，重新获取每个 DLL 引入的所有函数的地址，并将其填写在 IAT 中；</p>
-</li>
-<li><p>重定位项的处理</p>
-<p>文件执行时将被映射到指定内存地址中，这个初始内存地址称为基址，当然，这只是程序文件中声明的，当程序运行时，操作系统一定会满足其要求吗？</p>
-<p>对 EXE 文件来说，操作系统会尽量满足其要求，如：程序声明的基址是 400000，操作系统提供的基址也是 400000，在这种情况下就不需要基址重定位了；</p>
-<p>由于不需要对 EXE 文件进行重定位，加壳软件会删除原程序文件中用于保存重定位信息的区块，使加壳后的程序更小巧；</p>
-<p>对 DLL 的动态链接库文件来说，操作系统无法保证 DLL 每次运行时都提供相同的基址，所以重定位就很重要了；</p>
-<p>此时，壳中也要有用于重定位的代码，否则原程序将无法正常运行；</p>
-<p>所以，加壳的 DLL 比加壳的 EXE 在修正时多了一个重定位表；</p>
-</li>
-<li><p>Hook API<br>在程序文件中，输入表的作用是让 Windows 操作系统在程序运行时将 API 的实际地址提供给程序使用，在程序的第 1 行代码执行前，Windows 操作系统就完成了这项工作；</p>
-<p>壳大都在修改原程序的输入表后，自己模仿 Windows 操作系统的工作流程，向输入表中填充相关的数据，在填充过程中，外壳可以填充 Hook API 代码的地址，从而间接获得程序的控制权；</p>
-</li>
-<li><p>跳转到程序原始入口点（OEP）</p>
-<p>从这个时候起，壳就把控制权还给原程序了，一般的壳在这里会有一条明显的分界线；</p>
-<p>现在越来越多的加密壳先将 OEP 代码段搬到外壳的地址空间里，再将这段代码清除（这种技术称为“Stolen Bytes”），这样，OEP 与外壳之间那条明显的分界线就消失了，脱壳的难度也增加了；</p>
-</li>
-</ol>
-<h4 id="脱壳机"><a href="#脱壳机" class="headerlink" title="脱壳机"></a>脱壳机</h4><p>针对特定的壳开发出来的脱壳软件称为“脱壳机”；</p>
-<p>脱壳就是将加壳后的程序恢复到原来的状态，脱壳成功的标志是文件能正常运行；</p>
-<p>由于脱壳时可能没有将壳本身的代码去除，脱壳后程序的体积通常会比原程序的体积大；</p>
-<p>脱壳机一般分为专用脱壳机和通用脱壳机；</p>
-<p>专用脱壳机是针对某种壳专门编写的，只能脱特定的壳，虽然使用范围小，但效果好；</p>
-<p>通用脱壳机具有通用性，可以脱多种不同类型的壳（主要是压缩壳）；</p>
-<p>在分析一个软件前，可以使用 PEiD 确定壳的种类，再选择合适的脱壳机；</p>
-<h4 id="手动脱壳"><a href="#手动脱壳" class="headerlink" title="手动脱壳"></a>手动脱壳</h4><p>对一些加密壳或修改的壳，没有脱壳机，因此必须要分析外壳并手动脱壳；</p>
-<p>手动脱壳过程一般分为 3 步：</p>
-<ol>
-<li>查找真正的程序入口点（OEP）；</li>
-<li>抓取内存映像文件；</li>
-<li>重建 PE 文件；</li>
-</ol>
-<p>当程序执行时，外壳代码首先获得控制权，模拟 Windows 加载器，将原程序恢复到内存中，这时，内存中的数据就是加壳前的映像文件了，适时将其抓取并修改，即可还原到加壳前的状态；</p>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>脱壳技术</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>脱壳</tag>
       </tags>
   </entry>
   <entry>
@@ -3960,6 +3960,720 @@
       </tags>
   </entry>
   <entry>
+    <title>脱壳之重建 IAT</title>
+    <url>/post/3969158325/</url>
+    <content><![CDATA[<blockquote>
+<p>破坏原程序的输入表是加密外壳必备的功能，因此在脱壳中，输入表的处理是一个关键环节，这需要脱壳者对 PE 格式中输入表的概念必须非常清楚；</p>
+<p>手动修复可以更清晰的理解重建输入表的过程及原理，但很辛苦，需要细心细心再细心，中间因为数值填错而苦苦寻找，想象一下在一堆二进制中找一个数值错误，很可怕，但很值得，弄懂了原理，以后就善用工具吧；</p>
+</blockquote>
+<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li>与<code>逆向分析之软编码寻找序列号（一）</code>使用的 CrackMe 相同；</li>
+<li>加壳工具为<a href="http://www.aspack.com/">ASPACK</a>：收费软件，可以试用；</li>
+<li>Dump 工具为 LoadPE，来自互联网；</li>
+<li>16 进制修改器为 WinHex；</li>
+<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
+
+</li>
+</ul>
+<h4 id="输入表重建的原理"><a href="#输入表重建的原理" class="headerlink" title="输入表重建的原理"></a>输入表重建的原理</h4><p>在输入表结构中，与实际运行相关的主要是 IAT 结构，这个结构用于保存 API 的实际地址；</p>
+<p>PE 文件运行时将初始化输入表的这一部分：</p>
+<ul>
+<li>Windows 加载器首先搜索 OriginalFirstThunk；</li>
+<li>如果存在，加载程序将迭代搜索数组中的每个指针，找到每个 IMAGE_IMPORT_BY_NAME 结构所指向的输入函数的地址；</li>
+<li>然后，加载器用函数真正的入口地址代替由 FirstThunk 指向的 IMAGE_THUNK_DATA 数组中元素的值；</li>
+<li>初始化结束后，输入表中的其它部分就不重要了，程序依靠 IAT 提供的函数地址就可以正常运行；</li>
+</ul>
+<p>外壳程序一般都会修改原程序文件的输入，然后自己模仿 PE 装载器来填充 IAT 中的相关数据，也就是说，内存中只有一个 IAT，原程序的输入表不在内存中；</p>
+<p>输入表重建就是根据这个 IAT 还原整个输入表的结构，包括 IID 结构以及其它各成员指向的数据等；</p>
+<p>一些加密软件为了防止输入表被还原，在 IAT 加密上大作文章，此时，由外壳填充到 IAT 中的不是实际的 API 地址，而是用于 Hook API 的外壳代码的地址；</p>
+<p>这样，外壳中的代码一旦完成了加载工作，在进入原程序的代码之后，仍然能够间接获得程序的控制权；</p>
+<p>因为程序总要与系统打交道，与系统打交道的途径是 API，而 API 的地址已经被替换为外壳的 Hook API 的地址，所以，每次程序与系统打交道，都会让外壳程序获得一次控制权；</p>
+<p>这样，外壳就可以进行反跟踪，从而继续保护软件，同时完成某些特殊任务了；</p>
+<p>综上所述，重建输入表的关键是获取未加密的 IAT，一般的做法是跟踪加壳程序对 IAT 的处理过程，修改相关指令，不让外壳加密 IAT；</p>
+<h4 id="确定-IAT-的地址和大小"><a href="#确定-IAT-的地址和大小" class="headerlink" title="确定 IAT 的地址和大小"></a>确定 IAT 的地址和大小</h4><p>输入表重建的关键是 IAT 的获得；</p>
+<p>一般程序的 IAT 是连续排列的，以一个 DWORD 字的 0 作为结束，因此，只要确定 IAT 的一个点，就能获得整个 IAT 的地址和大小；</p>
+<p>程序中的每一个 API 函数在 IAT 中都有自己的位置，这样，无论在代码中调用函数多少次，都会通过 IAT 中的同一个函数指针来完成；</p>
+<p>程序调用输入函数分为直接调用和间接调用：</p>
+<p>直接调用：<code>CALL DWORD PTR [00401506]</code>，直接调用跳转的地址就是函数的行首；</p>
+<p>间接调用：<code>CALL &lt;JMP.&amp;KERNEL32.GetModuleHandleA&gt;</code>，间接调用是获取跳转地址存储的内容，然后调用；</p>
+<p>以 CM 为例：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnysy0v08kj31eb0u0ads.jpg" alt="间接调用"></p>
+<p>此处为间接调用，在选择行按下 Enter 键即可到调用位置：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnyszz3dehj31ef0u00x0.jpg" alt="调用位置"></p>
+<p>这里有很多跳转至输入函数的指令，其实此处即为 IAT（在指令中的显示）；</p>
+<p>IAT 是一块连续排列的数据，因此，可以向上滚动屏幕，直到没有跳转，就是 IAT 的起始位置；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnyt7wfurwj318v0u079r.jpg" alt="IAT 的起始位置"></p>
+<p>可以看到，当前地址之前的数据为 0，所以可以确定，这里就是 IAT 的起始位置；</p>
+<p>既然起始位置是向上滚动，结束位置肯定是向下滚动：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnyteiv2nrj31fq0u0n2f.jpg" alt="IAT 结束位置"></p>
+<p>需要注意的是，IAT 中的 IID 结构数组以 NULL 确定数据的结尾，所以，IAT 的结尾不是最后一个跳转指向的地址，而是下一个 DWORD <code>00000000</code>；</p>
+<p>为了更直观地观察，可以让数据窗口直接显示这些 API 函数，以确定 IAT 是否正确：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnytpedhm7j31ds0u0tde.jpg" alt="直观地观察"></p>
+<p>设置数据窗口显示方式后，可以更直观地看到 IAT 的起始地址和结束地址；</p>
+<h4 id="根据-IAT-重建输入表"><a href="#根据-IAT-重建输入表" class="headerlink" title="根据 IAT 重建输入表"></a>根据 IAT 重建输入表</h4><ol>
+<li><p>使用 ASPACK 加密 CM，然后导入 OD；</p>
+</li>
+<li><p>使用栈平衡法定位并跳转至 OEP；</p>
+</li>
+<li><p>运行 LoadPE，将内存数据 Dump 出来并保存（Dump 过程中不能关闭 OD）：</p>
+<p>Dump（转存）是指把内存指定地址的映像文件读出，用文件等形式将其保存下来的过程；</p>
+<p>在程序到达 OEP 且没有运行时，Dump 是正确的，而程序运行后，由于一些变量已经初始化了，所以不适合 Dump；</p>
+<p>在外壳处理过程中，外壳要把压缩后的全部代码数据释放到内存中，并初始化一些项目，因此，在此过程中也可以选择合适的位置进行 Dump；</p>
+<p>常用的 Dump 软件有 LoadPE、PETools 等，这类工具一般利用 Module32Next 来获取欲 Dump 进程的基本信息；</p>
+<p>首先设置 LoadPE，勾选完整转存选项：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnyu1ofv8cj30so0is74t.jpg" alt="设置 LoadPE"></p>
+<p>设置完成后，在 LoadPE 的进程窗口中选择 CM 的进程，然后单击右键，在弹出的快捷菜单中执行“完整转存”命令，抓取并保存：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnyu86qvv6j30ys0jaab0.jpg" alt="Dump"></p>
+<p>注意保存文件的后缀，默认为 .dll 需要修改为 .exe；</p>
+</li>
+<li><p>运行 dumped.exe 发现不能运行：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnyub982ydj30pe0eyq3b.jpg" alt="不能运行"></p>
+<p>将 dumped.exe 导入 OD，在弹出错误弹窗后，程序并没有停在 OEP 位置，说明异常是在初始化时产生的：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnyuihwfs0j31e40u00vv.jpg" alt="异常是在初始化时产生的"></p>
+<p>查看 log 窗口，发现创建进程后异常就发生了，程序都没有完成初始化；</p>
+</li>
+<li><p>回到反汇编窗口，goto 到 OEP，然后来到 IAT 表：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnyux7yeyaj318b0u00xf.jpg" alt="来到 IAT 表"></p>
+<p>发现 PE 加载器在搜索 OriginalFirstThunk 数组时异常了；</p>
+<p>这时，就需要修复了；</p>
+</li>
+<li><p>回到之前的 OD，通过查看 IAT 可以看到，CM 使用了 5 个 DLL，分别是：user32.dll、kernel32.dll、comctl32.dll、GDI32.dll、comdlg32.dll，它们分别对应一个 IAT，IAT 之间以一个 DWORD 类型的 0 隔开，整理 IAT 成员的函数：</p>
+<table>
+<thead>
+<tr>
+<th align="center">user32.dll</th>
+<th align="center">kernel32.dll</th>
+<th align="center">comctl32.dll</th>
+<th align="center">GDI32.dll</th>
+<th align="center">comdlg32.dll</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">KillTimer</td>
+<td align="center">GetLocalTime</td>
+<td align="center">InitCommonControls</td>
+<td align="center">TextOutA</td>
+<td align="center">GetSaveFileNameA</td>
+</tr>
+<tr>
+<td align="center">GetSystemMetrics</td>
+<td align="center">OpenFile</td>
+<td align="center">CreateToolbarEx</td>
+<td align="center">StartPage</td>
+<td align="center">GetOpenFileNameA</td>
+</tr>
+<tr>
+<td align="center">LoadCursorA</td>
+<td align="center">GlobalFree</td>
+<td align="center">CreateToolbar</td>
+<td align="center">StartDocA</td>
+<td align="center">PrintDlgA</td>
+</tr>
+<tr>
+<td align="center">LoadAcceleratorsA</td>
+<td align="center">GlobalAlloc</td>
+<td align="center"></td>
+<td align="center">GetTextMetricsA</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">MessageBeep</td>
+<td align="center">lstrlenA</td>
+<td align="center"></td>
+<td align="center">GetStockObject</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">GetWindowRect</td>
+<td align="center">CloseHandle</td>
+<td align="center"></td>
+<td align="center">EndPage</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">LoadStringA</td>
+<td align="center">WriteFile</td>
+<td align="center"></td>
+<td align="center">EndDoc</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">LoadIconA</td>
+<td align="center">GetModuleHandleA</td>
+<td align="center"></td>
+<td align="center">DeleteObject</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">LoadBitmapA</td>
+<td align="center">ReadFile</td>
+<td align="center"></td>
+<td align="center">DeleteDC</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">SetFocus</td>
+<td align="center">ExitProcess</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">MessageBoxA</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">PostQuitMessage</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">WinHelpA</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">InvalidateRect</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">TranslateAcceleratorA</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">MoveWindow</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">TranslateMessage</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">LoadMenuA</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">ShowWindow</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">SendMessageA</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">SetTimer</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">SetWindowPos</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">UpdateWindow</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">RegisterClassA</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">BeginPaint</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">CreateWindowExA</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">DefWindowProcA</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">DialogBoxParamA</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">DispatchMessageA</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">DrawMenuBar</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">EndDialog</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">EndPaint</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">FindWindowA</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">GetDC</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">GetDlgItem</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">GetDlgItemTextA</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">GetMessageA</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+</tbody></table>
+</li>
+<li><p>接下来就是修复了，使用 WinHex 打开 dumped.exe，在文件中找到一块空白空间，将表中的 DLL 名和函数名写进去：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnywqu2k84j31ue0h0qaq.jpg" alt="函数数据"></p>
+<p>为了加深对输入表的理解，手动。。。</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnyx9ny4d8j318f0u00vz.jpg" alt="写进去"></p>
+<p>写入数据时：</p>
+<ul>
+<li><p>每个函数前面要留 2 个字节来存放函数的序号，序号可以为 0；</p>
+</li>
+<li><p>每个函数后的 1 字节为 0，即以 0 结尾；</p>
+</li>
+<li><p>每个函数名或 DLL 名的起始位置必须按偶数对齐，空隙用 0 填充；</p>
+</li>
+</ul>
+<p>因为 dumped.exe 是内存映像文件，所以文件偏移地址和相对虚拟地址（RVA）是相等的；</p>
+<p>整理 DLL 名和 API 名所在的偏移地址：</p>
+<table>
+<thead>
+<tr>
+<th align="center">DLL 或 API 名称</th>
+<th align="center">地址</th>
+<th align="center">API 名称</th>
+<th align="center">地址</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">user32.dll</td>
+<td align="center">00002200</td>
+<td align="center">user32.dll 中的 API 👇👇👇</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">KillTimer</td>
+<td align="center">00002240</td>
+<td align="center">GetSystemMetrics</td>
+<td align="center">0000224C</td>
+</tr>
+<tr>
+<td align="center">LoadCursorA</td>
+<td align="center">00002260</td>
+<td align="center">LoadAcceleratorsA</td>
+<td align="center">0000226E</td>
+</tr>
+<tr>
+<td align="center">MessageBeep</td>
+<td align="center">00002282</td>
+<td align="center">GetWindowRect</td>
+<td align="center">00002290</td>
+</tr>
+<tr>
+<td align="center">LoadStringA</td>
+<td align="center">000022A0</td>
+<td align="center">LoadIconA</td>
+<td align="center">000022AE</td>
+</tr>
+<tr>
+<td align="center">LoadBitmapA</td>
+<td align="center">000022BA</td>
+<td align="center">SetFocus</td>
+<td align="center">000022C8</td>
+</tr>
+<tr>
+<td align="center">MessageBoxA</td>
+<td align="center">000022D4</td>
+<td align="center">PostQuitMessage</td>
+<td align="center">000022E2</td>
+</tr>
+<tr>
+<td align="center">WinHelpA</td>
+<td align="center">000022F4</td>
+<td align="center">InvalidateRect</td>
+<td align="center">00002300</td>
+</tr>
+<tr>
+<td align="center">TranslateAcceleratorA</td>
+<td align="center">00002312</td>
+<td align="center">MoveWindow</td>
+<td align="center">0000232A</td>
+</tr>
+<tr>
+<td align="center">TranslateMessage</td>
+<td align="center">00002338</td>
+<td align="center">LoadMenuA</td>
+<td align="center">000234C</td>
+</tr>
+<tr>
+<td align="center">ShowWindow</td>
+<td align="center">00002358</td>
+<td align="center">SendMessageA</td>
+<td align="center">00002366</td>
+</tr>
+<tr>
+<td align="center">SetTimer</td>
+<td align="center">00002376</td>
+<td align="center">SetWindowPos</td>
+<td align="center">00002382</td>
+</tr>
+<tr>
+<td align="center">UpdateWindow</td>
+<td align="center">00002392</td>
+<td align="center">RegisterClassA</td>
+<td align="center">000023A2</td>
+</tr>
+<tr>
+<td align="center">BeginPaint</td>
+<td align="center">000023B4</td>
+<td align="center">CreateWindowExA</td>
+<td align="center">000023C2</td>
+</tr>
+<tr>
+<td align="center">DefWindowProcA</td>
+<td align="center">000023D4</td>
+<td align="center">DialogBoxParamA</td>
+<td align="center">000023E6</td>
+</tr>
+<tr>
+<td align="center">DispatchMessageA</td>
+<td align="center">000023F8</td>
+<td align="center">DrawMenuBar</td>
+<td align="center">0000240C</td>
+</tr>
+<tr>
+<td align="center">EndDialog</td>
+<td align="center">0000241A</td>
+<td align="center">EndPaint</td>
+<td align="center">00002426</td>
+</tr>
+<tr>
+<td align="center">FindWindowA</td>
+<td align="center">00002432</td>
+<td align="center">GetDC</td>
+<td align="center">00002440</td>
+</tr>
+<tr>
+<td align="center">GetDlgItem</td>
+<td align="center">00002448</td>
+<td align="center">GetDlgItemTextA</td>
+<td align="center">00002456</td>
+</tr>
+<tr>
+<td align="center">GetMessageA</td>
+<td align="center">00002468</td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">kernel32.dll</td>
+<td align="center">0000220C</td>
+<td align="center">kernel32.dll 中的 API 👇👇👇</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">GetLocalTime</td>
+<td align="center">00002476</td>
+<td align="center">OpenFile</td>
+<td align="center">00002486</td>
+</tr>
+<tr>
+<td align="center">GlobalFree</td>
+<td align="center">00002492</td>
+<td align="center">GlobalAlloc</td>
+<td align="center">000024A0</td>
+</tr>
+<tr>
+<td align="center">lstrlenA</td>
+<td align="center">000024AE</td>
+<td align="center">CloseHandle</td>
+<td align="center">000024B8</td>
+</tr>
+<tr>
+<td align="center">WriteFile</td>
+<td align="center">000024C6</td>
+<td align="center">GetModuleHandleA</td>
+<td align="center">000024D2</td>
+</tr>
+<tr>
+<td align="center">ReadFile</td>
+<td align="center">000024E6</td>
+<td align="center">ExitProcess</td>
+<td align="center">000024F2</td>
+</tr>
+<tr>
+<td align="center">comctl32.dll</td>
+<td align="center">0000221A</td>
+<td align="center">comctl32.dll 中的 API 👇👇👇</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">InitCommonControls</td>
+<td align="center">00002500</td>
+<td align="center">CreateToolbarEx</td>
+<td align="center">00002516</td>
+</tr>
+<tr>
+<td align="center">CreateToolbar</td>
+<td align="center">00002528</td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">GDI32.dll</td>
+<td align="center">00002228</td>
+<td align="center">GDI32.dll 中的 API 👇👇👇</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">TextOutA</td>
+<td align="center">00002538</td>
+<td align="center">StartPage</td>
+<td align="center">00002544</td>
+</tr>
+<tr>
+<td align="center">StartDocA</td>
+<td align="center">00002550</td>
+<td align="center">GetTextMetricsA</td>
+<td align="center">0000255C</td>
+</tr>
+<tr>
+<td align="center">GetStockObject</td>
+<td align="center">0000256E</td>
+<td align="center">EndPage</td>
+<td align="center">00002580</td>
+</tr>
+<tr>
+<td align="center">EndDoc</td>
+<td align="center">0000258A</td>
+<td align="center">DeleteObject</td>
+<td align="center">00002594</td>
+</tr>
+<tr>
+<td align="center">DeleteDC</td>
+<td align="center">000025A4</td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">comdlg32.dll</td>
+<td align="center">00002232</td>
+<td align="center">comdlg32.dll 中的 API 👇👇👇</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">GetSaveFileNameA</td>
+<td align="center">000025B0</td>
+<td align="center">GetOpenFileNameA</td>
+<td align="center">000025C4</td>
+</tr>
+<tr>
+<td align="center">PrintDlgA</td>
+<td align="center">000025D8</td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+</tbody></table>
+<p>接着，构造指向函数名地址的 IMAGE_THUNK_DATA 数组：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnz01e8sjhj318c0u0q5p.jpg" alt="IMAGE_THUNK_DATA 数组"></p>
+<p>位置随意，两个数组之间的间隔为 2 字节，用 0 填充（小端序构建）；</p>
+<p>然后构建其 IID 数组：</p>
+<table>
+<thead>
+<tr>
+<th align="center">DLL</th>
+<th align="center">OrignalFirstThunk</th>
+<th align="center">TimeDateStamp</th>
+<th align="center">ForwardChain</th>
+<th align="center">Name</th>
+<th align="center">FirstThunk</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">user32.dll</td>
+<td align="center">00290000</td>
+<td align="center">00000000</td>
+<td align="center">00000000</td>
+<td align="center">00220000</td>
+<td align="center">84310000</td>
+</tr>
+<tr>
+<td align="center">kernel32.dll</td>
+<td align="center">98290000</td>
+<td align="center">00000000</td>
+<td align="center">00000000</td>
+<td align="center">0C220000</td>
+<td align="center">1C320000</td>
+</tr>
+<tr>
+<td align="center">comctl32.dll</td>
+<td align="center">C4290000</td>
+<td align="center">00000000</td>
+<td align="center">00000000</td>
+<td align="center">1A220000</td>
+<td align="center">48320000</td>
+</tr>
+<tr>
+<td align="center">GDI32.dll</td>
+<td align="center">D4290000</td>
+<td align="center">00000000</td>
+<td align="center">00000000</td>
+<td align="center">28220000</td>
+<td align="center">58320000</td>
+</tr>
+<tr>
+<td align="center">comdlg32.dll</td>
+<td align="center">FC290000</td>
+<td align="center">00000000</td>
+<td align="center">00000000</td>
+<td align="center">32220000</td>
+<td align="center">80320000</td>
+</tr>
+<tr>
+<td align="center">（结束标志 ）</td>
+<td align="center">00000000</td>
+<td align="center">00000000</td>
+<td align="center">00000000</td>
+<td align="center">00000000</td>
+<td align="center">00000000</td>
+</tr>
+</tbody></table>
+<p>接下来，使用 LoadPE 修改输入表地址：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnz7h6rl86j30n60lsdg9.jpg" alt="使用 LoadPE修改输入表地址"></p>
+<p>修改完成后，运行程序，一切正确，这就完了吗？并没有；</p>
+<p>将 dumped.exe 导入 OD：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnz7m49balj313806sdg1.jpg" alt="弹出警告"></p>
+<p>程序会弹出提示入口点超出代码段范围的警告，所以，还需要修改 OEP：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnz7r455y1j31dw0u0n0a.jpg" alt="修改OEP"></p>
+<p>修改 OEP 为正常数值，并保存修改到可执行文件；</p>
+<p>将保存的文件导入 OD，然后检查 IAT，有数据才算正常：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnz7ub6ct2j31jn0u0tb7.jpg" alt="检查IAT"></p>
+</li>
+<li><p>总结一下：</p>
+<ul>
+<li>构建 IMAGE_IMPORT_BY_NAME 结构体，用来存储 DLL 名和 API 名；</li>
+<li>构建 IMAGE_THUNK_DATA 结构体，指向函数名对应的地址；</li>
+<li>构建 IID 结构体，OrignalFirstThunk 指向 IMAGE_THUNK_DATA 对应的起始地址，Name 指向 IMAGE_IMPORT_BY_NAME 对应的地址，FirstThunk 指向原程序的 IAT 表；</li>
+<li>构建过程中，每项的注意事项不再赘述；</li>
+</ul>
+</li>
+<li><p>所有修改如下：</p>
+<ul>
+<li><p>IMAGE_IMPORT_BY_NAME：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnz8byl9soj31360sqq4g.jpg" alt="1"><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnz8c1acqcj312y0ti403.jpg" alt="2"><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnz8c43rquj31300gujs4.jpg" alt="3"></p>
+</li>
+<li><p>IMAGE_THUNK_DATA：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnz8fazzagj31340j43yq.jpg" alt="4"></p>
+</li>
+<li><p>IID：<br><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnz8gumd8lj313409omxd.jpg" alt="5"></p>
+</li>
+</ul>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>脱壳技术</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>CrackMe</tag>
+        <tag>脱壳</tag>
+        <tag>IAT</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>PE 文件格式</title>
     <url>/post/1876828466/</url>
     <content><![CDATA[<blockquote>
@@ -4013,7 +4727,7 @@
 <p>文件的内容被分割为不同的区块（Section，又称区段、节等）；</p>
 <p>区块中包含代码或数据，各个区块按页边界对齐；</p>
 <p>区块没有大小限制，是一个连续结构；</p>
-<p>每区个块都有它自己在内存中的一套属性，如：是否包含代码、是否只读或可读/写等；</p>
+<p>每个区块都有它自己在内存中的一套属性，如：是否包含代码、是否只读或可读/写等；</p>
 <p>Windows 加载器（又称 PE 装载器）遍历 PE 文件并决定文件的哪一部分被映射，这种映射方式是将文件较高的偏移地址映射到较高的内存地址中；</p>
 <p>磁盘文件一旦被载入内存，磁盘上的数据结构布局和内存中的数据结构布局就是一致的，但数据之间的相对位置可能会改变，某项的偏移地址可能区别于原始的偏移地址；</p>
 <p>当 PE 文件通过 Windows 加载器载入内存后，内存中的版本称为模块（Module）；</p>
@@ -4022,7 +4736,7 @@
 <p>从 DOS 头到节区头是 PE 头部分，称为 PE 头，下面的节区合称 PE 体；</p>
 <p>文件中使用偏移（offset），内存中使用 VA（Virtual Address，虚拟地址）来表示位置；</p>
 <p>文件加载到内存时，节区的大小、位置等会发生变化；</p>
-<p>文件的内容一般可以分为代码（.text）、数据（.data）、资源（.src）节，分别保存；</p>
+<p>文件的内容一般可以分为代码（.text）、数据（.data）、资源（.src）节等，分别保存；</p>
 <p>根据所用的不同开发工具与编译选项，节区的名称、大小、个数、存储的内容等都是不同的，它们按照不同的用途，分类保存到不同的节中；</p>
 <p>各节区头定义了各节区在文件或内存中的大小、位置、属性等；</p>
 <p>PE 头与各节区的尾部存在一个区域，称为 NULL 填充，也就是 PE 头与各节区以 NULL 分割；</p>
@@ -4037,7 +4751,6 @@
 <p>原因在于，PE 文件（主要是 DLL）加载到进程虚拟内存的特定位置时，该位置可能已经加载了其它 PE 文件（DLL）；</p>
 <p>此时，必须通过重定位将其加载到其它空白的位置，若 PE 头信息使用的是 VA，则无法正常访问；</p>
 <p>因此使用 RVA 来定位信息，即使发生了重定位，只要相对于基准位置的相对地址没有变化，就能正常访问到指定信息，不会出现任何问题；</p>
-<p>这么看和栈帧类似啊，基于 EBP 而不是 ESP，原因就是 ESP 在程序运行中不断变化；</p>
 <p>32 位 Windows 系统中，各进程分配有 4GB 的虚拟内存，因此进程中 VA 值的范围是 00000000 ～ FFFFFFFF；</p>
 <h3 id="PE-头"><a href="#PE-头" class="headerlink" title="PE 头"></a>PE 头</h3><p>PE 头由许多结构体组成；</p>
 <h4 id="DOS-头"><a href="#DOS-头" class="headerlink" title="DOS 头"></a>DOS 头</h4><p>每个 PE 文件都是以一个 DOS 程序开始的，有了它，一旦程序在 DOS 下执行，DOS 就能识别出这是一个有效的执行体，然后运行紧随 MZ Header 的 DOS stub（DOS 块）；</p>
@@ -4046,7 +4759,7 @@
 <p>微软创建 PE 文件格式时，广泛使用的是 DOS 文件，考虑到 PE 文件对 DOS 文件的兼容性，在 PE 头的最前面添加了一个 IMAGE_DOS_HEADER 结构体，用来扩展已有的 DOS EXE 头；</p>
 <p>IMAGE_DOS_HEADER 结构体的大小为 64 字节，在该结构体中必须知道 2 个重要的成员：</p>
 <ul>
-<li>e_magic：DOS 签名（Signature，4D5A，对应的 ASCII 值是“MZ”），也称为 DOS MZ 头；</li>
+<li>e_magic：DOS 签名（Signature，5A4D，对应的 ASCII 值是“MZ”），也称为 DOS MZ 头；</li>
 <li>e_lfanew：指示 NT 头的偏移（根据不同文件拥有可变值），是真正的 PE 文件头的相对偏移（RVA）位置，占用 4 个字节，位于从文件开始偏移 3C 字节处；</li>
 </ul>
 <p>所有 PE 文件在开始部分（e_magic）都有 DOS 签名（5A4D，“MZ”）；</p>
@@ -4079,25 +4792,25 @@
 </thead>
 <tbody><tr>
 <td align="center">4</td>
-<td align="center">Machine</td>
+<td align="center">Machine ⚠️</td>
 <td align="center">WORD</td>
 <td align="center">运行平台</td>
 </tr>
 <tr>
 <td align="center">6</td>
-<td align="center">NumberOfSections</td>
+<td align="center">NumberOfSections ⚠️</td>
 <td align="center">WORD</td>
 <td align="center">文件的区块数</td>
 </tr>
 <tr>
 <td align="center">14</td>
-<td align="center">SizeOfOptionalHeader</td>
+<td align="center">SizeOfOptionalHeader ⚠️</td>
 <td align="center">WORD</td>
 <td align="center">IMAGE_OPTIONAL_HEADER 结构体的大小</td>
 </tr>
 <tr>
 <td align="center">16</td>
-<td align="center">Characteristics</td>
+<td align="center">Characteristics ⚠️</td>
 <td align="center">WORD</td>
 <td align="center">文件属性</td>
 </tr>
@@ -4316,10 +5029,17 @@
 </li>
 <li><p>ImageBase：进程的虚拟内存范围是 00000000 ～ FFFFFFFF（32 位系统），PE 文件被加载到如此大的内存中时，ImageBase 指出文件的优先装载地址，而 ImageBase 就是文件在内存中的首选载入地址，如果 PE 文件是在这个地址载入的，那么加载器将跳过应用基址重定位的步骤；</p>
 <ul>
-<li>EXE、DLL 文件被装载到用户内存的 00000000 ～ 7FFFFFFF 中；</li>
-<li>SYS 文件被装载到内核内存的 80000000 ～ FFFFFFFF 中；</li>
-<li>一般而言，使用开发工具创建的 EXE 文件，其默认 ImageBase 值为 00400000，DLL 文件的 ImageBase 值为 10000000；（可以指定为其它值）</li>
-<li>执行 PE 文件时，PE 装载器先创建进程，再将文件载入内存，然后把 EIP 寄存器的值设置为 <code>ImageBase + AddressOfEntryPoint</code>；</li>
+<li><p>EXE、DLL 文件被装载到用户内存的 00000000 ～ 7FFFFFFF 中；</p>
+</li>
+<li><p>SYS 文件被装载到内核内存的 80000000 ～ FFFFFFFF 中；</p>
+</li>
+<li><p>一般而言，使用开发工具创建的 EXE 文件，其默认 ImageBase 值为 00400000，DLL 文件的 ImageBase 值为 10000000；（可以指定为其它值）</p>
+</li>
+<li><p>执行 PE 文件时，PE 装载器先创建进程，再将文件载入内存，然后把 EIP 寄存器的值设置为 <code>ImageBase + AddressOfEntryPoint</code>；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnymrkwex8j31e90u0wj0.jpg" alt="ImageBase + AddressOfEntryPoint"></p>
+<p>如图所示，AddressOfEntryPoint 为 0000739D，ImageBase 为 01000000，则 EIP 的值（也就是 EP）为：0100739D；</p>
+<p>勘误：<code>#### NT 头：可选头 IMAGE_OPTIONAL_HEADER</code> 开始位置，图中的签名（IMAGE_NT_SIGNATURE）结构体标注错了，有发现的小伙伴吗？</p>
+</li>
 </ul>
 </li>
 <li><p>SetionAlignment / FileAlignment</p>
@@ -4329,7 +5049,7 @@
 <p>一个文件中，FileAlignment 与 SetionAlignment 的值可能相同，也可能不相同；</p>
 <p>磁盘文件或内存的节区大小必定为 FileAlignment 或 SetionAlignment 值的整数倍；</p>
 </li>
-<li><p>SizeOfImage：加载 PE 文件到内存时，SizeOfImage 指定了 PE Image 在虚拟内存中所占空间的大小；</p>
+<li><p>SizeOfImage：加载 PE 文件到内存时，SizeOfImage 指定了 PE 映像在虚拟内存中所占空间的大小；</p>
 <p>映像载入内存后的总尺寸，是指载入文件从 ImageBase 到最后一个块的大小，最后一个块根据其大小向上取整；</p>
 <p>一般而言，文件的大小与加载到内存中的大小是不同的（节区头中定义了各节装载的位置与占有内存的大小）；</p>
 </li>
@@ -4633,16 +5353,16 @@
 <li><p>查找 RVA 所在节区；</p>
 </li>
 <li><p>使用简单的公式计算文件偏移（RAW）</p>
-</li>
-</ol>
 <p>根据 IMAGE_SECTION_HEADER 结构体，换算公式如下：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">RAW - PointerToRawData = RVA - VirtualAddress</span><br><span class="line">                   RAW = RVA - VirtualAddress + PointerToRawData</span><br></pre></td></tr></table></figure>
-<h3 id="IAT（Import-Address-Table，导入地址表）"><a href="#IAT（Import-Address-Table，导入地址表）" class="headerlink" title="IAT（Import Address Table，导入地址表）"></a>IAT（Import Address Table，导入地址表）</h3><p>在 PE 文件内有一组数据结构，它们分别对应于被输入的 DLL，每一个这样的结构体都给出了被输入的 DLL 的名称并指向一组函数指针，这组函数指针称为输入地址表（IAT）；</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">RAW - PointerToRawData = RVA - VirtualAddress</span><br><span class="line">                  RAW = RVA - VirtualAddress + PointerToRawData</span><br></pre></td></tr></table></figure>
+<h3 id="IAT（Import-Address-Table，导入地址表）"><a href="#IAT（Import-Address-Table，导入地址表）" class="headerlink" title="IAT（Import Address Table，导入地址表）"></a>IAT（Import Address Table，导入地址表）</h3></li>
+</ol>
+<p>在 PE 文件内有一组数据结构，它们分别对应于被输入的 DLL，每一个这样的结构体都给出了被输入的 DLL 的名称并指向一组函数指针，这组函数指针称为输入地址表（IAT）；</p>
 <p>每一个被引入的 API 在 IAT 里都有保留的位置，在那里它将被 Windows 加载器写入输入函数的地址，也就是调用位置；</p>
 <p>一旦模块被载入，IAT 中将包含所要输入函数的地址；</p>
 <p>把所有输入函数放在 IAT 中，这样，无论代码中多用一个输入函数多少次，都会通过 IAT 中的同一个函数指针来完成；</p>
 <h4 id="DLL（Dynamic-Link-Library，动态链接库）"><a href="#DLL（Dynamic-Link-Library，动态链接库）" class="headerlink" title="DLL（Dynamic Link Library，动态链接库）"></a>DLL（Dynamic Link Library，动态链接库）</h4><p>16 位的 DOS 时代不存在 DLL 这一概念，只有“库”一说，比如在 C 语言中使用 printf() 函数时，编译器会从 C 语言库中读取相应函数的二进制代码，然后插入应用程序的源代码中，也就是说，可执行文件中包含着 printf() 函数的二进制代码；</p>
-<p>Windows OS 支持多任务，如果同时运行多个程序，而每个程序包含相同的库，将造成严重的内存浪费和磁盘浪费，因此，Windows 引入了 DLL 这一概念，描述如下：</p>
+<p>Windows 系统支持多任务，如果同时运行多个程序，而每个程序包含相同的库，将造成严重的内存浪费和磁盘浪费，因此，Windows 引入了 DLL 这一概念，描述如下：</p>
 <ol>
 <li>不要把库包含到程序中，单独组成 DLL 文件，需要时调用即可；</li>
 <li>内存映射技术使加载后的 DLL 代码、资源在多个进程中实现共享；</li>
