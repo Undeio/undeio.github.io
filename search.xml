@@ -1087,6 +1087,69 @@
       </tags>
   </entry>
   <entry>
+    <title>脱壳之修复 IAT</title>
+    <url>/post/452711586/</url>
+    <content><![CDATA[<blockquote>
+<p>之前尝试了手动修复 IAT，了解修复的原理后，本次记录使用工具修复的过程；</p>
+</blockquote>
+<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li>与<code>逆向分析之软编码寻找序列号（一）</code>使用的 CrackMe 相同；</li>
+<li>加壳工具为<a href="https://upx.github.io/">UPX</a>，感谢 🙏 开源；</li>
+<li>Dump 工具为 PETools，来自互联网；</li>
+<li>修正输出表的工具为 ImportREC，来自互联网；</li>
+<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
+
+</li>
+</ul>
+<h4 id="操作流程"><a href="#操作流程" class="headerlink" title="操作流程"></a>操作流程</h4><ol>
+<li><p>使用 UPX 加密 CM，然后导入 OD；</p>
+</li>
+<li><p>使用栈平衡法定位并跳转至 OEP，接下来在操作过程中不能关闭 OD 且程序需停留在 OEP 位置；</p>
+</li>
+<li><p>打开 PETools，将内存数据 Dump 出来并保存至可执行文件：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzu6nvencj31500u0tbv.jpg" alt="PETools"></p>
+<p>默认保存为 dumped.exe；</p>
+</li>
+<li><p>打开 ImportREC 选择 CM 进程：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzuc3dogbj30wm0omgmq.jpg" alt="选择 CM 进程"></p>
+<p>选择后，日志窗口会提示关联模块获取完成：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzudwpewvj30wo0omwfh.jpg" alt="关联模块获取"></p>
+<p>然后在下方填写 dumped.exe 程序 OEP 的 RVA，以及 IAT 的起始位置（RVA）和尺寸：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzuqyt15wj31e40u00yt.jpg" alt="计算 RVA"></p>
+<p>根据 VA 和 RVA 的转换公式计算如下（注意都是 16 进制哦）：</p>
+<p>OEP 的 RVA = 401000 - 400000 = 1000；</p>
+<p>IAT 的 RVA = 403184 - 400000 = 3184；</p>
+<p>IAT 的 Size = 40328C - 403184 = 108；</p>
+<p>填写 ImportREC 的选项：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzux3fy14j310u0ou75d.jpg" alt="填写 ImportREC"></p>
+<p>然后点击<code>Get Imports</code>，开始获取输入表的内容：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzv149j6vj30wi0oqgn3.jpg" alt="获取内容"></p>
+<p>获取完成后，需要检查获取的数据是否有效，如果 valid 为 NO，需要手动检查是否为无用信息，否则需要修正后重新获取；</p>
+<p>接着点击<code>Fix Dump</code>选项，在弹出窗口选择 dumped.exe，用于修复；</p>
+</li>
+<li><p>修复后的程序可以正常运行，但导入 OD 后依然会提示入口点超出代码段范围：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzv6dfug9j313m06sjrl.jpg" alt="入口点超出代码段范围"></p>
+<p>修改代码段的起始地址（RVA）即可：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzvbrofegj31dm0u0gp3.jpg" alt="修改代码段的起始地址"></p>
+<p>然后选中修改并保存到可执行文件，完工！</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>脱壳技术</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>CrackMe</tag>
+        <tag>脱壳</tag>
+        <tag>IAT</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>脱壳之 VB 程序快速定位 OEP</title>
     <url>/post/69889928/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -1205,6 +1268,74 @@
       </tags>
   </entry>
   <entry>
+    <title>脱壳之壳常用函数定位 OEP</title>
+    <url>/post/1066637783/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li>OllyDbg 1.1 修改版，简称<code>OD</code>；</li>
+<li><code>OD</code>修改版设置的<code>内存访问断点</code>只在执行时中断，不会在访问或写入时中断，也可称为<code>内存执行断点</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li>与<code>脱壳之异常法定位 OEP</code>使用的 CrackMe 相同；</li>
+<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
+
+</li>
+</ul>
+<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><h5 id="GetProcAddress"><a href="#GetProcAddress" class="headerlink" title="GetProcAddress"></a>GetProcAddress</h5><ol>
+<li><p>将程序导入 OD，goto 到 GetProcAddress 函数的行首，设置 F2 断点，然后运行程序；</p>
+</li>
+<li><p>程序中断在函数的行首，使用<code>shift + F4</code>设置条件记录断点：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnx8nzo52ej319x0u041z.jpg" alt="设置条件记录断点"></p>
+<p>表达式的值填写<code>[esp]</code>，表示获取 ESP 中的数据，同时勾选记录表达式的值以及函数参数选项；</p>
+</li>
+<li><p>清空 log 窗口，然后运行程序，条件记录断点会在 log 窗口记录每次调用 GetProcAddress 函数的调用地址及参数：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnx8ws8qugj31aa0u0acs.jpg" alt="记录每次调用"></p>
+<p>通过查看内存窗口得知，外壳程序对 GetProcAddress 的最后一次调用位于：0047009A：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnx939o7ifj31a80u0gou.jpg" alt="外壳程序的最后一次调用"></p>
+</li>
+<li><p>重载程序，编辑条件记录断点：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnx9ag1b3uj31a00u00vx.jpg" alt="编辑条件记录断点"></p>
+<p>勾选<code>按条件中断</code>选项，同时将条件设置为<code>[ESP] == 0047009A</code>，表示当 ESP 的值为 0047009A 时中断；</p>
+</li>
+<li><p>运行程序后，程序中断在条件记录断点位置，来到内存窗口，给代码段设置内存执行断点：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnx9euqak5j31ok0e2jrz.jpg" alt="内存执行断点"></p>
+</li>
+<li><p>多次运行程序后，程序到达 OEP：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnx9k811k6j31a50u0tby.jpg" alt="程序到达 OEP"></p>
+<p>这里需要运行太多次了，所以这种方法因程序而异，灵活使用；</p>
+<p>其实，设置了内存执行断点后，就可以将条件访问断点取消了，取消之后就和异常法大同小异了，好处是可以绕过部分反调试；</p>
+</li>
+</ol>
+<h4 id="ExitThread"><a href="#ExitThread" class="headerlink" title="ExitThread"></a>ExitThread</h4><p>因为本例中有终止线程的动作，且位于代码段之外，可以使用 ExitThread；</p>
+<ol>
+<li><p>将程序导入 OD，<code>F9</code>运行程序后，打开日志窗口：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnx9vj0yquj30sa0eoaaj.jpg" alt="打开日志窗口"></p>
+<p>可以看到，在一堆异常中，有一个线程结束日志，位于最后一次异常之前；</p>
+</li>
+<li><p>打开 OD 调试设置菜单，事件选项卡，选中<code>中断于线程结束</code>选项：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnx9z0mfyhj30q20lgdgc.jpg" alt="中断于线程结束"></p>
+</li>
+<li><p>重载并运行程序，程序中断：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnxa1y4w6uj319v0u0tcr.jpg" alt="提示信息"></p>
+<p>看提示信息可以得知，中断原因是某个线程结束了；</p>
+</li>
+<li><p>在内存窗口，给代码段设置内存执行断点，然后运行程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnx9k811k6j31a50u0tby.jpg" alt="程序中断在 OEP"></p>
+<p>程序到达 OEP；</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>脱壳技术</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>CrackMe</tag>
+        <tag>脱壳</tag>
+        <tag>OEP</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>脱壳之壳的加载过程</title>
     <url>/post/1754370069/</url>
     <content><![CDATA[<blockquote>
@@ -1284,74 +1415,6 @@
       </categories>
       <tags>
         <tag>脱壳</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>脱壳之壳常用函数定位 OEP</title>
-    <url>/post/1066637783/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 修改版，简称<code>OD</code>；</li>
-<li><code>OD</code>修改版设置的<code>内存访问断点</code>只在执行时中断，不会在访问或写入时中断，也可称为<code>内存执行断点</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>与<code>脱壳之异常法定位 OEP</code>使用的 CrackMe 相同；</li>
-<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
-</ul>
-<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><h5 id="GetProcAddress"><a href="#GetProcAddress" class="headerlink" title="GetProcAddress"></a>GetProcAddress</h5><ol>
-<li><p>将程序导入 OD，goto 到 GetProcAddress 函数的行首，设置 F2 断点，然后运行程序；</p>
-</li>
-<li><p>程序中断在函数的行首，使用<code>shift + F4</code>设置条件记录断点：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnx8nzo52ej319x0u041z.jpg" alt="设置条件记录断点"></p>
-<p>表达式的值填写<code>[esp]</code>，表示获取 ESP 中的数据，同时勾选记录表达式的值以及函数参数选项；</p>
-</li>
-<li><p>清空 log 窗口，然后运行程序，条件记录断点会在 log 窗口记录每次调用 GetProcAddress 函数的调用地址及参数：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnx8ws8qugj31aa0u0acs.jpg" alt="记录每次调用"></p>
-<p>通过查看内存窗口得知，外壳程序对 GetProcAddress 的最后一次调用位于：0047009A：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnx939o7ifj31a80u0gou.jpg" alt="外壳程序的最后一次调用"></p>
-</li>
-<li><p>重载程序，编辑条件记录断点：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnx9ag1b3uj31a00u00vx.jpg" alt="编辑条件记录断点"></p>
-<p>勾选<code>按条件中断</code>选项，同时将条件设置为<code>[ESP] == 0047009A</code>，表示当 ESP 的值为 0047009A 时中断；</p>
-</li>
-<li><p>运行程序后，程序中断在条件记录断点位置，来到内存窗口，给代码段设置内存执行断点：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnx9euqak5j31ok0e2jrz.jpg" alt="内存执行断点"></p>
-</li>
-<li><p>多次运行程序后，程序到达 OEP：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnx9k811k6j31a50u0tby.jpg" alt="程序到达 OEP"></p>
-<p>这里需要运行太多次了，所以这种方法因程序而异，灵活使用；</p>
-<p>其实，设置了内存执行断点后，就可以将条件访问断点取消了，取消之后就和异常法大同小异了，好处是可以绕过部分反调试；</p>
-</li>
-</ol>
-<h4 id="ExitThread"><a href="#ExitThread" class="headerlink" title="ExitThread"></a>ExitThread</h4><p>因为本例中有终止线程的动作，且位于代码段之外，可以使用 ExitThread；</p>
-<ol>
-<li><p>将程序导入 OD，<code>F9</code>运行程序后，打开日志窗口：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnx9vj0yquj30sa0eoaaj.jpg" alt="打开日志窗口"></p>
-<p>可以看到，在一堆异常中，有一个线程结束日志，位于最后一次异常之前；</p>
-</li>
-<li><p>打开 OD 调试设置菜单，事件选项卡，选中<code>中断于线程结束</code>选项：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnx9z0mfyhj30q20lgdgc.jpg" alt="中断于线程结束"></p>
-</li>
-<li><p>重载并运行程序，程序中断：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnxa1y4w6uj319v0u0tcr.jpg" alt="提示信息"></p>
-<p>看提示信息可以得知，中断原因是某个线程结束了；</p>
-</li>
-<li><p>在内存窗口，给代码段设置内存执行断点，然后运行程序：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnx9k811k6j31a50u0tby.jpg" alt="程序中断在 OEP"></p>
-<p>程序到达 OEP；</p>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>脱壳技术</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>CrackMe</tag>
-        <tag>脱壳</tag>
-        <tag>OEP</tag>
       </tags>
   </entry>
   <entry>
@@ -3964,7 +4027,7 @@
     <url>/post/3969158325/</url>
     <content><![CDATA[<blockquote>
 <p>破坏原程序的输入表是加密外壳必备的功能，因此在脱壳中，输入表的处理是一个关键环节，这需要脱壳者对 PE 格式中输入表的概念必须非常清楚；</p>
-<p>手动修复可以更清晰的理解重建输入表的过程及原理，但很辛苦，需要细心细心再细心，中间因为数值填错而苦苦寻找，想象一下在一堆二进制中找一个数值错误，很可怕，但很值得，弄懂了原理，以后就善用工具吧；</p>
+<p>手动修复可以更清晰的理解重建输入表的过程及原理，但很辛苦，需要细心细心再细心，中间因为数值填错而苦苦寻找，想象一下在一堆二进制中找一个数值错误，很可怕，但很值得，弄懂了原理，以后就善用工具了；</p>
 </blockquote>
 <h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
 <li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
