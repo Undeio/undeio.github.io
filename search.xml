@@ -1127,68 +1127,6 @@
       </tags>
   </entry>
   <entry>
-    <title>脱壳之修复 IAT</title>
-    <url>/post/452711586/</url>
-    <content><![CDATA[<blockquote>
-<p>之前尝试了手动修复 IAT，了解修复的原理后，本次记录使用工具修复的过程；</p>
-</blockquote>
-<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-7">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>加壳工具为<a href="https://upx.github.io/">UPX</a>，感谢 🙏 开源；</li>
-<li>Dump 工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-3">PETools</a>，来自互联网；</li>
-<li>修正输出表的工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-4">ImportREC</a>，来自互联网；</li>
-<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
-</ul>
-<h4 id="操作流程"><a href="#操作流程" class="headerlink" title="操作流程"></a>操作流程</h4><ol>
-<li><p>使用 UPX 加密 CM，然后导入 OD；</p>
-</li>
-<li><p>使用栈平衡法定位并跳转至 OEP，接下来在操作过程中不能关闭 OD 且程序需停留在 OEP 位置；</p>
-</li>
-<li><p>打开 PETools，将内存数据 Dump 出来并保存至可执行文件：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzu6nvencj31500u0tbv.jpg" alt="PETools"></p>
-<p>默认保存为 dumped.exe；</p>
-</li>
-<li><p>打开 ImportREC 选择 CM 进程：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzuc3dogbj30wm0omgmq.jpg" alt="选择 CM 进程"></p>
-<p>选择后，日志窗口会提示关联模块获取完成：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzudwpewvj30wo0omwfh.jpg" alt="关联模块获取"></p>
-<p>然后在下方填写 dumped.exe 程序 OEP 的 RVA，以及 IAT 的起始位置（RVA）和尺寸：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzuqyt15wj31e40u00yt.jpg" alt="计算 RVA"></p>
-<p>根据 VA 和 RVA 的转换公式计算如下（注意都是 16 进制哦）：</p>
-<p>OEP 的 RVA = 401000 - 400000 = 1000；</p>
-<p>IAT 的 RVA = 403184 - 400000 = 3184；</p>
-<p>IAT 的 Size = 40328C - 403184 = 108；</p>
-<p>填写 ImportREC 的选项：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzux3fy14j310u0ou75d.jpg" alt="填写 ImportREC"></p>
-<p>然后点击<code>Get Imports</code>，开始获取输入表的内容：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzv149j6vj30wi0oqgn3.jpg" alt="获取内容"></p>
-<p>获取完成后，需要检查获取的数据是否有效，如果 valid 为 NO，需要手动检查是否为无用信息，否则需要修正后重新获取；</p>
-<p>接着点击<code>Fix Dump</code>选项，在弹出窗口选择 dumped.exe，用于修复；</p>
-</li>
-<li><p>修复后的程序可以正常运行，但导入 OD 后依然会提示入口点超出代码段范围：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzv6dfug9j313m06sjrl.jpg" alt="入口点超出代码段范围"></p>
-<p>修改代码段的起始地址（RVA）即可：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzvbrofegj31dm0u0gp3.jpg" alt="修改代码段的起始地址"></p>
-<p>然后选中修改并保存到可执行文件，完工！</p>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>脱壳技术</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>CrackMe</tag>
-        <tag>脱壳</tag>
-        <tag>IAT</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>脱壳之修正 IAT</title>
     <url>/post/1928138386/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -1244,6 +1182,68 @@
 </ul>
 <p>修改完成后，点击<code>Fix Dump</code>，选择需要修复的程序，完成修复：</p>
 <p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0p1ijxbfj31e20u0ada.jpg" alt="完成修复"></p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>脱壳技术</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>CrackMe</tag>
+        <tag>脱壳</tag>
+        <tag>IAT</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>脱壳之修复 IAT</title>
+    <url>/post/452711586/</url>
+    <content><![CDATA[<blockquote>
+<p>之前尝试了手动修复 IAT，了解修复的原理后，本次记录使用工具修复的过程；</p>
+</blockquote>
+<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-7">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li>加壳工具为<a href="https://upx.github.io/">UPX</a>，感谢 🙏 开源；</li>
+<li>Dump 工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-3">PETools</a>，来自互联网；</li>
+<li>修正输出表的工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-4">ImportREC</a>，来自互联网；</li>
+<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
+
+</li>
+</ul>
+<h4 id="操作流程"><a href="#操作流程" class="headerlink" title="操作流程"></a>操作流程</h4><ol>
+<li><p>使用 UPX 加密 CM，然后导入 OD；</p>
+</li>
+<li><p>使用栈平衡法定位并跳转至 OEP，接下来在操作过程中不能关闭 OD 且程序需停留在 OEP 位置；</p>
+</li>
+<li><p>打开 PETools，将内存数据 Dump 出来并保存至可执行文件：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzu6nvencj31500u0tbv.jpg" alt="PETools"></p>
+<p>默认保存为 dumped.exe；</p>
+</li>
+<li><p>打开 ImportREC 选择 CM 进程：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzuc3dogbj30wm0omgmq.jpg" alt="选择 CM 进程"></p>
+<p>选择后，日志窗口会提示关联模块获取完成：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzudwpewvj30wo0omwfh.jpg" alt="关联模块获取"></p>
+<p>然后在下方填写 dumped.exe 程序 OEP 的 RVA，以及 IAT 的起始位置（RVA）和尺寸：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzuqyt15wj31e40u00yt.jpg" alt="计算 RVA"></p>
+<p>根据 VA 和 RVA 的转换公式计算如下（注意都是 16 进制哦）：</p>
+<p>OEP 的 RVA = 401000 - 400000 = 1000；</p>
+<p>IAT 的 RVA = 403184 - 400000 = 3184；</p>
+<p>IAT 的 Size = 40328C - 403184 = 108；</p>
+<p>填写 ImportREC 的选项：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzux3fy14j310u0ou75d.jpg" alt="填写 ImportREC"></p>
+<p>然后点击<code>Get Imports</code>，开始获取输入表的内容：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzv149j6vj30wi0oqgn3.jpg" alt="获取内容"></p>
+<p>获取完成后，需要检查获取的数据是否有效，如果 valid 为 NO，需要手动检查是否为无用信息，否则需要修正后重新获取；</p>
+<p>接着点击<code>Fix Dump</code>选项，在弹出窗口选择 dumped.exe，用于修复；</p>
+</li>
+<li><p>修复后的程序可以正常运行，但导入 OD 后依然会提示入口点超出代码段范围：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzv6dfug9j313m06sjrl.jpg" alt="入口点超出代码段范围"></p>
+<p>修改代码段的起始地址（RVA）即可：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzvbrofegj31dm0u0gp3.jpg" alt="修改代码段的起始地址"></p>
+<p>然后选中修改并保存到可执行文件，完工！</p>
 </li>
 </ol>
 ]]></content>
@@ -1475,6 +1475,78 @@
         <category>Windows</category>
       </categories>
       <tags>
+        <tag>脱壳</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>脱壳之小练习</title>
+    <url>/post/2471182341/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-24">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li>Dump 工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-3">PETools</a>，来自互联网；</li>
+<li>修正输出表的工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-4">ImportREC</a>，来自互联网；</li>
+<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
+
+</li>
+</ul>
+<h4 id="操作流程"><a href="#操作流程" class="headerlink" title="操作流程"></a>操作流程</h4><ol>
+<li><p>将 CM 导入 OD，使用内存访问法定位 OEP（这种方式设置的断点是一次性的）：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0wlp01l2j31dz0u0diq.jpg" alt="F2 断点"></p>
+<p>原理是：加壳程序运行时，会依次解压各区段，所以，访问后会中断；</p>
+</li>
+<li><p>运行程序后，程序中断两次：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0woppgmtj31e00u0jv3.jpg" alt="第一次重点"></p>
+<p>中断后查看提示信息，程序访问了代码段，所以触发了断点，再次运行程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0wqml26dj31e30u0djj.jpg" alt="第二次中断"></p>
+<p>程序再次中断，程序访问了第 2 个设置断点的区段，此时说明代码段已经解压完成了；</p>
+</li>
+<li><p>再次来到内存窗口，给代码段设置 F2 断点，然后运行程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0wve0v2wj31e60u041p.jpg" alt="再次设置断点"></p>
+<p>原理是：既然代码段已经解压完毕了，如果再次访问，就是原程序运行的时候；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0x0nx0ndj31e00u0q7e.jpg" alt="到达 OEP"></p>
+<p>从模块中删除分析后，就可以看到程序的本来面目了；</p>
+</li>
+<li><p>然后打开 PETools，选择当前 CM 进程，右键菜单选择完整转存并保存到可执行文件：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0x64np0kj314y0u0adf.jpg" alt="PETools"></p>
+</li>
+<li><p>回到 OD，定位到 IAT，查看 IAT 起始位置（RVA）及结束位置（RVA），计算 Size：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0x9gmecfj31dt0u0q6v.jpg" alt="定位到 IAT"></p>
+<p>通过 GetVersion 函数的地址，定位到 IAT；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0xenogn6j31e10u0jvs.jpg" alt="计算 RVA"></p>
+<p>通过计算得知：</p>
+<ul>
+<li>OEP 的 RVA 为：271B0；</li>
+<li>IAT 的 起始地址 RVA 为：60818；</li>
+<li>IAT 的 Size 为：60F28 - 60818 = 710（Hex）；</li>
+</ul>
+</li>
+<li><p>打开 ImportREC 填写相关选项并获取：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0xk307itj30wi0oqt9p.jpg" alt="填写选项"></p>
+<p>获取完成后，检查获取的数据：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0xlkacwwj30wi0oo3zu.jpg" alt="检查"></p>
+<p>手动或通过显示无效选项检查获取数据是否有效；</p>
+<p>确认无误后点击修复转存按钮，选择转存的程序，就完成修复了；</p>
+</li>
+<li><p>将修复后的程序导入 OD，查看 log 窗口：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0xswrszgj31dy0u0ju8.jpg" alt="log"></p>
+<p>没有异常，说明程序正常运行；</p>
+<p>然后定位到 IAT，随便选择一个函数，右键菜单查看可执行文件，到达函数 IMAGE_THUNK_DATA 结构体；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0xuvyplsj31e50u00wl.jpg" alt="查看可执行程序"></p>
+<p>这里存放的是函数名字符串的 RVA，<code>Ctrl + G</code>跳转到 VA 查看函数名字符串；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0y4g6n1sj31dy0u0wlb.jpg" alt="确认 IAT"></p>
+<p>确认函数名和 IAT 显示的函数名一致，脱壳完成；</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>脱壳技术</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>CrackMe</tag>
         <tag>脱壳</tag>
       </tags>
   </entry>
