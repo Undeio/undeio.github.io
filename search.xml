@@ -128,8 +128,8 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>VB</category>
         <category>汇编</category>
+        <category>VB</category>
         <category>Windows</category>
       </categories>
       <tags>
@@ -216,8 +216,8 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>VB</category>
         <category>汇编</category>
+        <category>VB</category>
         <category>Windows</category>
       </categories>
       <tags>
@@ -306,8 +306,8 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>VB</category>
         <category>汇编</category>
+        <category>VB</category>
         <category>Windows</category>
       </categories>
       <tags>
@@ -428,8 +428,8 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>VB</category>
         <category>汇编</category>
+        <category>VB</category>
         <category>Windows</category>
       </categories>
       <tags>
@@ -530,45 +530,13 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>VB</category>
         <category>汇编</category>
+        <category>VB</category>
         <category>Windows</category>
       </categories>
       <tags>
         <tag>CrackMe</tag>
         <tag>逆向分析</tag>
-        <tag>VB 调试</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>VB 调试之初识 VB</title>
-    <url>/post/674877238/</url>
-    <content><![CDATA[<blockquote>
-<p>初识简单了解一下 VB，相信随着深入的学习，对它的了解会更多，理解会更深；</p>
-</blockquote>
-<h4 id="P-Code-Packed-Code-压缩代码"><a href="#P-Code-Packed-Code-压缩代码" class="headerlink" title="P-Code Packed Code 压缩代码"></a>P-Code Packed Code 压缩代码</h4><ul>
-<li>4.0 以前</li>
-<li>运行时，动态链接库（DLL）将翻译或解释执行程序中的指令；</li>
-<li>解释器 MSVBVM50.DLL 和 MSVBVM60.DLL</li>
-</ul>
-<h4 id="N-Code-Native-Code-本机代码"><a href="#N-Code-Native-Code-本机代码" class="headerlink" title="N-Code Native Code 本机代码"></a>N-Code Native Code 本机代码</h4><ul>
-<li>5.0 以后</li>
-<li>改善 VB 的运行速度</li>
-<li>但还是需要 MSVBVM60.DLL，因为许多函数本体放在 MSVBVM60.DLL 里面，需要不断地 CALL 其中的函数，不过，这时候的 MSVBVM60.DLL 就不承担解释执行的任务了，只是充当一般的 DLL；</li>
-</ul>
-<h4 id="编译器技术"><a href="#编译器技术" class="headerlink" title="编译器技术"></a>编译器技术</h4><ul>
-<li>编译器的编译技术可以分为native－compile（自然编译）与pcode－compile（伪编译）两种；</li>
-<li>自然编译是编译器将高级语言转换为汇编代码，并经链接生成EXE程序的过程；</li>
-<li>伪编译是编译器将高级语言转换为某种编码后，将能解释、执行此编码的一段程序一同链接，生成EXE程序；</li>
-<li>伪代码p-code，最早应该叫做Pascal-Code，其名称起源于一个pascal编译器使用的“中间代码”编译技术。现在一般作为pseudo-code（伪代码），或packed-code（压缩代码）简称，此项编译技术的出现，最终导致了“虚拟机”的出现。而微软在其编程工具basic、c、vb中都使用了类似的编译技术；</li>
-<li>所谓伪代码，其基本工作原理是编译器先把执行程序编译为比80X86机器码紧凑得多的中间代码形式，然后在链接时把一个小工作引擎嵌入执行程序中，最后在运行时由此工作引擎把P-Code解释为本地机器码实际执行，所以叫做packed-code；同时又由于此代码并不是最终的机器码形式，实际上是“变形的源代码”，所以也被称为pseudo-code。依靠P-code编译技术，使得编程语言不依赖于机器或操作平台成为可能；</li>
-</ul>
-]]></content>
-      <categories>
-        <category>VB</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
         <tag>VB 调试</tag>
       </tags>
   </entry>
@@ -801,6 +769,110 @@
       </tags>
   </entry>
   <entry>
+    <title>脱壳之 SFX 功能定位 OEP</title>
+    <url>/post/3371155739/</url>
+    <content><![CDATA[<blockquote>
+<p>对壳一无所知的情况下，通过简单的操作完成程序的脱壳，从而增加成就感，获得学习的乐趣及动力；</p>
+</blockquote>
+<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li>加壳工具使用了<a href="https://upx.github.io/">UPX</a>，感谢 🙏 开源，以及 <a href="http://www.aspack.com/">ASPACK</a>：收费软件，可以试用；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li>与<code>逆向分析之软编码寻找序列号（一）</code>使用的 CrackMe 相同；</li>
+<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
+
+</li>
+</ul>
+<h4 id="壳"><a href="#壳" class="headerlink" title="壳"></a>壳</h4><p>壳（也叫“外壳”）是一种专用加密软件技术；</p>
+<p>壳分为：压缩壳、加密壳、虚拟机保护软件；</p>
+<h3 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h3><ol>
+<li><p>首先，将原始程序导入 OD，然后查看 OEP：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv7l4xkb9j31dp0u0jv3.jpg" alt="原始程序导入 OD"></p>
+<p>可以看到，原始程序的 OEP 是：00401000；</p>
+</li>
+<li><p>安装 UPX，然后打开并给 CM 加壳：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv797t16ij31340u076k.jpg" alt="给 CM 加壳"></p>
+<p>将 CM 拖入 UPX，选项默认，点击 RUN 即可；</p>
+<p>不会生成新文件，而是直接在源程序上加壳，所以，记得备份源程序；</p>
+</li>
+<li><p>打开 OD 设置 SFX：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv7j8uzeuj31dx0u0n2e.jpg" alt="设置 SFX"></p>
+<p>打开调试设置，在异常选项卡下，勾选全部选项，是为了防止 SFX 在自动分析中，中断在某个异常而导致失败；</p>
+<p>然后，在 SFX 选项卡下，勾选 <code>块方式跟踪</code>或<code>字节方式跟踪</code>其一，它们的区别是查找速度与准确率，首先选择速度较快的<code>块方式跟踪</code>；</p>
+</li>
+<li><p>然后将加壳后的程序载入 OD，发现没有任何反应，即使切换 SFX 选项卡为<code>字节方式跟踪</code>也没有任何反应，这是为什么呢？</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv7vp6yy2j31e30u0jut.jpg" alt="没有任何反应"></p>
+</li>
+<li><p>原来，SFX 使用是有限制的：程序在载入 OD 后，入口点必须位于代码段（.code）之外，才会生效；</p>
+<p>打开内存窗口：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv7xm4w2qj31e00u077c.jpg" alt="内存窗口"></p>
+<p>发现当前程序的代码段起始位置为：00409000，大小为 1000，也就是说，当前程序代码段的范围是 00409000 ～ 00409FFF；</p>
+<p>而程序载入 OD 后，EP（入口点）位于 00409BF0，处于代码段范围，所以 SFX 没有生效；</p>
+</li>
+<li><p>既然 UPX 加壳后入口点在代码段，那就切换加壳软件，使用 ASPACK；</p>
+<p>安装 ASPACK 并打开，在打开文件选项卡下点击打开并选择原始程序，就会自动加壳：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv8e3edj4j30n80iat9g.jpg" alt="ASPACK"></p>
+<p>ASPACK 同样不会生成新文件，所以，记得备份源程序；</p>
+</li>
+<li><p>首先，打开 OD 确认 SFX 以及异常选项卡设置 OK，然后将 ASPACK 加密后的程序导入 OD：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv8k4495oj31du0u0q6x.jpg" alt="ASPACK 加密后的程序导入 OD"></p>
+<p>CM 运行起来了，然而，程序并非停留在 OEP 上，因为第 1 步的时候，已经确认了原始程序的 OEP 是：00401000；</p>
+<p>看来 SFX 的<code>块方式跟踪</code>速度很快但是不够准确，不过，既然 CM 能够运行，也侧面说明了，ASPACK 加壳后，EP 位于代码段之外；</p>
+</li>
+<li><p>切换 SFX 选项为<code>字节方式跟踪</code>并删除 OD 操作日志（UDD 文件夹内），重新将 ASPACK 加密后的程序导入 OD：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv8u6b8v9j31dy0u0wi4.jpg" alt="程序已脱壳"></p>
+<p>此时 EP 停留在 00401000 上，也就 OEP 上，说明程序已经脱壳了；</p>
+</li>
+<li><p>加壳方式多种多样，这种脱壳方式可用范围应该很小，毕竟换了加壳工具后就失效了，不过，很振奋人心；</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>脱壳技术</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>CrackMe</tag>
+        <tag>脱壳</tag>
+        <tag>SFX</tag>
+        <tag>OEP</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>VB 调试之初识 VB</title>
+    <url>/post/674877238/</url>
+    <content><![CDATA[<blockquote>
+<p>初识简单了解一下 VB，相信随着深入的学习，对它的了解会更多，理解会更深；</p>
+</blockquote>
+<h4 id="P-Code-Packed-Code-压缩代码"><a href="#P-Code-Packed-Code-压缩代码" class="headerlink" title="P-Code Packed Code 压缩代码"></a>P-Code Packed Code 压缩代码</h4><ul>
+<li>4.0 以前</li>
+<li>运行时，动态链接库（DLL）将翻译或解释执行程序中的指令；</li>
+<li>解释器 MSVBVM50.DLL 和 MSVBVM60.DLL</li>
+</ul>
+<h4 id="N-Code-Native-Code-本机代码"><a href="#N-Code-Native-Code-本机代码" class="headerlink" title="N-Code Native Code 本机代码"></a>N-Code Native Code 本机代码</h4><ul>
+<li>5.0 以后</li>
+<li>改善 VB 的运行速度</li>
+<li>但还是需要 MSVBVM60.DLL，因为许多函数本体放在 MSVBVM60.DLL 里面，需要不断地 CALL 其中的函数，不过，这时候的 MSVBVM60.DLL 就不承担解释执行的任务了，只是充当一般的 DLL；</li>
+</ul>
+<h4 id="编译器技术"><a href="#编译器技术" class="headerlink" title="编译器技术"></a>编译器技术</h4><ul>
+<li>编译器的编译技术可以分为native－compile（自然编译）与pcode－compile（伪编译）两种；</li>
+<li>自然编译是编译器将高级语言转换为汇编代码，并经链接生成EXE程序的过程；</li>
+<li>伪编译是编译器将高级语言转换为某种编码后，将能解释、执行此编码的一段程序一同链接，生成EXE程序；</li>
+<li>伪代码p-code，最早应该叫做Pascal-Code，其名称起源于一个pascal编译器使用的“中间代码”编译技术。现在一般作为pseudo-code（伪代码），或packed-code（压缩代码）简称，此项编译技术的出现，最终导致了“虚拟机”的出现。而微软在其编程工具basic、c、vb中都使用了类似的编译技术；</li>
+<li>所谓伪代码，其基本工作原理是编译器先把执行程序编译为比80X86机器码紧凑得多的中间代码形式，然后在链接时把一个小工作引擎嵌入执行程序中，最后在运行时由此工作引擎把P-Code解释为本地机器码实际执行，所以叫做packed-code；同时又由于此代码并不是最终的机器码形式，实际上是“变形的源代码”，所以也被称为pseudo-code。依靠P-code编译技术，使得编程语言不依赖于机器或操作平台成为可能；</li>
+</ul>
+]]></content>
+      <categories>
+        <category>VB</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>VB 调试</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>常见的汇编指令</title>
     <url>/post/1025109479/</url>
     <content><![CDATA[<h3 id="常见指令"><a href="#常见指令" class="headerlink" title="常见指令"></a>常见指令</h3><h4 id="NOP"><a href="#NOP" class="headerlink" title="NOP"></a>NOP</h4><ul>
@@ -1015,74 +1087,47 @@
       </tags>
   </entry>
   <entry>
-    <title>脱壳之 SFX 功能定位 OEP</title>
-    <url>/post/3371155739/</url>
-    <content><![CDATA[<blockquote>
-<p>对壳一无所知的情况下，通过简单的操作完成程序的脱壳，从而增加成就感，获得学习的乐趣及动力；</p>
-</blockquote>
-<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
+    <title>脱壳之 VB 程序快速定位 OEP</title>
+    <url>/post/69889928/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li>OllyDbg 1.1 修改版，简称<code>OD</code>；</li>
+<li><code>OD</code>修改版设置的<code>内存访问断点</code>只在执行时中断，不会在访问或写入时中断，也可称为<code>内存执行断点</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li>加壳工具使用了<a href="https://upx.github.io/">UPX</a>，感谢 🙏 开源，以及 <a href="http://www.aspack.com/">ASPACK</a>：收费软件，可以试用；</li>
 <li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>与<code>逆向分析之软编码寻找序列号（一）</code>使用的 CrackMe 相同；</li>
+<li>与<code>VB 调试之修改系统 DLL</code>使用的 CrackMe 相同；</li>
+<li>加壳工具为<a href="http://www.aspack.com/">ASPACK</a>：收费软件，可以试用；</li>
 <li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
 
 </li>
 </ul>
-<h4 id="壳"><a href="#壳" class="headerlink" title="壳"></a>壳</h4><p>壳（也叫“外壳”）是一种专用加密软件技术；</p>
-<p>壳分为：压缩壳、加密壳、虚拟机保护软件；</p>
-<h3 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h3><ol>
-<li><p>首先，将原始程序导入 OD，然后查看 OEP：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv7l4xkb9j31dp0u0jv3.jpg" alt="原始程序导入 OD"></p>
-<p>可以看到，原始程序的 OEP 是：00401000；</p>
+<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
+<li><p>使用 ASPACK 给 CM 加壳；</p>
 </li>
-<li><p>安装 UPX，然后打开并给 CM 加壳：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv797t16ij31340u076k.jpg" alt="给 CM 加壳"></p>
-<p>将 CM 拖入 UPX，选项默认，点击 RUN 即可；</p>
-<p>不会生成新文件，而是直接在源程序上加壳，所以，记得备份源程序；</p>
+<li><p>将加壳后的 CM 导入 OD，然后来到内存窗口，找到 MSVBVM60.dll 的代码段，设置内存访问断点：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwh95tsoij31a30u0ad4.jpg" alt="MSVBVM60"></p>
+<p>VB 程序有个特点：入口处都是一个 PUSH 指令，然后一个 CALL 指令，并且 CALL 指令中的 JMP 指向 MSVBVM60/50；</p>
+<p>所以这里的思路就是：当外壳程序执行完毕，跳转至 OEP 时，程序会调用 MSVBVM60/50，所以，只要给 MSVBVM60/50 设置断点，然后跟随到调用位置，就到达 OEP 了；</p>
 </li>
-<li><p>打开 OD 设置 SFX：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv7j8uzeuj31dx0u0n2e.jpg" alt="设置 SFX"></p>
-<p>打开调试设置，在异常选项卡下，勾选全部选项，是为了防止 SFX 在自动分析中，中断在某个异常而导致失败；</p>
-<p>然后，在 SFX 选项卡下，勾选 <code>块方式跟踪</code>或<code>字节方式跟踪</code>其一，它们的区别是查找速度与准确率，首先选择速度较快的<code>块方式跟踪</code>；</p>
+<li><p>设置好断点并<code>F9</code>运行程序，程序会中断在 MSVBVM60/50 的行首：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwi48xrnrj31a60u0adj.jpg" alt="中断在 MSVBVM60/50 的行首"></p>
+<p>此时在栈窗口跟随到调用位置：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwicoomz0j31a50u0wi6.jpg" alt="调用位置"></p>
+<p>这里，通过上面的函数列表就已经可以确定是 OEP，VB 程序的 OEP 基本类似，都是这种结构；</p>
 </li>
-<li><p>然后将加壳后的程序载入 OD，发现没有任何反应，即使切换 SFX 选项卡为<code>字节方式跟踪</code>也没有任何反应，这是为什么呢？</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv7vp6yy2j31e30u0jut.jpg" alt="没有任何反应"></p>
-</li>
-<li><p>原来，SFX 使用是有限制的：程序在载入 OD 后，入口点必须位于代码段（.code）之外，才会生效；</p>
-<p>打开内存窗口：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv7xm4w2qj31e00u077c.jpg" alt="内存窗口"></p>
-<p>发现当前程序的代码段起始位置为：00409000，大小为 1000，也就是说，当前程序代码段的范围是 00409000 ～ 00409FFF；</p>
-<p>而程序载入 OD 后，EP（入口点）位于 00409BF0，处于代码段范围，所以 SFX 没有生效；</p>
-</li>
-<li><p>既然 UPX 加壳后入口点在代码段，那就切换加壳软件，使用 ASPACK；</p>
-<p>安装 ASPACK 并打开，在打开文件选项卡下点击打开并选择原始程序，就会自动加壳：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv8e3edj4j30n80iat9g.jpg" alt="ASPACK"></p>
-<p>ASPACK 同样不会生成新文件，所以，记得备份源程序；</p>
-</li>
-<li><p>首先，打开 OD 确认 SFX 以及异常选项卡设置 OK，然后将 ASPACK 加密后的程序导入 OD：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv8k4495oj31du0u0q6x.jpg" alt="ASPACK 加密后的程序导入 OD"></p>
-<p>CM 运行起来了，然而，程序并非停留在 OEP 上，因为第 1 步的时候，已经确认了原始程序的 OEP 是：00401000；</p>
-<p>看来 SFX 的<code>块方式跟踪</code>速度很快但是不够准确，不过，既然 CM 能够运行，也侧面说明了，ASPACK 加壳后，EP 位于代码段之外；</p>
-</li>
-<li><p>切换 SFX 选项为<code>字节方式跟踪</code>并删除 OD 操作日志（UDD 文件夹内），重新将 ASPACK 加密后的程序导入 OD：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv8u6b8v9j31dy0u0wi4.jpg" alt="程序已脱壳"></p>
-<p>此时 EP 停留在 00401000 上，也就 OEP 上，说明程序已经脱壳了；</p>
-</li>
-<li><p>加壳方式多种多样，这种脱壳方式可用范围应该很小，毕竟换了加壳工具后就失效了，不过，很振奋人心；</p>
+<li><p>删除代码分析后，更加确定这里就是 OEP：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwi9wuc1ij31a40u0djm.jpg" alt="删除代码分析后"></p>
 </li>
 </ol>
 ]]></content>
       <categories>
         <category>逆向工程</category>
+        <category>VB</category>
         <category>脱壳技术</category>
         <category>Windows</category>
       </categories>
       <tags>
         <tag>CrackMe</tag>
         <tag>脱壳</tag>
-        <tag>SFX</tag>
         <tag>OEP</tag>
       </tags>
   </entry>
@@ -1150,48 +1195,73 @@
       </tags>
   </entry>
   <entry>
-    <title>脱壳之 VB 程序快速定位 OEP</title>
-    <url>/post/69889928/</url>
+    <title>脱壳之修正 IAT</title>
+    <url>/post/1928138386/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 修改版，简称<code>OD</code>；</li>
-<li><code>OD</code>修改版设置的<code>内存访问断点</code>只在执行时中断，不会在访问或写入时中断，也可称为<code>内存执行断点</code>；</li>
+<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
 <li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>与<code>VB 调试之修改系统 DLL</code>使用的 CrackMe 相同；</li>
-<li>加壳工具为<a href="http://www.aspack.com/">ASPACK</a>：收费软件，可以试用；</li>
+<li>Dump 工具为 OD 插件 OllyDump.dll，来自互联网；</li>
+<li>修正输出表的工具为 ImportREC，来自互联网；</li>
 <li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
 
 </li>
 </ul>
-<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
-<li><p>使用 ASPACK 给 CM 加壳；</p>
+<h4 id="操作流程"><a href="#操作流程" class="headerlink" title="操作流程"></a>操作流程</h4><p>Import REConstructor（简称 ImportREC）是目前最好用的输入表重建工具，它可以从杂乱的 IAT 中重建一个输入表；</p>
+<p>要运行 ImportREC，必须满足以下条件：</p>
+<ul>
+<li>目标文件已完全被 Dump 并保存为另外一个文件；</li>
+<li>目标文件必须正在运行；</li>
+<li>事先找到目标程序真正的 OEP 或知晓 IAT 的偏移量和大小；</li>
+</ul>
+<ol>
+<li><p>将 CM 导入 OD，使用栈平衡法找到 OEP，并停留在 OEP（目标文件必须正在运行）；</p>
 </li>
-<li><p>将加壳后的 CM 导入 OD，然后来到内存窗口，找到 MSVBVM60.dll 的代码段，设置内存访问断点：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwh95tsoij31a30u0ad4.jpg" alt="MSVBVM60"></p>
-<p>VB 程序有个特点：入口处都是一个 PUSH 指令，然后一个 CALL 指令，并且 CALL 指令中的 JMP 指向 MSVBVM60/50；</p>
-<p>所以这里的思路就是：当外壳程序执行完毕，跳转至 OEP 时，程序会调用 MSVBVM60/50，所以，只要给 MSVBVM60/50 设置断点，然后跟随到调用位置，就到达 OEP 了；</p>
+<li><p>使用 OllyDump 将内存数据 Dump 出来并保存至可执行文件（目标文件已完全被 Dump 并保存为另外一个文件）：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0n79lxu4j31dt0u0jvk.jpg" alt="OllyDump"></p>
+<p>在插件菜单选择 OllyDump 或右键菜单选择转存调试的进程都可以，然后确认 Dump 选项：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0n2xcja2j31e00u0djx.jpg" alt="Dump"></p>
+<p>插件 Dump 数据方面没有问题，但重建 IAT 功能不够强大，因此，取消勾选重建输入表选项；</p>
 </li>
-<li><p>设置好断点并<code>F9</code>运行程序，程序会中断在 MSVBVM60/50 的行首：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwi48xrnrj31a60u0adj.jpg" alt="中断在 MSVBVM60/50 的行首"></p>
-<p>此时在栈窗口跟随到调用位置：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwicoomz0j31a50u0wi6.jpg" alt="调用位置"></p>
-<p>这里，通过上面的函数列表就已经可以确定是 OEP，VB 程序的 OEP 基本类似，都是这种结构；</p>
+<li><p>在 OD 中定位到 IAT，查看起始 RVA 以及结束 RVA，计算 Size：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0nfnw56mj310w0o8ta0.jpg" alt="Size"></p>
+<p>在输入表中，一个 DLl 对应于一份 IAT，多个 IAT 之间一般以一个 DWORD 的 0 隔开；</p>
+<p>此处 CM 的 IAT 之间被添加了无效信息；</p>
 </li>
-<li><p>删除代码分析后，更加确定这里就是 OEP：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwi9wuc1ij31a40u0djm.jpg" alt="删除代码分析后"></p>
+<li><p>用 ImportREC 打开 CM 进程，填写 OEP（RVA）以及 IAT 的起始地址（RVA）和大小，然后点击获取：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0no2nckij30we0oojsj.jpg" alt="ImportREC"></p>
+<p>获取输入表后，可以看到有一组<code>valid：NO</code>的数据，这就是两个 IAT 之间的无效信息：</p>
+<p>确认是无效信息后，在无效信息上右键菜单执行“Cut thunk(s)”命令：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0nzzqto3j31e10u0aeq.jpg" alt="Cut thunk(s)"></p>
+<p>剔除无效信息后，数据还是不正确：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0o4b5w5kj31dy0u078u.jpg" alt="数据还是不正确"></p>
+<p>因为 CM 中调用了 3 个 DLL，分别是 user32.dll、kernel32.dll 以及 ntdll.dll；</p>
+<p>而 ImportREC 只找到了两个，看来这玩意儿也不好使啊；</p>
+<p>NoNoNo，它找到了三个，但因为 ntdll 中的 API 混合在 kernel32 的 API 中，所以被替换了，看 log 窗口的提示信息；</p>
+<p>此时如果直接修复 dump.exe，在当前环境（xp）下是可以运行的，但可能会在其它 OS 中遇到兼容性问题；</p>
+<p>所以还需要修复 API：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0olk6qhmj31lk0qu0v8.jpg" alt="修复"></p>
+<p>在获取的信息中，双击对应的 API，在弹出的函数编辑框中修改对应的 DLL 名称和 API 名称；</p>
+<ul>
+<li>查看 RVA 来获取对应的函数比较直观，如：00001200 和 00001210；</li>
+<li>双击函数行打开函数编辑框；</li>
+<li>在编辑框中首先选择 DLL 名称，然后可以在下面的输入框中搜索指定的函数名，接着选择函数，点击 OK 确认修改；</li>
+<li>修改完成后，依然显示的是未修改的状态，但修复程序后，显示已修改；</li>
+</ul>
+<p>修改完成后，点击<code>Fix Dump</code>，选择需要修复的程序，完成修复：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0p1ijxbfj31e20u0ada.jpg" alt="完成修复"></p>
 </li>
 </ol>
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>VB</category>
         <category>脱壳技术</category>
         <category>Windows</category>
       </categories>
       <tags>
         <tag>CrackMe</tag>
         <tag>脱壳</tag>
-        <tag>OEP</tag>
+        <tag>IAT</tag>
       </tags>
   </entry>
   <entry>
@@ -2289,6 +2359,92 @@
       </tags>
   </entry>
   <entry>
+    <title>逆向分析之异常处理（一）</title>
+    <url>/post/996855490/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
+
+</li>
+</ul>
+<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
+<li><p>学习完的总结，而且其中讲的<code>PE</code>部分的内容，完全是一脸懵逼听下来，做个笔记；</p>
+</li>
+<li><p>内存访问异常总结下来就一句话：在没有权限的地方做了没权限的事儿；</p>
+</li>
+<li><p>将任意<code>CrackMe</code>倒入<code>OD</code>:</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonfurw1oj31ff0u0gwo.jpg" alt="倒入OD"></p>
+<ul>
+<li><p>当前处于代码段，只有只读权限，如果要写入内容会怎么样？</p>
+<p>修改第一行代码，把<code>EAX</code>的内容写入指定地址；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gloniemvqrj31ff0u0gxc.jpg" alt="修改代码"></p>
+<p>然后执行代码：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonkvl23pj31ff0u0wq7.jpg" alt="访问违规"></p>
+<p>可以看到，根本无法执行代码；</p>
+</li>
+<li><p>那每个代码段的权限如何查看呢？</p>
+<ol>
+<li><p>方法一：</p>
+<p>打开<code>内存窗口</code>，找到<code>PE 头文件</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonoefqwhj31ff0u048w.jpg" alt="内存窗口"></p>
+<p>然后双击<code>PE 头文件</code>所在行，打开<code>数据窗口</code>，找到 PE 头偏移量<code>Offset to PE signature</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonqf357jj31ff0u0k1l.jpg" alt="偏移量"></p>
+<p>既然偏移量是 100， 那地址就是<code>00400100</code>，往下翻找到这个地址：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonx75sh8j31ff0u0499.jpg" alt="找到地址"></p>
+<p>在这里，发现了代码段和数据段的地址信息，偏移量分别是 1000 和 2000，那地址就分别是<code>00401000</code>和<code>00402000</code>喽，如何确定呢？重载程序就知道了；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glop9kcs3qj31ff0u049x.jpg" alt="起始位置"></p>
+<p>至于它们的权限，继续往下翻：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gloo34nk41j31ff0u0n80.jpg" alt="权限"></p>
+<p>在这里可以清楚的看到，CODE 段只有只读权限，而 DATA 段有读写权限；</p>
+</li>
+<li><p>方法二：</p>
+<p>在<code>数据窗口</code>按下<code>Ctrl + G</code>，转到<code>00400000</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glooawpu9qj31ff0u0alk.jpg" alt="转到表达式"></p>
+<p>然后在<code>数据窗口</code>右键<code>指定 &gt; PE 头文件</code>，就可以定位到<code>PE 头文件</code>了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gloofb56bhj31ff0u0qe1.jpg" alt="定位"></p>
+<p>其他操作和方法一一致；</p>
+</li>
+</ol>
+</li>
+<li><p>测试一下修改代码段权限，写入内容：</p>
+<p>在<code>数据窗口</code>选择代码段权限行，右键选择<code>修改整数</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glooklxgtpj31ff0u0dq1.jpg" alt="修改整数"></p>
+<p>然后修改权限：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gloonxmrfcj31ff0u0qeh.jpg" alt="修改成功"></p>
+<p>修改后可以看到，CODE 段有写的权限了，然后将修改保存到新的可执行文件；</p>
+<p>接着，将保存的新文件倒入<code>OD</code>并修改第一行代码：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glop0ua22cj31ff0u0wqa.jpg" alt="打开新文件"></p>
+<p>运行程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glop2jpw4zj31ff0u013f.jpg" alt="运行程序"></p>
+<p>可以看到，<code>EAX</code>的内容成功写入到以指定地址为开始的位置；</p>
+</li>
+</ul>
+</li>
+<li><p>对<code>PE</code>没有任何概念，只能根据教程的思路一步步来，做到：能学到的东西要学会；</p>
+</li>
+<li><p>最后，来说说一个小的知识点<code>除零异常</code>；</p>
+<p>刚上学开始学习加减乘除的时候，老师就告诉我们 0 不能作为除数，而在程序设计中，当遇上正整数除以零程序会中止：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glov7g67kij31ff0u013c.jpg" alt="调试语句"></p>
+<p>在这里，由于<code>EAX</code>自身为 0，为了区分被除数和除数，让<code>EAX</code>加上一个随机的立即数以区分，这里以 123 为例，接着通过<code>xor</code>让准备作为除数的<code>ECX</code>置 0，最后用<code>EAX</code>除以<code>ECX</code>，接下来，看一下运算的结果：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glovdctagcj31ff0u049u.jpg" alt="除零异常"></p>
+<p>可以看到，执行<code>DIV ECX</code>后，也就是除以 0 后，这里产生了一个异常，这个异常就叫作除零异常；</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>汇编</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>CrackMe</tag>
+        <tag>逆向分析</tag>
+        <tag>异常处理</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>逆向分析之反调试（四）</title>
     <url>/post/3209676884/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -2433,92 +2589,6 @@
         <tag>CrackMe</tag>
         <tag>逆向分析</tag>
         <tag>反调试</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>逆向分析之异常处理（一）</title>
-    <url>/post/996855490/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
-</ul>
-<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
-<li><p>学习完的总结，而且其中讲的<code>PE</code>部分的内容，完全是一脸懵逼听下来，做个笔记；</p>
-</li>
-<li><p>内存访问异常总结下来就一句话：在没有权限的地方做了没权限的事儿；</p>
-</li>
-<li><p>将任意<code>CrackMe</code>倒入<code>OD</code>:</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonfurw1oj31ff0u0gwo.jpg" alt="倒入OD"></p>
-<ul>
-<li><p>当前处于代码段，只有只读权限，如果要写入内容会怎么样？</p>
-<p>修改第一行代码，把<code>EAX</code>的内容写入指定地址；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gloniemvqrj31ff0u0gxc.jpg" alt="修改代码"></p>
-<p>然后执行代码：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonkvl23pj31ff0u0wq7.jpg" alt="访问违规"></p>
-<p>可以看到，根本无法执行代码；</p>
-</li>
-<li><p>那每个代码段的权限如何查看呢？</p>
-<ol>
-<li><p>方法一：</p>
-<p>打开<code>内存窗口</code>，找到<code>PE 头文件</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonoefqwhj31ff0u048w.jpg" alt="内存窗口"></p>
-<p>然后双击<code>PE 头文件</code>所在行，打开<code>数据窗口</code>，找到 PE 头偏移量<code>Offset to PE signature</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonqf357jj31ff0u0k1l.jpg" alt="偏移量"></p>
-<p>既然偏移量是 100， 那地址就是<code>00400100</code>，往下翻找到这个地址：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonx75sh8j31ff0u0499.jpg" alt="找到地址"></p>
-<p>在这里，发现了代码段和数据段的地址信息，偏移量分别是 1000 和 2000，那地址就分别是<code>00401000</code>和<code>00402000</code>喽，如何确定呢？重载程序就知道了；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glop9kcs3qj31ff0u049x.jpg" alt="起始位置"></p>
-<p>至于它们的权限，继续往下翻：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gloo34nk41j31ff0u0n80.jpg" alt="权限"></p>
-<p>在这里可以清楚的看到，CODE 段只有只读权限，而 DATA 段有读写权限；</p>
-</li>
-<li><p>方法二：</p>
-<p>在<code>数据窗口</code>按下<code>Ctrl + G</code>，转到<code>00400000</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glooawpu9qj31ff0u0alk.jpg" alt="转到表达式"></p>
-<p>然后在<code>数据窗口</code>右键<code>指定 &gt; PE 头文件</code>，就可以定位到<code>PE 头文件</code>了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gloofb56bhj31ff0u0qe1.jpg" alt="定位"></p>
-<p>其他操作和方法一一致；</p>
-</li>
-</ol>
-</li>
-<li><p>测试一下修改代码段权限，写入内容：</p>
-<p>在<code>数据窗口</code>选择代码段权限行，右键选择<code>修改整数</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glooklxgtpj31ff0u0dq1.jpg" alt="修改整数"></p>
-<p>然后修改权限：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gloonxmrfcj31ff0u0qeh.jpg" alt="修改成功"></p>
-<p>修改后可以看到，CODE 段有写的权限了，然后将修改保存到新的可执行文件；</p>
-<p>接着，将保存的新文件倒入<code>OD</code>并修改第一行代码：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glop0ua22cj31ff0u0wqa.jpg" alt="打开新文件"></p>
-<p>运行程序：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glop2jpw4zj31ff0u013f.jpg" alt="运行程序"></p>
-<p>可以看到，<code>EAX</code>的内容成功写入到以指定地址为开始的位置；</p>
-</li>
-</ul>
-</li>
-<li><p>对<code>PE</code>没有任何概念，只能根据教程的思路一步步来，做到：能学到的东西要学会；</p>
-</li>
-<li><p>最后，来说说一个小的知识点<code>除零异常</code>；</p>
-<p>刚上学开始学习加减乘除的时候，老师就告诉我们 0 不能作为除数，而在程序设计中，当遇上正整数除以零程序会中止：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glov7g67kij31ff0u013c.jpg" alt="调试语句"></p>
-<p>在这里，由于<code>EAX</code>自身为 0，为了区分被除数和除数，让<code>EAX</code>加上一个随机的立即数以区分，这里以 123 为例，接着通过<code>xor</code>让准备作为除数的<code>ECX</code>置 0，最后用<code>EAX</code>除以<code>ECX</code>，接下来，看一下运算的结果：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glovdctagcj31ff0u049u.jpg" alt="除零异常"></p>
-<p>可以看到，执行<code>DIV ECX</code>后，也就是除以 0 后，这里产生了一个异常，这个异常就叫作除零异常；</p>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>汇编</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>CrackMe</tag>
-        <tag>逆向分析</tag>
-        <tag>异常处理</tag>
       </tags>
   </entry>
   <entry>
@@ -4012,8 +4082,8 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>VB</category>
         <category>汇编</category>
+        <category>VB</category>
         <category>Windows</category>
       </categories>
       <tags>
@@ -4066,7 +4136,7 @@
 <p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnysy0v08kj31eb0u0ads.jpg" alt="间接调用"></p>
 <p>此处为间接调用，在选择行按下 Enter 键即可到调用位置：</p>
 <p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnyszz3dehj31ef0u00x0.jpg" alt="调用位置"></p>
-<p>这里有很多跳转至输入函数的指令，其实此处即为 IAT（在指令中的显示）；</p>
+<p>这里有很多跳转至输入函数的指令，也可以说是 IAT 吧（IAT 跳转表）；</p>
 <p>IAT 是一块连续排列的数据，因此，可以向上滚动屏幕，直到没有跳转，就是 IAT 的起始位置；</p>
 <p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnyt7wfurwj318v0u079r.jpg" alt="IAT 的起始位置"></p>
 <p>可以看到，当前地址之前的数据为 0，所以可以确定，这里就是 IAT 的起始位置；</p>
