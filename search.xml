@@ -81,10 +81,10 @@
     <title>VB 调试之 P-Code 寻找操作码</title>
     <url>/post/3657232687/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><code>exdec</code>来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li>VB 静态分析工具<a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-8">exdec</a>来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-20">CrackMe</a>来自互联网，仅供学习使用；</li>
 <li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
 
 </li>
@@ -128,8 +128,8 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>汇编</category>
         <category>VB</category>
+        <category>汇编</category>
         <category>Windows</category>
       </categories>
       <tags>
@@ -142,9 +142,9 @@
     <title>VB 调试之 P-Code 替换操作码</title>
     <url>/post/3307503664/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe 和 opcode.txt</a>来自互联网，仅供学习使用；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-22">CrackMe 和 opcode.txt</a>来自互联网，仅供学习使用；</li>
 <li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
 
 </li>
@@ -216,8 +216,8 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>汇编</category>
         <category>VB</category>
+        <category>汇编</category>
         <category>Windows</category>
       </categories>
       <tags>
@@ -230,10 +230,9 @@
     <title>VB 调试之优先创建窗体</title>
     <url>/post/3326045461/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 修改版，简称<code>OD</code>；</li>
-<li>OD<code>修改版设置的</code>内存访问断点<code>只在执行时中断，不会在访问或写入时中断，也可称为</code>内存执行断点`；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-5">OllyDbg</a>修改版，简称<code>OD</code>；</li>
 <li><code>OD</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-18">CrackMe</a>来自互联网，仅供学习使用；</li>
 <li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
 
 </li>
@@ -306,8 +305,8 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>汇编</category>
         <category>VB</category>
+        <category>汇编</category>
         <category>Windows</category>
       </categories>
       <tags>
@@ -320,10 +319,9 @@
     <title>VB 调试之分析 N-Code（一）</title>
     <url>/post/1203909517/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 修改版，简称<code>OD</code>；</li>
-<li><code>OD</code>修改版设置的<code>内存访问断点</code>只在执行时中断，不会在访问或写入时中断，也可称为<code>内存执行断点</code>；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-5">OllyDbg</a>修改版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-17">CrackMe</a>来自互联网，仅供学习使用；</li>
 <li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
 
 </li>
@@ -428,8 +426,8 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>汇编</category>
         <category>VB</category>
+        <category>汇编</category>
         <category>Windows</category>
       </categories>
       <tags>
@@ -445,9 +443,9 @@
 <p>之前分析过这个 CrackMe（参见：VB 调试之分析 N-Code（一）），需要借助修改版的 OD 才能去除 NAG 窗口，在阅读<a href="https://reversecore.com/">逆向工程核心原理</a>一书后，学到了一种新的技巧，记录下来；</p>
 </blockquote>
 <h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-21">CrackMe</a>来自互联网，仅供学习使用；</li>
 <li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
 </ul>
 <a id="more"></a>
@@ -530,13 +528,45 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>汇编</category>
         <category>VB</category>
+        <category>汇编</category>
         <category>Windows</category>
       </categories>
       <tags>
         <tag>CrackMe</tag>
         <tag>逆向分析</tag>
+        <tag>VB 调试</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>VB 调试之初识 VB</title>
+    <url>/post/674877238/</url>
+    <content><![CDATA[<blockquote>
+<p>初识简单了解一下 VB，相信随着深入的学习，对它的了解会更多，理解会更深；</p>
+</blockquote>
+<h4 id="P-Code-Packed-Code-压缩代码"><a href="#P-Code-Packed-Code-压缩代码" class="headerlink" title="P-Code Packed Code 压缩代码"></a>P-Code Packed Code 压缩代码</h4><ul>
+<li>4.0 以前</li>
+<li>运行时，动态链接库（DLL）将翻译或解释执行程序中的指令；</li>
+<li>解释器 MSVBVM50.DLL 和 MSVBVM60.DLL</li>
+</ul>
+<h4 id="N-Code-Native-Code-本机代码"><a href="#N-Code-Native-Code-本机代码" class="headerlink" title="N-Code Native Code 本机代码"></a>N-Code Native Code 本机代码</h4><ul>
+<li>5.0 以后</li>
+<li>改善 VB 的运行速度</li>
+<li>但还是需要 MSVBVM60.DLL，因为许多函数本体放在 MSVBVM60.DLL 里面，需要不断地 CALL 其中的函数，不过，这时候的 MSVBVM60.DLL 就不承担解释执行的任务了，只是充当一般的 DLL；</li>
+</ul>
+<h4 id="编译器技术"><a href="#编译器技术" class="headerlink" title="编译器技术"></a>编译器技术</h4><ul>
+<li>编译器的编译技术可以分为native－compile（自然编译）与pcode－compile（伪编译）两种；</li>
+<li>自然编译是编译器将高级语言转换为汇编代码，并经链接生成EXE程序的过程；</li>
+<li>伪编译是编译器将高级语言转换为某种编码后，将能解释、执行此编码的一段程序一同链接，生成EXE程序；</li>
+<li>伪代码p-code，最早应该叫做Pascal-Code，其名称起源于一个pascal编译器使用的“中间代码”编译技术。现在一般作为pseudo-code（伪代码），或packed-code（压缩代码）简称，此项编译技术的出现，最终导致了“虚拟机”的出现。而微软在其编程工具basic、c、vb中都使用了类似的编译技术；</li>
+<li>所谓伪代码，其基本工作原理是编译器先把执行程序编译为比80X86机器码紧凑得多的中间代码形式，然后在链接时把一个小工作引擎嵌入执行程序中，最后在运行时由此工作引擎把P-Code解释为本地机器码实际执行，所以叫做packed-code；同时又由于此代码并不是最终的机器码形式，实际上是“变形的源代码”，所以也被称为pseudo-code。依靠P-code编译技术，使得编程语言不依赖于机器或操作平台成为可能；</li>
+</ul>
+]]></content>
+      <categories>
+        <category>VB</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
         <tag>VB 调试</tag>
       </tags>
   </entry>
@@ -769,110 +799,6 @@
       </tags>
   </entry>
   <entry>
-    <title>脱壳之 SFX 功能定位 OEP</title>
-    <url>/post/3371155739/</url>
-    <content><![CDATA[<blockquote>
-<p>对壳一无所知的情况下，通过简单的操作完成程序的脱壳，从而增加成就感，获得学习的乐趣及动力；</p>
-</blockquote>
-<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li>加壳工具使用了<a href="https://upx.github.io/">UPX</a>，感谢 🙏 开源，以及 <a href="http://www.aspack.com/">ASPACK</a>：收费软件，可以试用；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>与<code>逆向分析之软编码寻找序列号（一）</code>使用的 CrackMe 相同；</li>
-<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
-</ul>
-<h4 id="壳"><a href="#壳" class="headerlink" title="壳"></a>壳</h4><p>壳（也叫“外壳”）是一种专用加密软件技术；</p>
-<p>壳分为：压缩壳、加密壳、虚拟机保护软件；</p>
-<h3 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h3><ol>
-<li><p>首先，将原始程序导入 OD，然后查看 OEP：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv7l4xkb9j31dp0u0jv3.jpg" alt="原始程序导入 OD"></p>
-<p>可以看到，原始程序的 OEP 是：00401000；</p>
-</li>
-<li><p>安装 UPX，然后打开并给 CM 加壳：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv797t16ij31340u076k.jpg" alt="给 CM 加壳"></p>
-<p>将 CM 拖入 UPX，选项默认，点击 RUN 即可；</p>
-<p>不会生成新文件，而是直接在源程序上加壳，所以，记得备份源程序；</p>
-</li>
-<li><p>打开 OD 设置 SFX：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv7j8uzeuj31dx0u0n2e.jpg" alt="设置 SFX"></p>
-<p>打开调试设置，在异常选项卡下，勾选全部选项，是为了防止 SFX 在自动分析中，中断在某个异常而导致失败；</p>
-<p>然后，在 SFX 选项卡下，勾选 <code>块方式跟踪</code>或<code>字节方式跟踪</code>其一，它们的区别是查找速度与准确率，首先选择速度较快的<code>块方式跟踪</code>；</p>
-</li>
-<li><p>然后将加壳后的程序载入 OD，发现没有任何反应，即使切换 SFX 选项卡为<code>字节方式跟踪</code>也没有任何反应，这是为什么呢？</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv7vp6yy2j31e30u0jut.jpg" alt="没有任何反应"></p>
-</li>
-<li><p>原来，SFX 使用是有限制的：程序在载入 OD 后，入口点必须位于代码段（.code）之外，才会生效；</p>
-<p>打开内存窗口：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv7xm4w2qj31e00u077c.jpg" alt="内存窗口"></p>
-<p>发现当前程序的代码段起始位置为：00409000，大小为 1000，也就是说，当前程序代码段的范围是 00409000 ～ 00409FFF；</p>
-<p>而程序载入 OD 后，EP（入口点）位于 00409BF0，处于代码段范围，所以 SFX 没有生效；</p>
-</li>
-<li><p>既然 UPX 加壳后入口点在代码段，那就切换加壳软件，使用 ASPACK；</p>
-<p>安装 ASPACK 并打开，在打开文件选项卡下点击打开并选择原始程序，就会自动加壳：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv8e3edj4j30n80iat9g.jpg" alt="ASPACK"></p>
-<p>ASPACK 同样不会生成新文件，所以，记得备份源程序；</p>
-</li>
-<li><p>首先，打开 OD 确认 SFX 以及异常选项卡设置 OK，然后将 ASPACK 加密后的程序导入 OD：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv8k4495oj31du0u0q6x.jpg" alt="ASPACK 加密后的程序导入 OD"></p>
-<p>CM 运行起来了，然而，程序并非停留在 OEP 上，因为第 1 步的时候，已经确认了原始程序的 OEP 是：00401000；</p>
-<p>看来 SFX 的<code>块方式跟踪</code>速度很快但是不够准确，不过，既然 CM 能够运行，也侧面说明了，ASPACK 加壳后，EP 位于代码段之外；</p>
-</li>
-<li><p>切换 SFX 选项为<code>字节方式跟踪</code>并删除 OD 操作日志（UDD 文件夹内），重新将 ASPACK 加密后的程序导入 OD：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv8u6b8v9j31dy0u0wi4.jpg" alt="程序已脱壳"></p>
-<p>此时 EP 停留在 00401000 上，也就 OEP 上，说明程序已经脱壳了；</p>
-</li>
-<li><p>加壳方式多种多样，这种脱壳方式可用范围应该很小，毕竟换了加壳工具后就失效了，不过，很振奋人心；</p>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>脱壳技术</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>CrackMe</tag>
-        <tag>脱壳</tag>
-        <tag>SFX</tag>
-        <tag>OEP</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>VB 调试之初识 VB</title>
-    <url>/post/674877238/</url>
-    <content><![CDATA[<blockquote>
-<p>初识简单了解一下 VB，相信随着深入的学习，对它的了解会更多，理解会更深；</p>
-</blockquote>
-<h4 id="P-Code-Packed-Code-压缩代码"><a href="#P-Code-Packed-Code-压缩代码" class="headerlink" title="P-Code Packed Code 压缩代码"></a>P-Code Packed Code 压缩代码</h4><ul>
-<li>4.0 以前</li>
-<li>运行时，动态链接库（DLL）将翻译或解释执行程序中的指令；</li>
-<li>解释器 MSVBVM50.DLL 和 MSVBVM60.DLL</li>
-</ul>
-<h4 id="N-Code-Native-Code-本机代码"><a href="#N-Code-Native-Code-本机代码" class="headerlink" title="N-Code Native Code 本机代码"></a>N-Code Native Code 本机代码</h4><ul>
-<li>5.0 以后</li>
-<li>改善 VB 的运行速度</li>
-<li>但还是需要 MSVBVM60.DLL，因为许多函数本体放在 MSVBVM60.DLL 里面，需要不断地 CALL 其中的函数，不过，这时候的 MSVBVM60.DLL 就不承担解释执行的任务了，只是充当一般的 DLL；</li>
-</ul>
-<h4 id="编译器技术"><a href="#编译器技术" class="headerlink" title="编译器技术"></a>编译器技术</h4><ul>
-<li>编译器的编译技术可以分为native－compile（自然编译）与pcode－compile（伪编译）两种；</li>
-<li>自然编译是编译器将高级语言转换为汇编代码，并经链接生成EXE程序的过程；</li>
-<li>伪编译是编译器将高级语言转换为某种编码后，将能解释、执行此编码的一段程序一同链接，生成EXE程序；</li>
-<li>伪代码p-code，最早应该叫做Pascal-Code，其名称起源于一个pascal编译器使用的“中间代码”编译技术。现在一般作为pseudo-code（伪代码），或packed-code（压缩代码）简称，此项编译技术的出现，最终导致了“虚拟机”的出现。而微软在其编程工具basic、c、vb中都使用了类似的编译技术；</li>
-<li>所谓伪代码，其基本工作原理是编译器先把执行程序编译为比80X86机器码紧凑得多的中间代码形式，然后在链接时把一个小工作引擎嵌入执行程序中，最后在运行时由此工作引擎把P-Code解释为本地机器码实际执行，所以叫做packed-code；同时又由于此代码并不是最终的机器码形式，实际上是“变形的源代码”，所以也被称为pseudo-code。依靠P-code编译技术，使得编程语言不依赖于机器或操作平台成为可能；</li>
-</ul>
-]]></content>
-      <categories>
-        <category>VB</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>VB 调试</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>常见的汇编指令</title>
     <url>/post/1025109479/</url>
     <content><![CDATA[<h3 id="常见指令"><a href="#常见指令" class="headerlink" title="常见指令"></a>常见指令</h3><h4 id="NOP"><a href="#NOP" class="headerlink" title="NOP"></a>NOP</h4><ul>
@@ -1087,14 +1013,83 @@
       </tags>
   </entry>
   <entry>
+    <title>脱壳之 SFX 功能定位 OEP</title>
+    <url>/post/3371155739/</url>
+    <content><![CDATA[<blockquote>
+<p>对壳一无所知的情况下，通过简单的操作完成程序的脱壳，从而增加成就感，获得学习的乐趣及动力；</p>
+</blockquote>
+<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li>加壳工具使用了<a href="https://upx.github.io/">UPX</a>，感谢 🙏 开源，以及 <a href="http://www.aspack.com/">ASPACK</a>：收费软件，可以试用；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-7">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
+
+</li>
+</ul>
+<h4 id="壳"><a href="#壳" class="headerlink" title="壳"></a>壳</h4><p>壳（也叫“外壳”）是一种专用加密软件技术；</p>
+<p>壳分为：压缩壳、加密壳、虚拟机保护软件；</p>
+<h3 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h3><ol>
+<li><p>首先，将原始程序导入 OD，然后查看 OEP：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv7l4xkb9j31dp0u0jv3.jpg" alt="原始程序导入 OD"></p>
+<p>可以看到，原始程序的 OEP 是：00401000；</p>
+</li>
+<li><p>安装 UPX，然后打开并给 CM 加壳：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv797t16ij31340u076k.jpg" alt="给 CM 加壳"></p>
+<p>将 CM 拖入 UPX，选项默认，点击 RUN 即可；</p>
+<p>不会生成新文件，而是直接在源程序上加壳，所以，记得备份源程序；</p>
+</li>
+<li><p>打开 OD 设置 SFX：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv7j8uzeuj31dx0u0n2e.jpg" alt="设置 SFX"></p>
+<p>打开调试设置，在异常选项卡下，勾选全部选项，是为了防止 SFX 在自动分析中，中断在某个异常而导致失败；</p>
+<p>然后，在 SFX 选项卡下，勾选 <code>块方式跟踪</code>或<code>字节方式跟踪</code>其一，它们的区别是查找速度与准确率，首先选择速度较快的<code>块方式跟踪</code>；</p>
+</li>
+<li><p>然后将加壳后的程序载入 OD，发现没有任何反应，即使切换 SFX 选项卡为<code>字节方式跟踪</code>也没有任何反应，这是为什么呢？</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv7vp6yy2j31e30u0jut.jpg" alt="没有任何反应"></p>
+</li>
+<li><p>原来，SFX 使用是有限制的：程序在载入 OD 后，入口点必须位于代码段（.code）之外，才会生效；</p>
+<p>打开内存窗口：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv7xm4w2qj31e00u077c.jpg" alt="内存窗口"></p>
+<p>发现当前程序的代码段起始位置为：00409000，大小为 1000，也就是说，当前程序代码段的范围是 00409000 ～ 00409FFF；</p>
+<p>而程序载入 OD 后，EP（入口点）位于 00409BF0，处于代码段范围，所以 SFX 没有生效；</p>
+</li>
+<li><p>既然 UPX 加壳后入口点在代码段，那就切换加壳软件，使用 ASPACK；</p>
+<p>安装 ASPACK 并打开，在打开文件选项卡下点击打开并选择原始程序，就会自动加壳：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv8e3edj4j30n80iat9g.jpg" alt="ASPACK"></p>
+<p>ASPACK 同样不会生成新文件，所以，记得备份源程序；</p>
+</li>
+<li><p>首先，打开 OD 确认 SFX 以及异常选项卡设置 OK，然后将 ASPACK 加密后的程序导入 OD：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv8k4495oj31du0u0q6x.jpg" alt="ASPACK 加密后的程序导入 OD"></p>
+<p>CM 运行起来了，然而，程序并非停留在 OEP 上，因为第 1 步的时候，已经确认了原始程序的 OEP 是：00401000；</p>
+<p>看来 SFX 的<code>块方式跟踪</code>速度很快但是不够准确，不过，既然 CM 能够运行，也侧面说明了，ASPACK 加壳后，EP 位于代码段之外；</p>
+</li>
+<li><p>切换 SFX 选项为<code>字节方式跟踪</code>并删除 OD 操作日志（UDD 文件夹内），重新将 ASPACK 加密后的程序导入 OD：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv8u6b8v9j31dy0u0wi4.jpg" alt="程序已脱壳"></p>
+<p>此时 EP 停留在 00401000 上，也就 OEP 上，说明程序已经脱壳了；</p>
+</li>
+<li><p>加壳方式多种多样，这种脱壳方式可用范围应该很小，毕竟换了加壳工具后就失效了，不过，很振奋人心；</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>脱壳技术</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>CrackMe</tag>
+        <tag>脱壳</tag>
+        <tag>SFX</tag>
+        <tag>OEP</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>脱壳之 VB 程序快速定位 OEP</title>
     <url>/post/69889928/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 修改版，简称<code>OD</code>；</li>
-<li><code>OD</code>修改版设置的<code>内存访问断点</code>只在执行时中断，不会在访问或写入时中断，也可称为<code>内存执行断点</code>；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-5">OllyDbg</a>修改版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>与<code>VB 调试之修改系统 DLL</code>使用的 CrackMe 相同；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-19">CrackMe</a>来自互联网，仅供学习使用；</li>
 <li>加壳工具为<a href="http://www.aspack.com/">ASPACK</a>：收费软件，可以试用；</li>
 <li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
 
@@ -1138,13 +1133,12 @@
 <p>之前尝试了手动修复 IAT，了解修复的原理后，本次记录使用工具修复的过程；</p>
 </blockquote>
 <h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>与<code>逆向分析之软编码寻找序列号（一）</code>使用的 CrackMe 相同；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-7">CrackMe</a>来自互联网，仅供学习使用；</li>
 <li>加壳工具为<a href="https://upx.github.io/">UPX</a>，感谢 🙏 开源；</li>
-<li>Dump 工具为 PETools，来自互联网；</li>
-<li>修正输出表的工具为 ImportREC，来自互联网；</li>
+<li>Dump 工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-3">PETools</a>，来自互联网；</li>
+<li>修正输出表的工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-4">ImportREC</a>，来自互联网；</li>
 <li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
 
 </li>
@@ -1198,11 +1192,11 @@
     <title>脱壳之修正 IAT</title>
     <url>/post/1928138386/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>Dump 工具为 OD 插件 OllyDump.dll，来自互联网；</li>
-<li>修正输出表的工具为 ImportREC，来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-25">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li>Dump 工具为 OD 插件 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Plugin-1">OllyDump.dll</a>，来自互联网；</li>
+<li>修正输出表的工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-4">ImportREC</a>，来自互联网；</li>
 <li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
 
 </li>
@@ -1272,11 +1266,10 @@
 <p>EP：与 OEP 对应的是 EP（Entry Point，入口点），无壳程序的 EP 与 OEP 相同，加壳程序的 EP 是壳的入口点，而不是原程序的入口点；</p>
 </blockquote>
 <h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
-<li>OllyDbg 1.1 修改版，简称<code>OD</code>；</li>
-<li><code>OD</code>修改版设置的<code>内存访问断点</code>只在执行时中断，不会在访问或写入时中断，也可称为<code>内存执行断点</code>；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-5">OllyDbg</a>修改版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-23">CrackMe</a>来自互联网，仅供学习使用；</li>
 <li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
 
 </li>
@@ -1341,11 +1334,9 @@
     <title>脱壳之壳常用函数定位 OEP</title>
     <url>/post/1066637783/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 修改版，简称<code>OD</code>；</li>
-<li><code>OD</code>修改版设置的<code>内存访问断点</code>只在执行时中断，不会在访问或写入时中断，也可称为<code>内存执行断点</code>；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-5">OllyDbg</a>修改版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>与<code>脱壳之异常法定位 OEP</code>使用的 CrackMe 相同；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-24">CrackMe</a>来自互联网，仅供学习使用；</li>
 <li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
 
 </li>
@@ -1491,11 +1482,10 @@
     <title>脱壳之异常法定位 OEP</title>
     <url>/post/2614075303/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
-<li>OllyDbg 1.1 修改版，简称<code>OD</code>；</li>
-<li><code>OD</code>修改版设置的<code>内存访问断点</code>只在执行时中断，不会在访问或写入时中断，也可称为<code>内存执行断点</code>；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-5">OllyDbg</a>修改版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-24">CrackMe</a>来自互联网，仅供学习使用；</li>
 <li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
 
 </li>
@@ -1559,10 +1549,9 @@
 <p>也就是说，加壳软件必须遵守栈平衡原理；</p>
 </blockquote>
 <h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>与<code>逆向分析之软编码寻找序列号（一）</code>使用的 CrackMe 相同；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-7">CrackMe</a>来自互联网，仅供学习使用；</li>
 <li>加壳工具为<a href="https://upx.github.io/">UPX</a>，感谢 🙏 开源；</li>
 <li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
 
@@ -1635,10 +1624,9 @@
 <p>在完成必需的初始化工作后，调用 WinMain 函数，该函数执行完毕，启动代码将再次获得控制权，进行初始化清除工作；</p>
 </blockquote>
 <h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>与<code>逆向分析之软编码寻找序列号（一）</code>使用的 CrackMe 相同；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-7">CrackMe</a>来自互联网，仅供学习使用；</li>
 <li>加壳工具为<a href="https://upx.github.io/">UPX</a>，感谢 🙏 开源；</li>
 <li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
 
@@ -1677,9 +1665,9 @@
     <title>逆向分析之反调试（一）</title>
     <url>/post/1969921723/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-10">CrackMe</a>来自互联网，仅供学习使用；</li>
 <li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
 
 </li>
@@ -1785,11 +1773,11 @@
     <title>逆向分析之反调试（三）</title>
     <url>/post/140693809/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><code>OD</code>补丁程序<code>re-pair</code>；</li>
-<li>类名检测工具<code>Greatis WinDowse</code>；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li><code>OD</code>补丁程序<a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-6">re-pair</a>；</li>
+<li>类名检测工具<a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-7">Greatis WinDowse</a>；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-12">CrackMe</a>来自互联网，仅供学习使用；</li>
 <li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
 
 </li>
@@ -1938,9 +1926,9 @@
     <title>逆向分析之反调试（二）</title>
     <url>/post/1165783651/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-11">CrackMe</a>来自互联网，仅供学习使用；</li>
 <li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
 
 </li>
@@ -2086,10 +2074,10 @@
     <title>逆向分析之反调试（五）</title>
     <url>/post/3503361299/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
-<li><code>OD</code>插件<code>HideDebugger</code>和<code>HideOD</code>；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code>插件<a href="https://github.com/Undeio/undeio.github.io/releases/tag/Plugin-2">HideDebugger</a>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-14">CrackMe</a>来自互联网，仅供学习使用；</li>
 <li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
 
 </li>
@@ -2201,10 +2189,10 @@
     <title>逆向分析之反调试（六）</title>
     <url>/post/3051308746/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
-<li><code>OD</code>插件<code>HideDebugger</code>和<code>HideOD</code>；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code>插件<a href="https://github.com/Undeio/undeio.github.io/releases/tag/Plugin-2">HideDebugger</a>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-15">CrackMe</a>来自互联网，仅供学习使用；</li>
 <li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
 
 </li>
@@ -2359,99 +2347,13 @@
       </tags>
   </entry>
   <entry>
-    <title>逆向分析之异常处理（一）</title>
-    <url>/post/996855490/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
-</ul>
-<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
-<li><p>学习完的总结，而且其中讲的<code>PE</code>部分的内容，完全是一脸懵逼听下来，做个笔记；</p>
-</li>
-<li><p>内存访问异常总结下来就一句话：在没有权限的地方做了没权限的事儿；</p>
-</li>
-<li><p>将任意<code>CrackMe</code>倒入<code>OD</code>:</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonfurw1oj31ff0u0gwo.jpg" alt="倒入OD"></p>
-<ul>
-<li><p>当前处于代码段，只有只读权限，如果要写入内容会怎么样？</p>
-<p>修改第一行代码，把<code>EAX</code>的内容写入指定地址；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gloniemvqrj31ff0u0gxc.jpg" alt="修改代码"></p>
-<p>然后执行代码：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonkvl23pj31ff0u0wq7.jpg" alt="访问违规"></p>
-<p>可以看到，根本无法执行代码；</p>
-</li>
-<li><p>那每个代码段的权限如何查看呢？</p>
-<ol>
-<li><p>方法一：</p>
-<p>打开<code>内存窗口</code>，找到<code>PE 头文件</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonoefqwhj31ff0u048w.jpg" alt="内存窗口"></p>
-<p>然后双击<code>PE 头文件</code>所在行，打开<code>数据窗口</code>，找到 PE 头偏移量<code>Offset to PE signature</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonqf357jj31ff0u0k1l.jpg" alt="偏移量"></p>
-<p>既然偏移量是 100， 那地址就是<code>00400100</code>，往下翻找到这个地址：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonx75sh8j31ff0u0499.jpg" alt="找到地址"></p>
-<p>在这里，发现了代码段和数据段的地址信息，偏移量分别是 1000 和 2000，那地址就分别是<code>00401000</code>和<code>00402000</code>喽，如何确定呢？重载程序就知道了；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glop9kcs3qj31ff0u049x.jpg" alt="起始位置"></p>
-<p>至于它们的权限，继续往下翻：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gloo34nk41j31ff0u0n80.jpg" alt="权限"></p>
-<p>在这里可以清楚的看到，CODE 段只有只读权限，而 DATA 段有读写权限；</p>
-</li>
-<li><p>方法二：</p>
-<p>在<code>数据窗口</code>按下<code>Ctrl + G</code>，转到<code>00400000</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glooawpu9qj31ff0u0alk.jpg" alt="转到表达式"></p>
-<p>然后在<code>数据窗口</code>右键<code>指定 &gt; PE 头文件</code>，就可以定位到<code>PE 头文件</code>了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gloofb56bhj31ff0u0qe1.jpg" alt="定位"></p>
-<p>其他操作和方法一一致；</p>
-</li>
-</ol>
-</li>
-<li><p>测试一下修改代码段权限，写入内容：</p>
-<p>在<code>数据窗口</code>选择代码段权限行，右键选择<code>修改整数</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glooklxgtpj31ff0u0dq1.jpg" alt="修改整数"></p>
-<p>然后修改权限：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gloonxmrfcj31ff0u0qeh.jpg" alt="修改成功"></p>
-<p>修改后可以看到，CODE 段有写的权限了，然后将修改保存到新的可执行文件；</p>
-<p>接着，将保存的新文件倒入<code>OD</code>并修改第一行代码：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glop0ua22cj31ff0u0wqa.jpg" alt="打开新文件"></p>
-<p>运行程序：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glop2jpw4zj31ff0u013f.jpg" alt="运行程序"></p>
-<p>可以看到，<code>EAX</code>的内容成功写入到以指定地址为开始的位置；</p>
-</li>
-</ul>
-</li>
-<li><p>对<code>PE</code>没有任何概念，只能根据教程的思路一步步来，做到：能学到的东西要学会；</p>
-</li>
-<li><p>最后，来说说一个小的知识点<code>除零异常</code>；</p>
-<p>刚上学开始学习加减乘除的时候，老师就告诉我们 0 不能作为除数，而在程序设计中，当遇上正整数除以零程序会中止：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glov7g67kij31ff0u013c.jpg" alt="调试语句"></p>
-<p>在这里，由于<code>EAX</code>自身为 0，为了区分被除数和除数，让<code>EAX</code>加上一个随机的立即数以区分，这里以 123 为例，接着通过<code>xor</code>让准备作为除数的<code>ECX</code>置 0，最后用<code>EAX</code>除以<code>ECX</code>，接下来，看一下运算的结果：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glovdctagcj31ff0u049u.jpg" alt="除零异常"></p>
-<p>可以看到，执行<code>DIV ECX</code>后，也就是除以 0 后，这里产生了一个异常，这个异常就叫作除零异常；</p>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>汇编</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>CrackMe</tag>
-        <tag>逆向分析</tag>
-        <tag>异常处理</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>逆向分析之反调试（四）</title>
     <url>/post/3209676884/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
-<li><code>OD</code>插件<code>HideDebugger</code>和<code>HideOD</code>；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code>插件<a href="https://github.com/Undeio/undeio.github.io/releases/tag/Plugin-2">HideDebugger</a>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-13">CrackMe</a>来自互联网，仅供学习使用；</li>
 <li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
 
 </li>
@@ -2592,6 +2494,92 @@
       </tags>
   </entry>
   <entry>
+    <title>逆向分析之异常处理（一）</title>
+    <url>/post/996855490/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-16">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
+
+</li>
+</ul>
+<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
+<li><p>学习完的总结，而且其中讲的<code>PE</code>部分的内容，完全是一脸懵逼听下来，做个笔记；</p>
+</li>
+<li><p>内存访问异常总结下来就一句话：在没有权限的地方做了没权限的事儿；</p>
+</li>
+<li><p>将任意<code>CrackMe</code>倒入<code>OD</code>:</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonfurw1oj31ff0u0gwo.jpg" alt="倒入OD"></p>
+<ul>
+<li><p>当前处于代码段，只有只读权限，如果要写入内容会怎么样？</p>
+<p>修改第一行代码，把<code>EAX</code>的内容写入指定地址；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gloniemvqrj31ff0u0gxc.jpg" alt="修改代码"></p>
+<p>然后执行代码：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonkvl23pj31ff0u0wq7.jpg" alt="访问违规"></p>
+<p>可以看到，根本无法执行代码；</p>
+</li>
+<li><p>那每个代码段的权限如何查看呢？</p>
+<ol>
+<li><p>方法一：</p>
+<p>打开<code>内存窗口</code>，找到<code>PE 头文件</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonoefqwhj31ff0u048w.jpg" alt="内存窗口"></p>
+<p>然后双击<code>PE 头文件</code>所在行，打开<code>数据窗口</code>，找到 PE 头偏移量<code>Offset to PE signature</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonqf357jj31ff0u0k1l.jpg" alt="偏移量"></p>
+<p>既然偏移量是 100， 那地址就是<code>00400100</code>，往下翻找到这个地址：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonx75sh8j31ff0u0499.jpg" alt="找到地址"></p>
+<p>在这里，发现了代码段和数据段的地址信息，偏移量分别是 1000 和 2000，那地址就分别是<code>00401000</code>和<code>00402000</code>喽，如何确定呢？重载程序就知道了；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glop9kcs3qj31ff0u049x.jpg" alt="起始位置"></p>
+<p>至于它们的权限，继续往下翻：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gloo34nk41j31ff0u0n80.jpg" alt="权限"></p>
+<p>在这里可以清楚的看到，CODE 段只有只读权限，而 DATA 段有读写权限；</p>
+</li>
+<li><p>方法二：</p>
+<p>在<code>数据窗口</code>按下<code>Ctrl + G</code>，转到<code>00400000</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glooawpu9qj31ff0u0alk.jpg" alt="转到表达式"></p>
+<p>然后在<code>数据窗口</code>右键<code>指定 &gt; PE 头文件</code>，就可以定位到<code>PE 头文件</code>了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gloofb56bhj31ff0u0qe1.jpg" alt="定位"></p>
+<p>其他操作和方法一一致；</p>
+</li>
+</ol>
+</li>
+<li><p>测试一下修改代码段权限，写入内容：</p>
+<p>在<code>数据窗口</code>选择代码段权限行，右键选择<code>修改整数</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glooklxgtpj31ff0u0dq1.jpg" alt="修改整数"></p>
+<p>然后修改权限：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gloonxmrfcj31ff0u0qeh.jpg" alt="修改成功"></p>
+<p>修改后可以看到，CODE 段有写的权限了，然后将修改保存到新的可执行文件；</p>
+<p>接着，将保存的新文件倒入<code>OD</code>并修改第一行代码：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glop0ua22cj31ff0u0wqa.jpg" alt="打开新文件"></p>
+<p>运行程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glop2jpw4zj31ff0u013f.jpg" alt="运行程序"></p>
+<p>可以看到，<code>EAX</code>的内容成功写入到以指定地址为开始的位置；</p>
+</li>
+</ul>
+</li>
+<li><p>对<code>PE</code>没有任何概念，只能根据教程的思路一步步来，做到：能学到的东西要学会；</p>
+</li>
+<li><p>最后，来说说一个小的知识点<code>除零异常</code>；</p>
+<p>刚上学开始学习加减乘除的时候，老师就告诉我们 0 不能作为除数，而在程序设计中，当遇上正整数除以零程序会中止：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glov7g67kij31ff0u013c.jpg" alt="调试语句"></p>
+<p>在这里，由于<code>EAX</code>自身为 0，为了区分被除数和除数，让<code>EAX</code>加上一个随机的立即数以区分，这里以 123 为例，接着通过<code>xor</code>让准备作为除数的<code>ECX</code>置 0，最后用<code>EAX</code>除以<code>ECX</code>，接下来，看一下运算的结果：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glovdctagcj31ff0u049u.jpg" alt="除零异常"></p>
+<p>可以看到，执行<code>DIV ECX</code>后，也就是除以 0 后，这里产生了一个异常，这个异常就叫作除零异常；</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>汇编</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>CrackMe</tag>
+        <tag>逆向分析</tag>
+        <tag>异常处理</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>逆向分析之异常处理（二）</title>
     <url>/post/192684570/</url>
     <content><![CDATA[<h4 id="异常处理流程图"><a href="#异常处理流程图" class="headerlink" title="异常处理流程图"></a>异常处理流程图</h4><p>总结一下异常处理的流程：</p>
@@ -2714,9 +2702,9 @@
     <title>逆向分析之硬编码寻找序列号（一）</title>
     <url>/post/2293324257/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-1">CrackMe</a>来自互联网，仅供学习使用；</li>
 <li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
 </ul>
 <a id="more"></a>
@@ -2782,9 +2770,9 @@
     <title>逆向分析之硬编码寻找序列号（三）</title>
     <url>/post/4122547819/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-3">CrackMe</a>来自互联网，仅供学习使用；</li>
 <li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
 </ul>
 <a id="more"></a>
@@ -2905,9 +2893,9 @@
     <title>逆向分析之硬编码寻找序列号（二）</title>
     <url>/post/3097998650/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-2">CrackMe</a>来自互联网，仅供学习使用；</li>
 <li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
 
 </li>
@@ -2998,9 +2986,9 @@
     <title>逆向分析之硬编码寻找序列号（五）</title>
     <url>/post/755681865/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-5">CrackMe</a>来自互联网，仅供学习使用；</li>
 <li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
 </ul>
 <a id="more"></a>
@@ -3067,10 +3055,10 @@
     <title>逆向分析之硬编码寻找序列号（六）</title>
     <url>/post/1208254864/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
-<li><code>OD</code>插件：<code>中文搜索引擎</code>和<code>ApiBreak</code>；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code>插件：<a href="https://github.com/Undeio/undeio.github.io/releases/tag/Plugin-3">中文搜索引擎</a>和<a href="https://github.com/Undeio/undeio.github.io/releases/tag/Plugin-4">ApiBreak</a>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>【歪坑牌 CM2.2】来自互联网，仅供学习使用；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-6">CrackMe</a>【歪坑牌 CM2.2】来自互联网，仅供学习使用；</li>
 <li><a href="http://xuepojie.com/"><code>Shark恒</code></a>大佬教了一种方法，但中间部分内容需要经验判断，才疏学浅的我一直不明白，经过多次失败后总结出了属于自己的方法，So，设置断点的思路来源于大佬，分析的过程属于自己；</li>
 <li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
 
@@ -3179,10 +3167,10 @@
     <title>逆向分析之硬编码寻找序列号（四）</title>
     <url>/post/1116999438/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
-<li><code>OD</code>插件：<code>中文搜索引擎</code>；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code>插件：<a href="https://github.com/Undeio/undeio.github.io/releases/tag/Plugin-3">中文搜索引擎</a>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-4">CrackMe</a>来自互联网，仅供学习使用；</li>
 <li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
 
 </li>
@@ -3251,9 +3239,9 @@
     <title>逆向分析之软编码寻找序列号（一）</title>
     <url>/post/4167455493/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-7">CrackMe</a>来自互联网，仅供学习使用；</li>
 <li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
 
 </li>
@@ -3362,9 +3350,9 @@
     <title>逆向分析之软编码寻找序列号（三）</title>
     <url>/post/2238585999/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-9">CrackMe</a>来自互联网，仅供学习使用；</li>
 <li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
 
 </li>
@@ -3765,9 +3753,9 @@
     <title>逆向分析之软编码寻找序列号（二）</title>
     <url>/post/3362832349/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-8">CrackMe</a>来自互联网，仅供学习使用；</li>
 <li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
 
 </li>
@@ -3894,11 +3882,10 @@
     <title>VB 调试之修改系统 DLL</title>
     <url>/post/1859998567/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
-<li>OllyDbg 1.1 修改版，简称<code>OD</code>；</li>
-<li>OD<code>修改版设置的</code>内存访问断点<code>只在执行时中断，不会在访问或写入时中断，也可称为</code>内存执行断点`；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-5">OllyDbg</a>修改版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-19">CrackMe</a>来自互联网，仅供学习使用；</li>
 <li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
 
 </li>
@@ -4082,8 +4069,8 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>汇编</category>
         <category>VB</category>
+        <category>汇编</category>
         <category>Windows</category>
       </categories>
       <tags>
@@ -4100,12 +4087,11 @@
 <p>手动修复可以更清晰的理解重建输入表的过程及原理，但很辛苦，需要细心细心再细心，中间因为数值填错而苦苦寻找，想象一下在一堆二进制中找一个数值错误，很可怕，但很值得，弄懂了原理，以后就善用工具了；</p>
 </blockquote>
 <h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>与<code>逆向分析之软编码寻找序列号（一）</code>使用的 CrackMe 相同；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-7">CrackMe</a>来自互联网，仅供学习使用；</li>
 <li>加壳工具为<a href="http://www.aspack.com/">ASPACK</a>：收费软件，可以试用；</li>
-<li>Dump 工具为 LoadPE，来自互联网；</li>
+<li>Dump 工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-2">LoadPE</a>，来自互联网；</li>
 <li>16 进制修改器为 WinHex；</li>
 <li>文中所有数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
 
@@ -4155,7 +4141,7 @@
 <p>Dump（转存）是指把内存指定地址的映像文件读出，用文件等形式将其保存下来的过程；</p>
 <p>在程序到达 OEP 且没有运行时，Dump 是正确的，而程序运行后，由于一些变量已经初始化了，所以不适合 Dump；</p>
 <p>在外壳处理过程中，外壳要把压缩后的全部代码数据释放到内存中，并初始化一些项目，因此，在此过程中也可以选择合适的位置进行 Dump；</p>
-<p>常用的 Dump 软件有 LoadPE、PETools 等，这类工具一般利用 Module32Next 来获取欲 Dump 进程的基本信息；</p>
+<p>常用的 Dump 软件有 LoadPE、PETool- 等，这类工具一般利用 Module32Next 来获取欲 Dump 进程的基本信息；</p>
 <p>首先设置 LoadPE，勾选完整转存选项：</p>
 <p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnyu1ofv8cj30so0is74t.jpg" alt="设置 LoadPE"></p>
 <p>设置完成后，在 LoadPE 的进程窗口中选择 CM 的进程，然后单击右键，在弹出的快捷菜单中执行“完整转存”命令，抓取并保存：</p>
