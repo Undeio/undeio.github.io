@@ -8,7 +8,7 @@
 </blockquote>
 <hr>
 <h4 id="最新版本Next主题已集成Utterance，So，此方法已弃用-❕❕❕"><a href="#最新版本Next主题已集成Utterance，So，此方法已弃用-❕❕❕" class="headerlink" title="最新版本Next主题已集成Utterance，So，此方法已弃用 ❕❕❕"></a>最新版本<code>Next</code>主题已集成<code>Utterance</code>，So，此方法已弃用 ❕❕❕</h4><hr>
-<a id="more"></a>
+<span id="more"></span>
 
 <h4 id="废话连篇"><a href="#废话连篇" class="headerlink" title="废话连篇"></a>废话连篇</h4><p>曾记得，2016 年端午节，在<code>Github Pages</code>上写下了人生中的第一篇博客，那时就用的<code>Hexo + Next</code>主题，时至今日，一直对<code>Hexo + Next</code>甚是喜爱，感谢大佬，感谢开源 🙏 。</p>
 <p>期间，经历了换工作、换电脑、换域名、换托管，诸多原因导致博客遗失，不过也是甚好，不能守着过去，要拥抱现在和未来（不应该是拥抱开源吗？）。</p>
@@ -60,6 +60,7 @@
 </ul>
 <h4 id="个人配置"><a href="#个人配置" class="headerlink" title="个人配置"></a>个人配置</h4><p>因为要用<code>注入</code>来实现评论功能，那就不能修改官方的模板，自己撸了个 js 来实现：</p>
 <figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="comment">/* utterances 评论插件 */</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 初始化</span></span><br><span class="line"><span class="built_in">window</span>.addEventListener(<span class="string">&quot;DOMContentLoaded&quot;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  query2add();</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">// pjax 使用 pushState() 不会触发 hashchange 事件，需要拦截</span></span><br><span class="line"><span class="keyword">var</span> _wr = <span class="function"><span class="keyword">function</span> (<span class="params">type</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">var</span> orig = history[type];</span><br><span class="line">  <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> e = <span class="keyword">new</span> Event(type);</span><br><span class="line">    e.arguments = <span class="built_in">arguments</span>;</span><br><span class="line">    <span class="built_in">window</span>.dispatchEvent(e);</span><br><span class="line">    <span class="comment">// 注意事件监听在url变更方法调用之前 也就是在事件监听的回调函数中获取的页面链接为跳转前的链接</span></span><br><span class="line">    <span class="keyword">var</span> rv = orig.apply(<span class="built_in">this</span>, <span class="built_in">arguments</span>);</span><br><span class="line">    <span class="keyword">return</span> rv;</span><br><span class="line">  &#125;;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">history.pushState = _wr(<span class="string">&quot;pushState&quot;</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 监听 change 事件</span></span><br><span class="line"><span class="built_in">window</span>.addEventListener(<span class="string">&quot;pushState&quot;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">e</span>) </span>&#123;</span><br><span class="line">  <span class="comment">// e &amp;&amp; e.arguments.length &gt; 2 &amp;&amp; e.arguments[2]</span></span><br><span class="line">  query2add();</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 加载 utterance 插件</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">loadUtterance</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">let</span> js = <span class="built_in">document</span>.createElement(<span class="string">&quot;script&quot;</span>);</span><br><span class="line">  <span class="comment">/* 以下内容改成第三步生成的配置 */</span></span><br><span class="line">  js.setAttribute(<span class="string">&quot;src&quot;</span>, <span class="string">&quot;https://utteranc.es/client.js&quot;</span>);</span><br><span class="line">  js.setAttribute(<span class="string">&quot;repo&quot;</span>, <span class="string">&quot;Undeio/undeio.github.io&quot;</span>);</span><br><span class="line">  js.setAttribute(<span class="string">&quot;issue-term&quot;</span>, <span class="string">&quot;title&quot;</span>);</span><br><span class="line">  js.setAttribute(<span class="string">&quot;theme&quot;</span>, <span class="string">&quot;github-light&quot;</span>);</span><br><span class="line">  js.setAttribute(<span class="string">&quot;crossorigin&quot;</span>, <span class="string">&quot;anonymous&quot;</span>);</span><br><span class="line">  js.setAttribute(<span class="string">&quot;async&quot;</span>, <span class="string">&quot;async&quot;</span>);</span><br><span class="line">  <span class="comment">/* 以上内容需要修改 */</span></span><br><span class="line">  <span class="comment">// 添加到主体部分的末尾</span></span><br><span class="line">  <span class="built_in">document</span>.getElementsByClassName(<span class="string">&quot;main-inner&quot;</span>)[<span class="number">0</span>].appendChild(js);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 是否已存在组件</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">query2add</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="comment">// 只有正文页面才有 post-copyright，也就是最后的版权声明</span></span><br><span class="line">  <span class="comment">// 当然，你也可以找一个自己正文才有的标识进行判断</span></span><br><span class="line">  <span class="keyword">let</span> postCopyRight = <span class="built_in">document</span>.getElementsByClassName(<span class="string">&quot;post-copyright&quot;</span>);</span><br><span class="line">  <span class="keyword">if</span> (postCopyRight &amp;&amp; postCopyRight[<span class="number">0</span>]) &#123;</span><br><span class="line">    <span class="comment">// 存在评论就放弃添加</span></span><br><span class="line">    <span class="keyword">let</span> utterances = <span class="built_in">document</span>.getElementsByClassName(<span class="string">&quot;utterances&quot;</span>);</span><br><span class="line">    <span class="keyword">if</span> (utterances &amp;&amp; utterances[<span class="number">0</span>]) &#123;</span><br><span class="line">      <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    loadUtterance();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
 <p>无图无真相</p>
 <p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giumvnbuw0j30gu0hm0vd.jpg" alt="真相"></p>
 <p>最终效果</p>
@@ -84,9 +85,7 @@
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-10">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
 </ul>
 <h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
 <li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了：</p>
@@ -112,6 +111,7 @@
 <ul>
 <li><p>先了解一下这个 API：</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">IsDebuggerPresent</span><br><span class="line"></span><br><span class="line">作用</span><br><span class="line">     确定调用进程是否由用户模式的调试器调试。</span><br><span class="line"> 返回值</span><br><span class="line">     如果当前进程运行在调试器的上下文，返回值为非零值。</span><br><span class="line">     如果当前进程没有运行在调试器的上下文，返回值为零。</span><br></pre></td></tr></table></figure>
+
 <p>看着好绕，大白话：检测当前程序是否正在被调试，没有被调试返回 0，只要返回值不是 0，那就表示程序正在被调试；</p>
 </li>
 </ul>
@@ -126,6 +126,7 @@
 </li>
 <li><p>分析一下这 4 行代码：</p>
 <figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">FS</span>:[<span class="number">18</span>]       <span class="comment">; 将 FS:[18] 中的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">30</span>]   <span class="comment">; 将 EAX 中的地址加 0x30 之后的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOVZX</span> <span class="built_in">EAX</span>,<span class="built_in">BYTE</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">2</span>]   <span class="comment">; 将 EAX 中的地址，存储的第 2 个字节的数据拷贝到 EAX</span></span><br><span class="line"><span class="keyword">RETN</span>                            <span class="comment">; 返回</span></span><br></pre></td></tr></table></figure>
+
 <p>嘛意思？往下分析；</p>
 <ul>
 <li><p><code>FS:[18]</code>中的<code>FS 寄存器</code>的地址是什么呢？</p>
@@ -187,9 +188,7 @@
 <li><code>OD</code>插件<a href="https://github.com/Undeio/undeio.github.io/releases/tag/Plugin-2">HideDebugger</a>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-14">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
 </ul>
 <h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
 <li><p>使用搜索引擎搜寻良久并未找到通俗易懂的说明，在<a href="https://ctf-wiki.github.io/ctf-wiki/">CTF Wiki</a>上发现了描述，但无奈自己功力尚浅，无法透彻理解，遂将链接奉上，感兴趣的同学可以去学习一下<a href="https://ctf-wiki.github.io/ctf-wiki/reverse/windows/anti-debug/ntglobalflag-zh/">NtGlobalFlag</a>，<a href="https://ctf-wiki.github.io/ctf-wiki/reverse/windows/anti-debug/heap-flags-zh/">Heap Flags</a>；</p>
@@ -198,6 +197,7 @@
 </li>
 <li><p>了解一下两个标志，以下描述引用自<a href="https://ctf-wiki.github.io/ctf-wiki/">CTF Wiki</a>：</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">NtGlobalFlag</span><br><span class="line"></span><br><span class="line">描述</span><br><span class="line">    1. 在 32 位机器上, NtGlobalFlag字段位于PEB(进程环境块)0x68的偏移处, 64 位机器则是在偏移0xBC位置.</span><br><span class="line">    2. 该字段的默认值为 0.</span><br><span class="line">    3. 当调试器正在运行时, 该字段会被设置为一个特定的值.</span><br><span class="line">    4. 尽管该值并不能十分可信地表明某个调试器真的有在运行, 但该字段常出于该目的而被使用</span><br></pre></td></tr></table></figure>
+
 <p>呃，至于<code>ProcessHeap</code>，实在是总结不出具体的描述性语言，感兴趣的同学去<a href="https://ctf-wiki.github.io/ctf-wiki/">CTF Wiki</a>看吧；</p>
 </li>
 <li><p>接下来就用实例来说明一下这两个标志的用法：</p>
@@ -205,6 +205,7 @@
 <li><p>首先选择一个<code>CrackMe</code>倒入<code>OD</code>：</p>
 <p>之前学习<code>IsDebuggerPresent</code>的时候学习到：如果程序倒入<code>OD</code>之后没有运行，那么<code>EBX</code>寄存器指向的位置就是<code>IsDebuggerPresent</code>检测的位置，用代码表示就是：</p>
 <figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">FS</span>:[<span class="number">18</span>]       <span class="comment">; 将 FS:[18] 中的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">30</span>]   <span class="comment">; 将 EAX 中的地址加 0x30 之后的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOVZX</span> <span class="built_in">EAX</span>,<span class="built_in">BYTE</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">2</span>]   <span class="comment">; 将 EAX 中的地址，存储的第 2 个字节的数据拷贝到 EAX</span></span><br><span class="line"><span class="keyword">RETN</span>                            <span class="comment">; 返回</span></span><br></pre></td></tr></table></figure>
+
 <p>在这里简单计算一下，就当作复习之前的知识了，以这个<code>CrackMe</code>为例：</p>
 <p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkafiohmmj31ff0u0gxv.jpg" alt="为例子"></p>
 <p>手动计算一下<code>IsDebuggerPresent</code>要检测的位置：</p>
@@ -242,6 +243,7 @@
 <p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkcwq4qc1j31ff0u0n7p.jpg" alt="NtGlobalFlag"></p>
 <p>整理一下代码的实现：</p>
 <figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">FS</span>:[<span class="number">18</span>]       <span class="comment">; 将 FS:[18] 中的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">30</span>]   <span class="comment">; 将 EAX 中的地址加 0x30 之后的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">68</span>]   <span class="comment">; 将 EAX 中的地址加 0x68 之后的数据拷贝到 EAX</span></span><br><span class="line"><span class="keyword">OR</span> <span class="built_in">EAX</span>,<span class="built_in">EAX</span>                      <span class="comment">; 是否为 0</span></span><br><span class="line"><span class="keyword">RETN</span>                            <span class="comment">; 返回</span></span><br></pre></td></tr></table></figure>
+
 <p>验证一下：</p>
 <p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkdsmdg1kj31ff0u0tjp.jpg" alt="验证NtGlobalFlag"></p>
 </li>
@@ -258,6 +260,7 @@
 <p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkdjjn9lfj31ff0u0akf.jpg" alt="ProcessHeap"></p>
 <p>整理一下代码的实现：</p>
 <figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">FS</span>:[<span class="number">18</span>]       <span class="comment">; 将 FS:[18] 中的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">30</span>]   <span class="comment">; 将 EAX 中的地址加 0x30 之后的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">18</span>]   <span class="comment">; 将 EAX 中的地址加 0x18 之后的数据拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">10</span>]   <span class="comment">; 将 EAX 中的地址加 0x10 之后的数据拷贝到 EAX</span></span><br><span class="line"><span class="keyword">OR</span> <span class="built_in">EAX</span>,<span class="built_in">EAX</span>                      <span class="comment">; 是否为 0</span></span><br><span class="line"><span class="keyword">RETN</span>                            <span class="comment">; 返回</span></span><br></pre></td></tr></table></figure>
+
 <p>验证一下：</p>
 <p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkdp9qncvj31ff0u0qdy.jpg" alt="验证ProcessHeap"></p>
 </li>
@@ -300,9 +303,7 @@
 <li><code>OD</code>插件<a href="https://github.com/Undeio/undeio.github.io/releases/tag/Plugin-2">HideDebugger</a>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-13">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
 </ul>
 <h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
 <li><p>查询微软官方文档，本次使用的 API<code>ZwQueryInformationProcess</code>未来可能会弃用，所以目前暂不做深入研究，有需要之时再做深入；</p>
@@ -321,6 +322,7 @@
 </li>
 <li><p>再来看第三个 API <code>ZwQueryInformationProcess</code>：</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">ZwQueryInformationProcess</span><br><span class="line"></span><br><span class="line">作用</span><br><span class="line">    检索有关指定进程的信息</span><br><span class="line">参数</span><br><span class="line">    ProcessInformationClass：要检索的过程信息的类型</span><br></pre></td></tr></table></figure>
+
 <ul>
 <li><p>在官方说明的开始有这么一段话：</p>
 <blockquote>
@@ -339,6 +341,7 @@
 </li>
 <li><p>最后来看看第一个 API <code>SetUnhandledExceptionFilter</code>：</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">SetUnhandledExceptionFilter</span><br><span class="line"></span><br><span class="line">作用</span><br><span class="line">    设置异常捕获函数</span><br><span class="line">参数</span><br><span class="line">    lpTopLevelExceptionFilter：指向顶级异常处理函数的指针，只要 UnhandledExceptionFilter 函数获得控制权且未在调试过程，该指针就会被调用</span><br></pre></td></tr></table></figure>
+
 <ul>
 <li><p>这是官方对 API 的说明；</p>
 <blockquote>
@@ -446,9 +449,7 @@
 <li><code>OD</code>补丁程序<a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-6">re-pair</a>；</li>
 <li>类名检测工具<a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-7">Greatis WinDowse</a>；</li>
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-12">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
 </ul>
 <h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
 <li><p>重点依然是学习 Windows API；</p>
@@ -463,6 +464,7 @@
 <p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk4yoy6d9j31ff0u0dov.jpg" alt="API列表"></p>
 <p>还好有一个我们认识的<code>ExitProcess</code>：</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">ExitProcess</span><br><span class="line"></span><br><span class="line">作用</span><br><span class="line">    结束调用的进程及其所有的线程；</span><br></pre></td></tr></table></figure>
+
 <p>那就只能从它下手了：设置 CC 断点并设置好备注；</p>
 </li>
 <li><p>接着，运行程序，程序会中断在我们设置的断点<code>ExitProcess</code>函数的行首，然后在<code>堆栈窗口</code>右键<code>反汇编窗口中跟随</code>来到调用这个函数的位置：</p>
@@ -478,6 +480,7 @@
 <p>既然 API 列表没有内容的同时发现了<code>GetProcAddress</code>，那是不是说明，大多数函数都被隐藏了，而<code>GetProcAddress</code>就是关键呢？</p>
 <p>再来复习一下<code>GetProcAddress</code>的功能：</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">GetProcAddress</span><br><span class="line"></span><br><span class="line">作用</span><br><span class="line">    检索指定的动态链接库中的输出库函数地址；</span><br><span class="line">    （获取函数列表中不显示且被调用的隐藏函数的地址；）</span><br><span class="line">    （捕捉间接加载或调用的其他隐藏函数；）</span><br><span class="line">参数</span><br><span class="line">    hModule：包含此函数的 DLL 模块的句柄；</span><br><span class="line">    （程序的句柄）</span><br><span class="line">    IpProcName：包含函数名的以 NULL 结尾的字符串；</span><br><span class="line">    （程序的名字）</span><br></pre></td></tr></table></figure>
+
 <p>毫无疑问，给<code>GetProcAddress</code>设置断点并做好备注，看看都有哪些隐藏的函数：</p>
 <p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk50u2kmtj31ff0u07fg.jpg" alt="GetProcAddress"></p>
 </li>
@@ -485,12 +488,17 @@
 <ul>
 <li><p>其中，<code>OpenProcess</code> <code>TerminateProcess</code> <code>lstrcmpA</code>很熟悉：</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">OpenProcess</span><br><span class="line"></span><br><span class="line">作用</span><br><span class="line">    通过已知 PID 获取程序的句柄；</span><br></pre></td></tr></table></figure>
+
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">TerminateProcess</span><br><span class="line"></span><br><span class="line">作用</span><br><span class="line">    通过进程句柄终止指定进程及其所有线程；</span><br></pre></td></tr></table></figure>
+
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">lstrcmpA</span><br><span class="line"></span><br><span class="line">作用</span><br><span class="line">    区分大小写的字符串比较；</span><br><span class="line"></span><br><span class="line">lstrcmpi</span><br><span class="line"></span><br><span class="line">作用</span><br><span class="line">    不区分大小写的字符串比较；</span><br></pre></td></tr></table></figure></li>
 <li><p>至于其他几个，需要学习一下：</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">CreateToolhelp32Snapshot</span><br><span class="line"></span><br><span class="line">作用</span><br><span class="line">    给所有进程的详细信息拍摄快照，返回快照句柄供其他 API调用；</span><br><span class="line">参数</span><br><span class="line">    dwFlags：用来指定“快照”中需要返回的对象；</span><br><span class="line">    th32ProcessID：指定将要快照的进程ID；</span><br><span class="line">        - 该参数只有在dwFlags设置了TH32CS_SNAPHEAPLIST或者TH32CS_SNAPMODULE后才有效；</span><br><span class="line">        - 该参数为 0 则获取当前进程快照；</span><br><span class="line">        - 其他情况下参数会被忽略，所有的进程都会被快照；</span><br></pre></td></tr></table></figure>
+
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Process32First</span><br><span class="line"></span><br><span class="line">作用</span><br><span class="line">    获取进程快照第一个进程的句柄；</span><br></pre></td></tr></table></figure>
+
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Process32Next</span><br><span class="line"></span><br><span class="line">作用</span><br><span class="line">    获取进程快照下一个进程的句柄；</span><br></pre></td></tr></table></figure>
+
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">FindWindowA</span><br><span class="line"></span><br><span class="line">参数</span><br><span class="line">    lpClassName：指向类名的字符串或一个可以确定类名字符串的原子；</span><br><span class="line">    lpWindowName：指向窗口名（即窗口标题）的字符串；</span><br><span class="line">作用</span><br><span class="line">    检索并处理顶级窗口的类名和窗口标题匹配指定的字符串；</span><br><span class="line">    不搜索子窗口；</span><br><span class="line">    不区分大小写；</span><br><span class="line">    如果有指定的类名或窗口标题则表示成功返回一个窗口的句柄；否则返回零；</span><br></pre></td></tr></table></figure></li>
 </ul>
 </li>
@@ -594,9 +602,7 @@
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-11">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
 </ul>
 <h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
 <li><p>本次内容学习 Windows API 才是重点；</p>
@@ -620,7 +626,9 @@
 <ul>
 <li><p>国际惯例，分别了解一下这几个 API ：</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">EnumProcesses</span><br><span class="line"></span><br><span class="line">作用</span><br><span class="line">    检索进程列表中每一个进程的标识符；</span><br><span class="line">    （枚举进程的 PID；）</span><br><span class="line">    （获取进程列表所有进程的 PID；）</span><br></pre></td></tr></table></figure>
+
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">EnumProcessesModules</span><br><span class="line"></span><br><span class="line">作用</span><br><span class="line">    检索指定进程中每个模块的句柄；</span><br><span class="line">    （获取进程的基址；）</span><br></pre></td></tr></table></figure>
+
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">GetModuleBaseNameA</span><br><span class="line"></span><br><span class="line">作用</span><br><span class="line">    检索指定模块的基本名称；</span><br><span class="line">    （获取进程名；）</span><br></pre></td></tr></table></figure></li>
 <li><p>设置断点的方法：</p>
 <p>程序中断后，在<code>堆栈窗口</code>确认是需要的 API 后，在函数名称所在行右键菜单选择复制到剪贴板，</p>
@@ -716,6 +724,7 @@
 <li><p>接着，把<code>OD</code>的句柄作为参数传递给<code>TerminateProcess</code>：</p>
 <p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glhwpt69mlj31ff0u0k2p.jpg" alt="句柄当做参数"></p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">TerminateProcess</span><br><span class="line"></span><br><span class="line">作用</span><br><span class="line">    通过进程句柄终止指定进程及其所有线程；</span><br></pre></td></tr></table></figure>
+
 <p>了解了这个 API 的用途后，继续运行程序，结果不言而喻：灵光一闪，程序关闭！</p>
 </li>
 </ul>
@@ -741,9 +750,7 @@
 <li><code>OD</code>插件<a href="https://github.com/Undeio/undeio.github.io/releases/tag/Plugin-2">HideDebugger</a>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-15">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
 </ul>
 <h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
 <li><p>本次内容涉及了小部分脱壳以及一个<code>OD</code>无法处理的异常<code>int 68</code>；</p>
@@ -900,8 +907,7 @@
 <li><p><code>int3</code>是一个断点（中断）指令，在汇编中机器码是<code>CC</code>，所以，<code>F2断点</code>又可以称为<code>int3断点</code>或<code>CC断点</code>；</p>
 </li>
 <li><p>在使用 F2 设置断点后，CPU 会引发一个异常，而 OD 会捕获这个异常，从而中断程序；</p>
-<a id="more"></a>
-</li>
+<span id="more"></span></li>
 <li><p>可以使用命令<code>bp xxxxxxxx</code>快速设置一个<code>CC断点</code>；</p>
 </li>
 <li><p><code>bp</code>可以为内存地址设置断点，也就是为某条语句设置断点；</p>
@@ -997,9 +1003,7 @@
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
 <li>VB 静态分析工具<a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-8">exdec</a>来自互联网；</li>
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-20">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
 </ul>
 <h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><h5 id="方法一：手动寻找"><a href="#方法一：手动寻找" class="headerlink" title="方法一：手动寻找"></a>方法一：手动寻找</h5><ol>
 <li><p>将<code>CrackMe</code>倒入<code>OD</code>，会停留在程序的入口点，向上滚动代码：</p>
@@ -1055,9 +1059,7 @@
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-22">CrackMe 和 opcodes.txt</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
 </ul>
 <h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
 <li><p>运行程序，程序会先弹出一个 NAG 窗口，点击确定后弹出主窗体：</p>
@@ -1140,9 +1142,7 @@
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-5">OllyDbg</a>修改版，简称<code>OD</code>；</li>
 <li><code>OD</code>和<code>插件</code>均来自互联网；</li>
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-18">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
 </ul>
 <h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
 <li><p>首先运行软件，了解一下程序：</p>
@@ -1227,9 +1227,7 @@
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-5">OllyDbg</a>修改版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-17">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
 </ul>
 <h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
 <li><p>首先运行软件，了解一下程序：</p>
@@ -1351,7 +1349,7 @@
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-21">CrackMe</a>来自互联网，仅供学习使用；</li>
 <li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
 </ul>
-<a id="more"></a>
+<span id="more"></span>
 
 <h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
 <li><p>将<code>CrackMe</code>倒入<code>OD</code>，查找<code>rtcMsgBox</code>并设置断点：</p>
@@ -1455,7 +1453,7 @@
 <li>改善 VB 的运行速度</li>
 <li>但还是需要 MSVBVM60.DLL，因为许多函数本体放在 MSVBVM60.DLL 里面，需要不断地 CALL 其中的函数，不过，这时候的 MSVBVM60.DLL 就不承担解释执行的任务了，只是充当一般的 DLL；</li>
 </ul>
-<a id="more"></a>
+<span id="more"></span>
 
 <h4 id="编译器技术"><a href="#编译器技术" class="headerlink" title="编译器技术"></a>编译器技术</h4><ul>
 <li>编译器的编译技术可以分为 native－compile（自然编译）与 pcode－compile（伪编译）两种；</li>
@@ -1780,7 +1778,7 @@
 <li>指令指针寄存器：32 位，1 个</li>
 </ul>
 <p>在寄存器名称缩略语之前添加字母 E（Extended），表示该寄存器在 16 位 CPU 时就已经存在，并且其大小在 IA-32 下由原 16 位扩展为 32 位；</p>
-<a id="more"></a>
+<span id="more"></span>
 
 <h3 id="通用寄存器"><a href="#通用寄存器" class="headerlink" title="通用寄存器"></a>通用寄存器</h3><p>通用寄存器是一种通用型的寄存器，用于传送和暂存数据，也可以参与算术逻辑运算，并保存运算结果；</p>
 <h4 id="通用寄存器拆分"><a href="#通用寄存器拆分" class="headerlink" title="通用寄存器拆分"></a>通用寄存器拆分</h4><p>为了实现对低 16 位的兼容，各寄存器又可以分为高、低几个独立寄存器；</p>
@@ -1974,14 +1972,17 @@
 <li><p>cdecl：是主要在 C 语言中使用的方式，调用者负责处理栈；</p>
 <p>如：</p>
 <figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">CALL</span> <span class="number">00401000</span>       <span class="comment">; 调用函数</span></span><br><span class="line"><span class="keyword">ADD</span> <span class="built_in">ESP</span>, <span class="number">8</span>          <span class="comment">; 清理栈</span></span><br></pre></td></tr></table></figure>
+
 <p>调用函数后，使用<code>ADD ESP, 8</code>命令整理栈；</p>
 <p>调用者直接清理其压入栈的函数参数，这样的方式即是<code>cdecl</code>；</p>
 <p><code>cdecl</code>方式的好处是，它可以像 C 语言的 printf()函数一样，向被调用函数传递长度可变的参数，这种长度可变的参数在其它调用约定中很难实现；</p>
 </li>
 <li><p>stdcall：常用于 Win32 API，该方式由被调用者清理栈；<br>若想在 C 语言中使用，只要使用 _stdcall 关键字即可；</p>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> stdio.h</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> _stdcall <span class="title">add</span><span class="params">(<span class="keyword">int</span> a, <span class="keyword">int</span> b)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">return</span> (a + b);</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span>* argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">return</span> add(<span class="number">1</span>, <span class="number">2</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
 <p>调试：</p>
 <figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="number">00401000</span> <span class="keyword">PUSH</span> <span class="built_in">EBP</span>                       <span class="comment">; add() 函数</span></span><br><span class="line"><span class="number">00401001</span> <span class="keyword">MOV</span> <span class="built_in">EBP</span>, <span class="built_in">ESP</span>                   <span class="comment">; 函数栈帧</span></span><br><span class="line"><span class="number">00401003</span> <span class="keyword">MOV</span> <span class="built_in">EAX</span>, <span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">SS</span>:[<span class="built_in">EBP</span>+<span class="number">8</span>]  <span class="comment">; 参数 2 拷贝到 EAX</span></span><br><span class="line"><span class="number">00401006</span> <span class="keyword">ADD</span> <span class="built_in">EAX</span>, <span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">SS</span>:[<span class="built_in">EBP</span>+C]  <span class="comment">; 参数 1 加上参数 2，结果保存在 EAX</span></span><br><span class="line"><span class="number">00401009</span> <span class="keyword">POP</span> <span class="built_in">EBP</span>                        <span class="comment">; 恢复函数执行前的 EBP</span></span><br><span class="line">0040100A <span class="keyword">RETN</span> <span class="number">8</span>                         <span class="comment">; 恢复函数执行前的 ESP</span></span><br><span class="line"><span class="number">0040100D</span> <span class="keyword">INT3</span></span><br><span class="line">0040100E <span class="keyword">INT3</span></span><br><span class="line">0040100F <span class="keyword">INT3</span></span><br><span class="line"><span class="number">00401010</span> <span class="keyword">PUSH</span> <span class="built_in">EBP</span>                       <span class="comment">; main() 函数</span></span><br><span class="line"><span class="number">00401011</span> <span class="keyword">MOV</span> <span class="built_in">EBP</span>, <span class="built_in">ESP</span>                   <span class="comment">; 函数栈帧</span></span><br><span class="line"><span class="number">00401013</span> <span class="keyword">PUSH</span> <span class="number">2</span>                         <span class="comment">; 参数 2 压栈</span></span><br><span class="line"><span class="number">00401015</span> <span class="keyword">PUSH</span> <span class="number">1</span>                         <span class="comment">; 参数 1 压栈</span></span><br><span class="line"><span class="number">00401017</span> <span class="keyword">CALL</span> <span class="number">00401000</span>                  <span class="comment">; 调用 add() 函数</span></span><br><span class="line">0040101C <span class="keyword">POP</span> <span class="built_in">EBP</span>                        <span class="comment">; 恢复函数执行前的 EBP</span></span><br><span class="line"><span class="number">0040101D</span> <span class="keyword">RETN</span></span><br></pre></td></tr></table></figure>
+
 <p>栈的清理工作由 add()函数最后的<code>RETN 8</code>命令来执行；<br><code>RETN 8</code>命令的含义为<code>RETN + POP 8 字节</code>，即返回后使 ESP 增加指定大小；<br>像这样在被调用者内部清理栈的方式即为 stdcall 方式；<br>stdcall 方式的好处是相对于每次调用函数都要使用<code>ADD ESP, xxx</code> 的 cdecl 方式代码尺寸小；<br>Win32 API 是使用 C 语言编写的，但使用的是 stdcall 方式，这是为了获得更好的兼容性，使 C 语言以外的其它语言也能直接调用 API；</p>
 </li>
 <li><p>fastcall<br>fastcall 方式与 stdcall 方式基本类似，但该方式通常会使用寄存器而非栈内存，去传递那些需要传递给函数的部分参数（前 2 个）；<br>如：函数有 4 个参数，则前 2 个参数分别使用 ECX 和 EDX 寄存器传递；<br>fastcall 相对于 stdcall 速度快，毕竟 CPU 访问寄存器要比内存快得多，但需要额外的系统开销来管理 ECX 和 EDX 寄存器；</p>
@@ -2000,86 +2001,6 @@
       </tags>
   </entry>
   <entry>
-    <title>异常处理小记</title>
-    <url>/posts/996855490/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-16">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
-</ul>
-<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
-<li><p>内存访问异常总结下来就一句话：在没有权限的地方做了没权限的事儿；</p>
-</li>
-<li><p>将任意<code>CrackMe</code>倒入<code>OD</code>:</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonfurw1oj31ff0u0gwo.jpg" alt="倒入OD"></p>
-<ul>
-<li><p>当前处于代码段，只有只读权限，如果要写入内容会怎么样？</p>
-<p>修改第一行代码，把<code>EAX</code>的内容写入指定地址；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gloniemvqrj31ff0u0gxc.jpg" alt="修改代码"></p>
-<p>然后执行代码：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonkvl23pj31ff0u0wq7.jpg" alt="访问违规"></p>
-<p>可以看到，根本无法执行代码；</p>
-</li>
-<li><p>那每个代码段的权限如何查看呢？</p>
-<ol>
-<li><p>方法一：</p>
-<p>打开<code>内存窗口</code>，找到<code>PE 头文件</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonoefqwhj31ff0u048w.jpg" alt="内存窗口"></p>
-<p>然后双击<code>PE 头文件</code>所在行，打开<code>数据窗口</code>，找到 PE 头偏移量<code>Offset to PE signature</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonqf357jj31ff0u0k1l.jpg" alt="偏移量"></p>
-<p>既然偏移量是 100， 那地址就是<code>00400100</code>，往下翻找到这个地址：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonx75sh8j31ff0u0499.jpg" alt="找到地址"></p>
-<p>在这里，发现了代码段和数据段的地址信息，偏移量分别是 1000 和 2000，那地址就分别是<code>00401000</code>和<code>00402000</code>喽，如何确定呢？重载程序就知道了；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glop9kcs3qj31ff0u049x.jpg" alt="起始位置"></p>
-<p>至于它们的权限，继续往下翻：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gloo34nk41j31ff0u0n80.jpg" alt="权限"></p>
-<p>在这里可以清楚的看到，CODE 段只有只读权限，而 DATA 段有读写权限；</p>
-</li>
-<li><p>方法二：</p>
-<p>在<code>数据窗口</code>按下<code>Ctrl + G</code>，转到<code>00400000</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glooawpu9qj31ff0u0alk.jpg" alt="转到表达式"></p>
-<p>然后在<code>数据窗口</code>右键<code>指定 &gt; PE 头文件</code>，就可以定位到<code>PE 头文件</code>了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gloofb56bhj31ff0u0qe1.jpg" alt="定位"></p>
-<p>其他操作和方法一一致；</p>
-</li>
-</ol>
-</li>
-<li><p>测试一下修改代码段权限，写入内容：</p>
-<p>在<code>数据窗口</code>选择代码段权限行，右键选择<code>修改整数</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glooklxgtpj31ff0u0dq1.jpg" alt="修改整数"></p>
-<p>然后修改权限：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gloonxmrfcj31ff0u0qeh.jpg" alt="修改成功"></p>
-<p>修改后可以看到，CODE 段有写的权限了，然后将修改保存到新的可执行文件；</p>
-<p>接着，将保存的新文件倒入<code>OD</code>并修改第一行代码：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glop0ua22cj31ff0u0wqa.jpg" alt="打开新文件"></p>
-<p>运行程序：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glop2jpw4zj31ff0u013f.jpg" alt="运行程序"></p>
-<p>可以看到，<code>EAX</code>的内容成功写入到以指定地址为开始的位置；</p>
-</li>
-</ul>
-</li>
-<li><p>最后，来说说一个小的知识点<code>除零异常</code>；</p>
-<p>刚上学开始学习加减乘除的时候，老师就告诉我们 0 不能作为除数，而在程序设计中，当遇上正整数除以零程序会中止：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glov7g67kij31ff0u013c.jpg" alt="调试语句"></p>
-<p>在这里，由于<code>EAX</code>自身为 0，为了区分被除数和除数，让<code>EAX</code>加上一个随机的立即数以区分，这里以 123 为例，接着通过<code>xor</code>让准备作为除数的<code>ECX</code>置 0，最后用<code>EAX</code>除以<code>ECX</code>，接下来，看一下运算的结果：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glovdctagcj31ff0u049u.jpg" alt="除零异常"></p>
-<p>可以看到，执行<code>DIV ECX</code>后，也就是除以 0 后，这里产生了一个异常，这个异常就叫作除零异常；</p>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>逆向分析</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>异常处理</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>常见的汇编指令</title>
     <url>/posts/1025109479/</url>
     <content><![CDATA[<h3 id="常见指令"><a href="#常见指令" class="headerlink" title="常见指令"></a>常见指令</h3><h4 id="NOP"><a href="#NOP" class="headerlink" title="NOP"></a>NOP</h4><ul>
@@ -2088,7 +2009,7 @@
 <li>NOP 是空指令，就是没有操作，无操作；</li>
 <li>使用 <code>NOP</code> 来填充指令执行后多出来的字节，而不是用<code>00</code>来填充；</li>
 </ul>
-<a id="more"></a>
+<span id="more"></span>
 
 <h4 id="PUSH-压入堆栈"><a href="#PUSH-压入堆栈" class="headerlink" title="PUSH 压入堆栈"></a>PUSH 压入堆栈</h4><p>PUSH 的用法：</p>
 <ul>
@@ -2317,6 +2238,84 @@
       </tags>
   </entry>
   <entry>
+    <title>异常处理小记</title>
+    <url>/posts/996855490/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-16">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
+</ul>
+<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
+<li><p>内存访问异常总结下来就一句话：在没有权限的地方做了没权限的事儿；</p>
+</li>
+<li><p>将任意<code>CrackMe</code>倒入<code>OD</code>:</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonfurw1oj31ff0u0gwo.jpg" alt="倒入OD"></p>
+<ul>
+<li><p>当前处于代码段，只有只读权限，如果要写入内容会怎么样？</p>
+<p>修改第一行代码，把<code>EAX</code>的内容写入指定地址；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gloniemvqrj31ff0u0gxc.jpg" alt="修改代码"></p>
+<p>然后执行代码：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonkvl23pj31ff0u0wq7.jpg" alt="访问违规"></p>
+<p>可以看到，根本无法执行代码；</p>
+</li>
+<li><p>那每个代码段的权限如何查看呢？</p>
+<ol>
+<li><p>方法一：</p>
+<p>打开<code>内存窗口</code>，找到<code>PE 头文件</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonoefqwhj31ff0u048w.jpg" alt="内存窗口"></p>
+<p>然后双击<code>PE 头文件</code>所在行，打开<code>数据窗口</code>，找到 PE 头偏移量<code>Offset to PE signature</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonqf357jj31ff0u0k1l.jpg" alt="偏移量"></p>
+<p>既然偏移量是 100， 那地址就是<code>00400100</code>，往下翻找到这个地址：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonx75sh8j31ff0u0499.jpg" alt="找到地址"></p>
+<p>在这里，发现了代码段和数据段的地址信息，偏移量分别是 1000 和 2000，那地址就分别是<code>00401000</code>和<code>00402000</code>喽，如何确定呢？重载程序就知道了；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glop9kcs3qj31ff0u049x.jpg" alt="起始位置"></p>
+<p>至于它们的权限，继续往下翻：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gloo34nk41j31ff0u0n80.jpg" alt="权限"></p>
+<p>在这里可以清楚的看到，CODE 段只有只读权限，而 DATA 段有读写权限；</p>
+</li>
+<li><p>方法二：</p>
+<p>在<code>数据窗口</code>按下<code>Ctrl + G</code>，转到<code>00400000</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glooawpu9qj31ff0u0alk.jpg" alt="转到表达式"></p>
+<p>然后在<code>数据窗口</code>右键<code>指定 &gt; PE 头文件</code>，就可以定位到<code>PE 头文件</code>了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gloofb56bhj31ff0u0qe1.jpg" alt="定位"></p>
+<p>其他操作和方法一一致；</p>
+</li>
+</ol>
+</li>
+<li><p>测试一下修改代码段权限，写入内容：</p>
+<p>在<code>数据窗口</code>选择代码段权限行，右键选择<code>修改整数</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glooklxgtpj31ff0u0dq1.jpg" alt="修改整数"></p>
+<p>然后修改权限：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gloonxmrfcj31ff0u0qeh.jpg" alt="修改成功"></p>
+<p>修改后可以看到，CODE 段有写的权限了，然后将修改保存到新的可执行文件；</p>
+<p>接着，将保存的新文件倒入<code>OD</code>并修改第一行代码：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glop0ua22cj31ff0u0wqa.jpg" alt="打开新文件"></p>
+<p>运行程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glop2jpw4zj31ff0u013f.jpg" alt="运行程序"></p>
+<p>可以看到，<code>EAX</code>的内容成功写入到以指定地址为开始的位置；</p>
+</li>
+</ul>
+</li>
+<li><p>最后，来说说一个小的知识点<code>除零异常</code>；</p>
+<p>刚上学开始学习加减乘除的时候，老师就告诉我们 0 不能作为除数，而在程序设计中，当遇上正整数除以零程序会中止：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glov7g67kij31ff0u013c.jpg" alt="调试语句"></p>
+<p>在这里，由于<code>EAX</code>自身为 0，为了区分被除数和除数，让<code>EAX</code>加上一个随机的立即数以区分，这里以 123 为例，接着通过<code>xor</code>让准备作为除数的<code>ECX</code>置 0，最后用<code>EAX</code>除以<code>ECX</code>，接下来，看一下运算的结果：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glovdctagcj31ff0u049u.jpg" alt="除零异常"></p>
+<p>可以看到，执行<code>DIV ECX</code>后，也就是除以 0 后，这里产生了一个异常，这个异常就叫作除零异常；</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>逆向分析</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>异常处理</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>异常处理流程</title>
     <url>/posts/724103910/</url>
     <content><![CDATA[<blockquote>
@@ -2328,7 +2327,7 @@
 <li>SEH（Structured Exception Handling，结构化异常处理）：全局异常链表，不同的线程共用一个；</li>
 <li>VEH（Vectored Exception Handler，向量化异常处理）：局部异常链表，线程相关，位于当前线程的堆栈当中，不同线程不同堆栈；</li>
 </ul>
-<a id="more"></a>
+<span id="more"></span>
 
 <h3 id="异常基本概念"><a href="#异常基本概念" class="headerlink" title="异常基本概念"></a>异常基本概念</h3><p>Intel 在从 386 开始的 IA-32 家族处理中引入了中断（Interrupt）和 异常（Exception）的概念；</p>
 <ol>
@@ -2417,6 +2416,7 @@
 </tbody></table>
 <p>除了 CPU 能够捕获一个事件并引发一个硬件异常外，在代码段中可以主动引发一个软件异常，只需调用 RaiseException() 函数；</p>
 <figure class="highlight text"><table><tr><td class="code"><pre><span class="line">VOID RaiseException(</span><br><span class="line">    DWORD dwExceptionCode,      //标识引发异常的代码</span><br><span class="line">    DWORD dwExceptionFlags,     //异常是否继续执行的标识</span><br><span class="line">    DWORD nNumberOfArguments，  //附加信息</span><br><span class="line">    CONST DWORD *lpArguments    //附加信息</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
 <p>程序捕获软件异常的方法与捕获硬件异常的方法完全相同；</p>
 <h3 id="异常处理的基本过程"><a href="#异常处理的基本过程" class="headerlink" title="异常处理的基本过程"></a>异常处理的基本过程</h3><p>Windows 正常启动后，将运行在保护模式下，当有中断或异常发生时，CPU 会通过中断描述符表（Interrupt Descriptor Table，IDT）来寻找处理函数；</p>
 <p>IDT 表是 CPU（硬件）和操作系统（软件）交接中断和异常的关口；</p>
@@ -2454,10 +2454,12 @@
 <p>各个异常处理函数除了针对本异常的特定处理外，通常会将异常信息进行封装，以便进行后续处理；</p>
 <p>封装的内存主要有两部分，一部分是异常记录，包含本次异常的信息，该结构定义如下：</p>
 <figure class="highlight text"><table><tr><td class="code"><pre><span class="line">typedef struct _EXCEPTION_RECORD&#123;</span><br><span class="line">    NTSTATUS ExceptionCode;                     //异常代码</span><br><span class="line">    ULONG ExceptionFlags;                       //异常标志</span><br><span class="line">    struct _EXCEPTION_RECORD *ExceptionRecord;  //指向另一个 EXCEPTION_RECORD 的指针</span><br><span class="line">    PVOID ExceptionAddress;                     //异常发生的地址</span><br><span class="line">    ULONG NumberParameters;                     // ExceptionInformation 含有的元素数量</span><br><span class="line">    ULONG_PTR ExceptionInformation;             //附加信息</span><br><span class="line">&#125; EXCEPTION_RECORD</span><br></pre></td></tr></table></figure>
+
 <p>另一部分被封装的内容称为陷阱帧，它精确描述了发生异常时线程的状态（Windows 的任务调度是基于线程的）；<br>TRAP_FRAME 陷阱帧结构与处理器高度相关，因此在不同的平台上有不同的定义；</p>
 <p>TRAP_FRAME 陷阱帧结构包含每个寄存器的状态，但该结构一般仅供系统内核自身或调试系统使用，当需要把控制权交给用户注册的异常处理程序时，会将 TRAP_FRAME 转换成一个名为 CONTEXT 的结构，它包含线程运行时处理器各主要寄存器的完整镜像，用于保存线程运行环境；</p>
 <p>包装完毕后，异常处理函数会进一步调用系统内核的 nt!KiDispatchException 函数来处理异常；<br>该函数原型定义如下，其中第 1 参数和第 3 参数正是上面封装的两个结构体：</p>
 <figure class="highlight text"><table><tr><td class="code"><pre><span class="line">VOID</span><br><span class="line">KiDispatchException(</span><br><span class="line">    IN PEXCEPTION_RECORD ExceptionRecord,       //异常结构信息</span><br><span class="line">    IN PKEXCEPTION_FRAME ExceptionFrame,        //对 NT386 系统总是为 NULL，未使用</span><br><span class="line">    IN PKTRAP_FRAME TrapFrame,                  //发生异常时的陷阱帧</span><br><span class="line">    IN KPROCESSOR_MODE PreviousMode,            //发生异常时的 CPU 模式是内核模式还是用户模式</span><br><span class="line">    IN BOOLEAN FirstChance                      //是否第 1 次处理该异常</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
 <h4 id="内核状态的异常处理过程"><a href="#内核状态的异常处理过程" class="headerlink" title="内核状态的异常处理过程"></a>内核状态的异常处理过程</h4><p>当 PreviousMode 为 KernelMode 时，表示是内核模式下产生的异常，此时 KiDispatchException 会按以下步骤分发异常：</p>
 <ol>
 <li><p>检测当前系统是否正在被内核调试器调试，如果内核调试器不存在，将跳过本步骤；</p>
@@ -2544,10 +2546,11 @@
 <!-- htmlmin:ignore -->
 
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">graph TB</span><br><span class="line">  A[|&quot;系统发现产生了一个异常|&quot;] --&gt; B&#123;&quot;程序是否正在被调试&quot;&#125;</span><br><span class="line">  B -- |&quot;是，程序正在被调试&quot;| --&gt; C&#123;&quot;权限转给调试器，并判断调试器是否忽略了异常&quot;&#125;</span><br><span class="line">  C -- |&quot;是，忽略了&quot;| --&gt; D&#123;&quot;程序是否安装 SEH&quot;&#125;</span><br><span class="line">  D -- |&quot;是，安装了&quot;| --&gt; E&#123;&quot;SEH 是否解决异常&quot;&#125;</span><br><span class="line">  E -- |&quot;是，解决了&quot;| --&gt; F&#123;&quot;程序可以继续正常运行&quot;&#125;</span><br><span class="line">  B -- |&quot;否，程序没有被调试&quot;| --&gt; D</span><br><span class="line">  C -- |&quot;否，未忽略，但未能解决异常&quot;| --&gt; G&#123;&quot;系统默认异常处理流程&quot;&#125;</span><br><span class="line">  D -- |&quot;否，未安装&quot;| --&gt; G</span><br><span class="line">  E -- |&quot;否，未解决&quot;| --&gt; G</span><br></pre></td></tr></table></figure>
+
 <!-- htmlmin:ignore -->
 
 <p>已经写好<code>Mermaid</code>的语法，准备输出流程图了，发现<code>Hexo</code>的<code>mermaid</code>插件已是多年前的产物，不兼容最新的版本，无奈只能用<a href="https://app.diagrams.net/">draw.io</a>画了张图；</p>
-<a id="more"></a>
+<span id="more"></span>
 
 <p>图片镇楼：</p>
 <p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glprz3752lj31ay0u0tcd.jpg" alt="图片镇楼"></p>
@@ -2579,7 +2582,7 @@
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-1">CrackMe</a>来自互联网，仅供学习使用；</li>
 <li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
 </ul>
-<a id="more"></a>
+<span id="more"></span>
 
 <h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
 <li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
@@ -2645,7 +2648,7 @@
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-3">CrackMe</a>来自互联网，仅供学习使用；</li>
 <li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
 </ul>
-<a id="more"></a>
+<span id="more"></span>
 
 <h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><h5 id="第一部分"><a href="#第一部分" class="headerlink" title="第一部分"></a>第一部分</h5><ol>
 <li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
@@ -2764,9 +2767,7 @@
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-2">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
 </ul>
 <h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
 <li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
@@ -2857,7 +2858,7 @@
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-5">CrackMe</a>来自互联网，仅供学习使用；</li>
 <li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
 </ul>
-<a id="more"></a>
+<span id="more"></span>
 
 <h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
 <li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
@@ -2923,9 +2924,7 @@
 <li><code>OD</code>插件：<a href="https://github.com/Undeio/undeio.github.io/releases/tag/Plugin-3">中文搜索引擎</a>和<a href="https://github.com/Undeio/undeio.github.io/releases/tag/Plugin-4">ApiBreak</a>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-6">CrackMe</a>【歪坑牌 CM2.2】来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
 </ul>
 <h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
 <li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
@@ -3028,9 +3027,7 @@
 <li><code>OD</code>插件：<a href="https://github.com/Undeio/undeio.github.io/releases/tag/Plugin-3">中文搜索引擎</a>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-4">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
 </ul>
 <h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><p>事实证明：不能“以貌取人”。</p>
 <p>刚打开软件的时候，心里还想着，这么简陋？分分钟就逆向完毕了，结果，“啪啪啪”实力打脸，针扎的疼。</p>
@@ -3100,9 +3097,7 @@
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
 <li>加壳工具使用了<a href="https://upx.github.io/">UPX</a>，感谢 🙏 开源，以及 <a href="http://www.aspack.com/">ASPACK</a>：收费软件，可以试用；</li>
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-7">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
 </ul>
 <h4 id="壳"><a href="#壳" class="headerlink" title="壳"></a>壳</h4><p>壳（也叫“外壳”）是一种专用加密软件技术；</p>
 <p>壳分为：压缩壳、加密壳、虚拟机保护软件；</p>
@@ -3167,9 +3162,7 @@
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-19">CrackMe</a>来自互联网，仅供学习使用；</li>
 <li>加壳工具为<a href="http://www.aspack.com/">ASPACK</a>：收费软件，可以试用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
 </ul>
 <h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
 <li><p>使用 ASPACK 给 CM 加壳；</p>
@@ -3212,9 +3205,7 @@
 <li>修正输出表的工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-4">ImportREC</a>，来自互联网；</li>
 <li>区段导出工具为<a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-9">Pupe</a>，来自互联网；</li>
 <li>区段合并工具为<a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-10">Peditor</a>，来自互联网；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
 </ul>
 <h4 id="操作流程"><a href="#操作流程" class="headerlink" title="操作流程"></a>操作流程</h4><ol>
 <li><p>此次使用 KiUserExceptionDispatcher 函数来寻找 OEP，学习一种新技能；</p>
@@ -3326,9 +3317,7 @@
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-26">CrackMe</a>来自互联网，仅供学习使用；</li>
 <li>Dump 工具为 OD 插件 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Plugin-1">OllyDump.dll</a>，来自互联网；</li>
 <li>修正输出表的工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-4">ImportREC</a>，来自互联网；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
 </ul>
 <h4 id="输入表加密"><a href="#输入表加密" class="headerlink" title="输入表加密"></a>输入表加密</h4><p>在脱壳过程中，输入表修复是一个重点，修复关键是得到未加密的 IAT，对与 IAT 相关的位置设断，从而找到外壳处理 IAT 的代码，然后找对策；</p>
 <p>加壳程序处理输入表有以下几种情况：</p>
@@ -3448,9 +3437,7 @@
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-28">CrackMe</a>来自互联网，仅供学习使用；</li>
 <li>Dump 工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-3">PETools</a>，来自互联网；</li>
 <li>修正输出表的工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-4">ImportREC</a>，来自互联网；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
 </ul>
 <h4 id="操作流程"><a href="#操作流程" class="headerlink" title="操作流程"></a>操作流程</h4><ol>
 <li><p>将 CM 导入 OD，使用<code>内存访问定位法</code>到达 OEP；</p>
@@ -3531,9 +3518,7 @@
 <li>加壳工具为<a href="https://upx.github.io/">UPX</a>，感谢 🙏 开源；</li>
 <li>Dump 工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-3">PETools</a>，来自互联网；</li>
 <li>修正输出表的工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-4">ImportREC</a>，来自互联网；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
 </ul>
 <h4 id="操作流程"><a href="#操作流程" class="headerlink" title="操作流程"></a>操作流程</h4><ol>
 <li><p>使用 UPX 加密 CM，然后导入 OD；</p>
@@ -3588,9 +3573,7 @@
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-25">CrackMe</a>来自互联网，仅供学习使用；</li>
 <li>Dump 工具为 OD 插件 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Plugin-1">OllyDump.dll</a>，来自互联网；</li>
 <li>修正输出表的工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-4">ImportREC</a>，来自互联网；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
 </ul>
 <h4 id="操作流程"><a href="#操作流程" class="headerlink" title="操作流程"></a>操作流程</h4><p>Import REConstructor（简称 ImportREC）是目前最好用的输入表重建工具，它可以从杂乱的 IAT 中重建一个输入表；</p>
 <p>要运行 ImportREC，必须满足以下条件：</p>
@@ -3660,9 +3643,7 @@
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-5">OllyDbg</a>修改版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-23">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
 </ul>
 <h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><h4 id="使用改版-OD-到达-OEP"><a href="#使用改版-OD-到达-OEP" class="headerlink" title="使用改版 OD 到达 OEP"></a>使用改版 OD 到达 OEP</h4><ol>
 <li><p>此方法来自<a href="http://xuepojie.com/">SharkHeng</a>；</p>
@@ -3726,9 +3707,7 @@
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-5">OllyDbg</a>修改版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-24">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
 </ul>
 <h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><h5 id="GetProcAddress"><a href="#GetProcAddress" class="headerlink" title="GetProcAddress"></a>GetProcAddress</h5><ol>
 <li><p>将程序导入 OD，goto 到 GetProcAddress 函数的行首，设置 F2 断点，然后运行程序；</p>
@@ -3791,7 +3770,7 @@
 <p>记录<a href="https://bbs.pediy.com/forum-99.htm">加密解密</a>一书中对<code>壳的加载过程</code>的描述，第 16 章：16.1；</p>
 <p>眼过千遍，不如手过一遍；</p>
 </blockquote>
-<a id="more"></a>
+<span id="more"></span>
 
 <h4 id="壳的加载过程"><a href="#壳的加载过程" class="headerlink" title="壳的加载过程"></a>壳的加载过程</h4><p>加壳软件通过修改原程序执行文件的组织结构，从而使壳比原程序代码更早获得控制权，且不影响原程序的正常运行，以下是壳的常见加载过程:</p>
 <ol>
@@ -3803,12 +3782,15 @@
 <p>如果需要使用其它 API 函数，可以通过函数 LoadLibraryA（W）或 LoadLibraryExA（W）将 DLL 文件映像映射到调用进程的地址空间中，函数返回的 HINSTANCE 值用于标识文件映像所映射的虚拟内存地址；</p>
 <p>LoadLibrary 函数原型：</p>
 <figure class="highlight text"><table><tr><td class="code"><pre><span class="line">HINSTANCE LoadLibrary(</span><br><span class="line">    LPCTSTR lpLibFileName    // DLL 文件名地址</span><br><span class="line">     );</span><br></pre></td></tr></table></figure>
+
 <p>返回值：成功则返回模块的句柄，失败返回 NULL；</p>
 <p>如果 DLL 文件已经被映射到调用进程的地址空间中，可以调用 GetModuleHandleA（W）函数获取 DLL 模块的句柄；</p>
 <figure class="highlight text"><table><tr><td class="code"><pre><span class="line">HMODULE GetModuleHandle(</span><br><span class="line">    LPCTSTR lpModuleName    // DLL 文件名地址</span><br><span class="line">     );</span><br></pre></td></tr></table></figure>
+
 <p>返回值：成功则返回模块的句柄，失败返回 NULL；</p>
 <p>一旦 DLL 模块被加载，线程就可以调用 GetProcAddress 函数获取输入函数的地址了；</p>
 <figure class="highlight text"><table><tr><td class="code"><pre><span class="line">FARPROC GetProcAddress(</span><br><span class="line">    HMODULE hModule,        // DLl 模块句柄</span><br><span class="line">    LPCSTR  lpProcName      // 函数名</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
 <p>参数 hModule 是 DLL 模块的句柄，是调用 LoadLibrary（Ex） 或 GetModuleHandle 函数的返回值；</p>
 <p>参数 lpProcName 是函数名或函数序数值，如果此参数是序数值，则必须使用低位字；高位必须为零；</p>
 <p>返回值：成功则返回函数地址，失败返回 NULL；</p>
@@ -3876,9 +3858,7 @@
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-24">CrackMe</a>来自互联网，仅供学习使用；</li>
 <li>Dump 工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-3">PETools</a>，来自互联网；</li>
 <li>修正输出表的工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-4">ImportREC</a>，来自互联网；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
 </ul>
 <h4 id="操作流程"><a href="#操作流程" class="headerlink" title="操作流程"></a>操作流程</h4><ol>
 <li><p>将 CM 导入 OD，使用内存访问法定位 OEP（这种方式设置的断点是一次性的）：</p>
@@ -3948,9 +3928,7 @@
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-27">CrackMe</a>来自互联网，仅供学习使用；</li>
 <li>Dump 工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-3">PETools</a>，来自互联网；</li>
 <li>修正输出表的工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-4">ImportREC</a>，来自互联网；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
 </ul>
 <h4 id="操作流程"><a href="#操作流程" class="headerlink" title="操作流程"></a>操作流程</h4><ol>
 <li><p>将 CM 导入 OD，在尝试了<code>内存访问法</code>和<code>栈平衡法</code>都不能到达 OEP 后，使用 SPOD（Special OD，个人称呼）配合<code>常用函数法</code>最终到达 OEP；</p>
@@ -4008,9 +3986,7 @@
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-5">OllyDbg</a>修改版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-24">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
 </ul>
 <h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
 <li><p>拿到 CM 后，第 1 想法就是栈平衡，将 CM 导入原版 OD：</p>
@@ -4074,9 +4050,7 @@
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-7">CrackMe</a>来自互联网，仅供学习使用；</li>
 <li>加壳工具为<a href="https://upx.github.io/">UPX</a>，感谢 🙏 开源；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
 </ul>
 <h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><h4 id="方法一"><a href="#方法一" class="headerlink" title="方法一"></a>方法一</h4><ol>
 <li><p>首先，使用 UPX 压缩 CM；</p>
@@ -4148,9 +4122,7 @@
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-7">CrackMe</a>来自互联网，仅供学习使用；</li>
 <li>加壳工具为<a href="https://upx.github.io/">UPX</a>，感谢 🙏 开源；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
 </ul>
 <h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
 <li><p>将 CM 导入 OD，此时未加壳，EP 即是 OEP：</p>
@@ -4187,9 +4159,7 @@
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-7">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
 </ul>
 <h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
 <li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了：</p>
@@ -4296,9 +4266,7 @@
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-9">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
 </ul>
 <h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
 <li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了：</p>
@@ -4697,9 +4665,7 @@
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-8">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
 </ul>
 <h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
 <li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了：</p>
@@ -4825,9 +4791,7 @@
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-5">OllyDbg</a>修改版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-19">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
 </ul>
 <h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
 <li><p>首先运行软件，了解一下程序：</p>
@@ -4930,6 +4894,7 @@
 <p>既然程序有窗体，那它怎么也绕不开一个 API<code>CreateWindow</code>，至于这里为什么使用<code>CreateWindowExA</code>，而不是<code>CreateWindow</code>或<code>CreateWindowExW</code>，在<code>goto</code>窗口试试不就知道了；</p>
 <p>认识一下<code>CreateWindow</code>：</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">CreateWindow</span><br><span class="line"></span><br><span class="line">作用</span><br><span class="line">    该函数创建一个重叠式窗口、弹出式窗口或子窗口。</span><br><span class="line">    它指定窗口类，窗口标题，窗口风格，以及窗口的初始位置及大小（可选的）。</span><br><span class="line">    该函数也指定该窗口的父窗口或所属窗口（如果存在的话），及窗口的菜单。</span><br><span class="line">    若要使用除 CreateWindow 函数支持的风格外的扩展风格，则使用 CreateWindowEx 函数代替 CreateWindow 函数。</span><br><span class="line">    在 winuser.h 中根据是否已定义 Unicode 被分别定义为 CreateWindowW 和 CreateWindowA，然后两者又被分别定义为对 CreateWindowExW 和 CreateWindowExA 函数的调用。</span><br><span class="line">参数</span><br><span class="line">    LPCTSTR lpClassName,    &#x2F;&#x2F; 窗口类名称</span><br><span class="line">    LPCTSTR lpWindowName,   &#x2F;&#x2F; 窗口标题</span><br><span class="line">    DWORD   dwStyle,        &#x2F;&#x2F; 窗口风格，或称窗口格式</span><br></pre></td></tr></table></figure>
+
 <p>参数很多非常多，在这里，关注的是第 2 和第 3 参数，也就是<code>WindowName</code>和<code>Style</code>；</p>
 </li>
 <li><p>设置好<code>CreateWindowExA</code>断点后，运行程序，程序中断后，在堆栈窗口可以看到：</p>
@@ -5030,9 +4995,7 @@
 <li>加壳工具为<a href="http://www.aspack.com/">ASPACK</a>：收费软件，可以试用；</li>
 <li>Dump 工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-2">LoadPE</a>，来自互联网；</li>
 <li>16 进制修改器为 WinHex；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<a id="more"></a>
-
-</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
 </ul>
 <h4 id="输入表重建的原理"><a href="#输入表重建的原理" class="headerlink" title="输入表重建的原理"></a>输入表重建的原理</h4><p>在输入表结构中，与实际运行相关的主要是 IAT 结构，这个结构用于保存 API 的实际地址；</p>
 <p>PE 文件运行时将初始化输入表的这一部分：</p>
@@ -5740,7 +5703,7 @@
 <li><code>WinHex</code>来自互联网；</li>
 <li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
 </ul>
-<a id="more"></a>
+<span id="more"></span>
 
 <h3 id="PE-文件格式"><a href="#PE-文件格式" class="headerlink" title="PE 文件格式"></a>PE 文件格式</h3><p>PE 文件是 Windows 操作系统下的可执行文件格式；</p>
 <p>是微软在 UNIX 平台的 COFF（Common Object File Format，通用对象文件格式）基础上制作而成的；</p>
@@ -6409,10 +6372,9 @@
 </li>
 <li><p>使用简单的公式计算文件偏移（RAW）</p>
 <p>根据 IMAGE_SECTION_HEADER 结构体，换算公式如下：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">RAW - PointerToRawData = RVA - VirtualAddress</span><br><span class="line">                  RAW = RVA - VirtualAddress + PointerToRawData</span><br></pre></td></tr></table></figure>
-<h3 id="IAT（Import-Address-Table，导入地址表）"><a href="#IAT（Import-Address-Table，导入地址表）" class="headerlink" title="IAT（Import Address Table，导入地址表）"></a>IAT（Import Address Table，导入地址表）</h3></li>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">RAW - PointerToRawData = RVA - VirtualAddress</span><br><span class="line">                  RAW = RVA - VirtualAddress + PointerToRawData</span><br></pre></td></tr></table></figure></li>
 </ol>
-<p>在 PE 文件内有一组数据结构，它们分别对应于被输入的 DLL，每一个这样的结构体都给出了被输入的 DLL 的名称并指向一组函数指针，这组函数指针称为输入地址表（IAT）；</p>
+<h3 id="IAT（Import-Address-Table，导入地址表）"><a href="#IAT（Import-Address-Table，导入地址表）" class="headerlink" title="IAT（Import Address Table，导入地址表）"></a>IAT（Import Address Table，导入地址表）</h3><p>在 PE 文件内有一组数据结构，它们分别对应于被输入的 DLL，每一个这样的结构体都给出了被输入的 DLL 的名称并指向一组函数指针，这组函数指针称为输入地址表（IAT）；</p>
 <p>每一个被引入的 API 在 IAT 里都有保留的位置，在那里它将被 Windows 加载器写入输入函数的地址，也就是调用位置；</p>
 <p>一旦模块被载入，IAT 中将包含所要输入函数的地址；</p>
 <p>把所有输入函数放在 IAT 中，这样，无论代码中多用一个输入函数多少次，都会通过 IAT 中的同一个函数指针来完成；</p>
@@ -6493,16 +6455,19 @@
 <p>两个数组的结束都是由一个值为 0 的 IMAGE_THUNK_DATA 元素表示；</p>
 <p>IMAGE_THUNK_DATA 结构实际上是一个双字，该结构在不同时刻有不同的含义，定义如下：</p>
 <figure class="highlight text"><table><tr><td class="code"><pre><span class="line">IMAGE_THUNK_DATA STRUCT</span><br><span class="line">    union ul</span><br><span class="line">        ForwarderString     DWORD   ?       ; 指向一个转向者字符串的 RVA</span><br><span class="line">        Function            DWORD   ?       ; 被输入的函数的内存地址</span><br><span class="line">        Ordinal             DWORD   ?       ; 被输入的 API 的序数值</span><br><span class="line">        AddressOfData       DWORD   ?       ; 指向 IMAGE_IMPORT_BY_NAME</span><br><span class="line">    ends</span><br><span class="line">IMAGE_THUNK_DATA ENDS</span><br></pre></td></tr></table></figure>
+
 <p>当 IMAGE_THUNK_DATA 值的最高位（双字的最高位）为 1 时，表示函数以序号方式输入，这时低 31 位（或这 64 位可执行文件的低 63 位）被看成一个函数序号；</p>
 <p>当 IMAGE_THUNK_DATA 值的最高位（双字的最高位）为 0 时，表示函数以字符串类型的函数名方式输入，这时双字的值是一个 RVA，指向一个 IMAGE_IMPORT_BY_NAME 结构；</p>
 <p>IMAGE_IMPORT_BY_NAME 结构仅有 1 个字大小，存储了一个输入函数的相关信息，定义如下：</p>
 <figure class="highlight text"><table><tr><td class="code"><pre><span class="line">IMAGE_IMPORT_BY_NAME STRUCT</span><br><span class="line">    Hint     WORD   ?</span><br><span class="line">    Name     BYTE   ?</span><br><span class="line">IMAGE_IMPORT_BY_NAME ENDS</span><br></pre></td></tr></table></figure>
+
 <ol>
 <li>Hint：本函数在其所驻留 DLL 的输入表中的序号，该域被 PE 装载器用来在 DLL 的输出表里快速查询函数；<br>该值不是必需的，一些链接器将它设为 0；</li>
 <li>Name：含有输入函数的函数名，函数名是一个 ASCII 字符串，以 NULL 结尾；<br>这里虽然将 Name 的大小以字节为单位进行定义，但其实它是一个可变尺寸域，由于没有更好的表示方式，只好在定义中写成 BYTE；</li>
 </ol>
 <p>PE 装载器把导入函数输入至 IAT 的顺序：</p>
 <figure class="highlight text"><table><tr><td class="code"><pre><span class="line">1. 读取 IID 的 Name 成员，获取库名称字符串；</span><br><span class="line">2. 装载相应库：LoadLibrary(&quot;库名称.dll&quot;)</span><br><span class="line">3. 读取 IID 的 OriginalFirstThunk 成员，获取 INT 地址；</span><br><span class="line">4. 逐一读取 INT 数组中的值，获取相应的 IMAGE_IMPORT_BY_NAME（RVA）；</span><br><span class="line">5. 使用 IMAGE_IMPORT_BY_NAME 的 Hint 项或 Name 项，获取相应函数的起始位置；</span><br><span class="line">6. 读取 IID 的 FirstThunk 成员，获得 IAT 地址；</span><br><span class="line">7. 将上面获得的函数地址输入相应 IAT 数组中；</span><br><span class="line">8. 重复以上步骤 4～7，直到 INT 表结束（遇到 NULL）；</span><br></pre></td></tr></table></figure>
+
 <h4 id="以-NOTEPAD-EXE-为例，梳理思路，强化学习"><a href="#以-NOTEPAD-EXE-为例，梳理思路，强化学习" class="headerlink" title="以 NOTEPAD.EXE 为例，梳理思路，强化学习"></a>以 NOTEPAD.EXE 为例，梳理思路，强化学习</h4><ol>
 <li><p>在 PE 文件头的可选映像头中，数据目录表的第 2 个成员指向输入表；</p>
 </li>
