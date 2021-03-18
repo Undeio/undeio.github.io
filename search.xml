@@ -401,6 +401,121 @@
       </tags>
   </entry>
   <entry>
+    <title>OllyDbg 反调试之 ProcessHeap &amp; NTGlobalFlag</title>
+    <url>/posts/3503361299/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code>插件<a href="https://github.com/Undeio/undeio.github.io/releases/tag/Plugin-2">HideDebugger</a>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-14">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
+</ul>
+<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
+<li><p>使用搜索引擎搜寻良久并未找到通俗易懂的说明，在<a href="https://ctf-wiki.github.io/ctf-wiki/">CTF Wiki</a>上发现了描述，但无奈自己功力尚浅，无法透彻理解，遂将链接奉上，感兴趣的同学可以去学习一下<a href="https://ctf-wiki.github.io/ctf-wiki/reverse/windows/anti-debug/ntglobalflag-zh/">NtGlobalFlag</a>，<a href="https://ctf-wiki.github.io/ctf-wiki/reverse/windows/anti-debug/heap-flags-zh/">Heap Flags</a>；</p>
+</li>
+<li><p>文中使用的<code>CrackMe</code>无特定要求，可以使用任意一款；</p>
+</li>
+<li><p>了解一下两个标志，以下描述引用自<a href="https://ctf-wiki.github.io/ctf-wiki/">CTF Wiki</a>：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">NtGlobalFlag</span><br><span class="line"></span><br><span class="line">描述</span><br><span class="line">    1. 在 32 位机器上, NtGlobalFlag字段位于PEB(进程环境块)0x68的偏移处, 64 位机器则是在偏移0xBC位置.</span><br><span class="line">    2. 该字段的默认值为 0.</span><br><span class="line">    3. 当调试器正在运行时, 该字段会被设置为一个特定的值.</span><br><span class="line">    4. 尽管该值并不能十分可信地表明某个调试器真的有在运行, 但该字段常出于该目的而被使用</span><br></pre></td></tr></table></figure>
+
+<p>呃，至于<code>ProcessHeap</code>，实在是总结不出具体的描述性语言，感兴趣的同学去<a href="https://ctf-wiki.github.io/ctf-wiki/">CTF Wiki</a>看吧；</p>
+</li>
+<li><p>接下来就用实例来说明一下这两个标志的用法：</p>
+<ul>
+<li><p>首先选择一个<code>CrackMe</code>倒入<code>OD</code>：</p>
+<p>之前学习<code>IsDebuggerPresent</code>的时候学习到：如果程序倒入<code>OD</code>之后没有运行，那么<code>EBX</code>寄存器指向的位置就是<code>IsDebuggerPresent</code>检测的位置，用代码表示就是：</p>
+<figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">FS</span>:[<span class="number">18</span>]       <span class="comment">; 将 FS:[18] 中的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">30</span>]   <span class="comment">; 将 EAX 中的地址加 0x30 之后的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOVZX</span> <span class="built_in">EAX</span>,<span class="built_in">BYTE</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">2</span>]   <span class="comment">; 将 EAX 中的地址，存储的第 2 个字节的数据拷贝到 EAX</span></span><br><span class="line"><span class="keyword">RETN</span>                            <span class="comment">; 返回</span></span><br></pre></td></tr></table></figure>
+
+<p>在这里简单计算一下，就当作复习之前的知识了，以这个<code>CrackMe</code>为例：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkafiohmmj31ff0u0gxv.jpg" alt="为例子"></p>
+<p>手动计算一下<code>IsDebuggerPresent</code>要检测的位置：</p>
+<ol>
+<li><p><code>MOV EAX,DWORD PTR FS:[18]</code>：<code>FS 寄存器</code>从第 18 位开始，存放的是该寄存器从起始位置依次向后的地址，即第 18 位存放的是起始位置的地址，也就是说，在这里，<code>FS:[18] == 7FFDF000</code>；</p>
+</li>
+<li><p><code>MOV EAX,DWORD PTR DS:[EAX+30]</code>：这个很好计算嘛，<code>[EAX+30] == 7FFDF030</code>，使用<code>Ctrl + G</code>跟随一下这个地址：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkarqpe18j31ff0u0n8e.jpg" alt="计算并跟随"></p>
+<p><code>7FFDF030</code>中存储的地址不正是<code>EBX</code>中的地址嘛；</p>
+</li>
+</ol>
+</li>
+<li><p>回顾完之前的内容，开始学习本次内容的第一个标志<code>NtGlobalFlag</code>：</p>
+<p>根据对<code>NtGlobalFlag</code>描述可知：在 32 位机器上, NtGlobalFlag 字段位于 PEB(进程环境块)0x68 的偏移处；</p>
+<p>首先，什么是 PEB?查询了许久之后又引出了 TEB，不太理解，但找到一些感觉描述很通俗的话：</p>
+<ul>
+<li><p>TEB：即 Thread Environment Block ，它记录相关线程的信息，每一个线程都有自己的 TEB，每个 TEB 都有自己的 TIB（Thread Information Block）,即线程信息块，每当创建一个线程，系统均会为每个线程分配 TEB，而且 TEB 永远放在 FS 寄存器指定的数据段的 0 偏移处；</p>
+</li>
+<li><p>PEB：即（Process Envirorment Block Structure），英文翻译过来就是进程环境信息块，在你进行打开这个程序或以调试方式打开这个程序，那么操作系统会对你这个进程的进程环境块的一些标志设置一系列的属性，如果你使用系统的调试方法，那么系统就会把相对应的标志位给设置上；</p>
+<ol>
+<li><p>TEB 结构体位于 FS 段选择符所指的段内存的起始地址处，也就是 0 偏移处；</p>
+</li>
+<li><p>PEB 成员位于距 TEB 结构体 Offset 30 的位置，也就是 0x30 偏移处；</p>
+</li>
+<li><p>那么就有两种获取 PEB 的方法：</p>
+<ul>
+<li>既然 TEB 位于 <code>FS 寄存器</code> 0 偏移处，在本文中就是<code>7FFDF000</code>，而 PEB 位于距 TEB 结构体 0x30 偏移处，那么是不是可以直接理解为：PEB 位于<code>FS 寄存器</code> 0x30 偏移处，即<code>FS:[30]</code>就是 PEB，在本文中就是<code>7FFDF030</code>；</li>
+<li>TEB 位于 <code>FS 寄存器</code> 0 偏移处，在本文中就是<code>7FFDF000</code>，如何获取<code>FS 寄存器</code> 0 偏移处即文中的<code>7FFDF000</code>呢？当然是<code>FS:[18]</code>了，既然拿到 TEB 本身，如何获取 PEB 呢？方法就和上面复习的一样了；</li>
+</ul>
+</li>
+</ol>
+</li>
+<li><p>既然找到了 PEB 的位置，而根据对<code>NtGlobalFlag</code>的定义得知，它位于 PEB 0x68 偏移处；</p>
+<p>本文中 PEB 为<code>7FFDF030</code>地址中的数据<code>7FFD8000</code>，也就是初始<code>EBX</code>指向的地址，再偏移 0x68 计算为<code>7FFD8068</code>，也就是说，如果<code>7FFD8068</code>地址的数据不为 0，则表示检测到正在调试程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkcwq4qc1j31ff0u0n7p.jpg" alt="NtGlobalFlag"></p>
+<p>整理一下代码的实现：</p>
+<figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">FS</span>:[<span class="number">18</span>]       <span class="comment">; 将 FS:[18] 中的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">30</span>]   <span class="comment">; 将 EAX 中的地址加 0x30 之后的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">68</span>]   <span class="comment">; 将 EAX 中的地址加 0x68 之后的数据拷贝到 EAX</span></span><br><span class="line"><span class="keyword">OR</span> <span class="built_in">EAX</span>,<span class="built_in">EAX</span>                      <span class="comment">; 是否为 0</span></span><br><span class="line"><span class="keyword">RETN</span>                            <span class="comment">; 返回</span></span><br></pre></td></tr></table></figure>
+
+<p>验证一下：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkdsmdg1kj31ff0u0tjp.jpg" alt="验证NtGlobalFlag"></p>
+</li>
+</ul>
+</li>
+<li><p>再来说说第二个标志<code>ProcessHeap</code>：</p>
+<p>对这个标志的了解少之又少，暂时没有查到直接关联的资料，只能大概总结一下：</p>
+<ol>
+<li><p>位于 PEB 偏移 0x18 处，本文中 PEB 是<code>7FFD8000</code>，偏移 0x18 之后是<code>7FFD8018</code>；</p>
+</li>
+<li><p>把偏移后的地址中的 DWORD 长度的数据作为地址，偏移 0x10，即对本文的<code>7FFD8018</code>中的数据<code>00140000</code>偏移 0x10；</p>
+</li>
+<li><p>如果这个位置的数据不为 0，即本文的<code>00140010</code>不为 0，则表示检测到正在调试程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkdjjn9lfj31ff0u0akf.jpg" alt="ProcessHeap"></p>
+<p>整理一下代码的实现：</p>
+<figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">FS</span>:[<span class="number">18</span>]       <span class="comment">; 将 FS:[18] 中的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">30</span>]   <span class="comment">; 将 EAX 中的地址加 0x30 之后的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">18</span>]   <span class="comment">; 将 EAX 中的地址加 0x18 之后的数据拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">10</span>]   <span class="comment">; 将 EAX 中的地址加 0x10 之后的数据拷贝到 EAX</span></span><br><span class="line"><span class="keyword">OR</span> <span class="built_in">EAX</span>,<span class="built_in">EAX</span>                      <span class="comment">; 是否为 0</span></span><br><span class="line"><span class="keyword">RETN</span>                            <span class="comment">; 返回</span></span><br></pre></td></tr></table></figure>
+
+<p>验证一下：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkdp9qncvj31ff0u0qdy.jpg" alt="验证ProcessHeap"></p>
+</li>
+</ol>
+</li>
+<li><p>两个标志分析完毕，接下来就要说说如何绕过了，不能每次都手动修改吧；</p>
+<p>这里需要借助两个<code>OD</code>插件<code>HideDebugger</code>和<code>HideOD</code>；</p>
+<p>设置如下图：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gll7skb4c3j31ff0u048h.jpg" alt="插件设置"></p>
+<p>细心的同学会发现，这里的设置和上节课一模一样，是的，设置相同，但是重点不同；</p>
+<p>虽然之前设置了某些选项，但只是照猫画虎，不知其意，相信学完这节内容，就会理解这样设置的意图；</p>
+</li>
+<li><p>验证一下插件是否生效：</p>
+<p>程序倒入<code>OD</code>不要运行，在<code>数据窗口</code>中跟随<code>EBX</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gll8umchjbj31ff0u07ez.jpg" alt="前两个绕过"></p>
+<p>可以在<code>数据窗口</code>直观的看到，<code>IsDebuggerPresent</code>和<code>NtGlobalFlag</code>检测的位置已经成功置 0，绕过检测，至于<code>ProcessHeap</code>，<code>Ctrl + G</code>跟随地址查看：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gll931b41xj31ff0u0qd9.jpg" alt="最后一个绕过"></p>
+</li>
+</ul>
+</li>
+<li><p>聊完两个标志，再来聊聊另外一个知识点：一个崩溃：</p>
+<p>一个崩溃不是说 Windows 的 API 又有特殊的用途或参数，或者说是开发人员思路清奇把 API 用出了花儿，而是<code>OD</code>的 bug：当被调试的程序通过 OutputDebugString 输出超长的一串调试字符串的时候，OllyDbg 无法处理导致崩溃；</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>逆向分析</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>反调试</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>OllyDbg 反调试之 ZwQueryInformationProcess</title>
     <url>/posts/3209676884/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -533,121 +648,6 @@
 <p>期待自己早日变得更加强大，加油 💪💪💪❗️</p>
 </li>
 </ul>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>逆向分析</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>反调试</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>OllyDbg 反调试之 ProcessHeap &amp; NTGlobalFlag</title>
-    <url>/posts/3503361299/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
-<li><code>OD</code>插件<a href="https://github.com/Undeio/undeio.github.io/releases/tag/Plugin-2">HideDebugger</a>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-14">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
-</ul>
-<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
-<li><p>使用搜索引擎搜寻良久并未找到通俗易懂的说明，在<a href="https://ctf-wiki.github.io/ctf-wiki/">CTF Wiki</a>上发现了描述，但无奈自己功力尚浅，无法透彻理解，遂将链接奉上，感兴趣的同学可以去学习一下<a href="https://ctf-wiki.github.io/ctf-wiki/reverse/windows/anti-debug/ntglobalflag-zh/">NtGlobalFlag</a>，<a href="https://ctf-wiki.github.io/ctf-wiki/reverse/windows/anti-debug/heap-flags-zh/">Heap Flags</a>；</p>
-</li>
-<li><p>文中使用的<code>CrackMe</code>无特定要求，可以使用任意一款；</p>
-</li>
-<li><p>了解一下两个标志，以下描述引用自<a href="https://ctf-wiki.github.io/ctf-wiki/">CTF Wiki</a>：</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">NtGlobalFlag</span><br><span class="line"></span><br><span class="line">描述</span><br><span class="line">    1. 在 32 位机器上, NtGlobalFlag字段位于PEB(进程环境块)0x68的偏移处, 64 位机器则是在偏移0xBC位置.</span><br><span class="line">    2. 该字段的默认值为 0.</span><br><span class="line">    3. 当调试器正在运行时, 该字段会被设置为一个特定的值.</span><br><span class="line">    4. 尽管该值并不能十分可信地表明某个调试器真的有在运行, 但该字段常出于该目的而被使用</span><br></pre></td></tr></table></figure>
-
-<p>呃，至于<code>ProcessHeap</code>，实在是总结不出具体的描述性语言，感兴趣的同学去<a href="https://ctf-wiki.github.io/ctf-wiki/">CTF Wiki</a>看吧；</p>
-</li>
-<li><p>接下来就用实例来说明一下这两个标志的用法：</p>
-<ul>
-<li><p>首先选择一个<code>CrackMe</code>倒入<code>OD</code>：</p>
-<p>之前学习<code>IsDebuggerPresent</code>的时候学习到：如果程序倒入<code>OD</code>之后没有运行，那么<code>EBX</code>寄存器指向的位置就是<code>IsDebuggerPresent</code>检测的位置，用代码表示就是：</p>
-<figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">FS</span>:[<span class="number">18</span>]       <span class="comment">; 将 FS:[18] 中的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">30</span>]   <span class="comment">; 将 EAX 中的地址加 0x30 之后的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOVZX</span> <span class="built_in">EAX</span>,<span class="built_in">BYTE</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">2</span>]   <span class="comment">; 将 EAX 中的地址，存储的第 2 个字节的数据拷贝到 EAX</span></span><br><span class="line"><span class="keyword">RETN</span>                            <span class="comment">; 返回</span></span><br></pre></td></tr></table></figure>
-
-<p>在这里简单计算一下，就当作复习之前的知识了，以这个<code>CrackMe</code>为例：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkafiohmmj31ff0u0gxv.jpg" alt="为例子"></p>
-<p>手动计算一下<code>IsDebuggerPresent</code>要检测的位置：</p>
-<ol>
-<li><p><code>MOV EAX,DWORD PTR FS:[18]</code>：<code>FS 寄存器</code>从第 18 位开始，存放的是该寄存器从起始位置依次向后的地址，即第 18 位存放的是起始位置的地址，也就是说，在这里，<code>FS:[18] == 7FFDF000</code>；</p>
-</li>
-<li><p><code>MOV EAX,DWORD PTR DS:[EAX+30]</code>：这个很好计算嘛，<code>[EAX+30] == 7FFDF030</code>，使用<code>Ctrl + G</code>跟随一下这个地址：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkarqpe18j31ff0u0n8e.jpg" alt="计算并跟随"></p>
-<p><code>7FFDF030</code>中存储的地址不正是<code>EBX</code>中的地址嘛；</p>
-</li>
-</ol>
-</li>
-<li><p>回顾完之前的内容，开始学习本次内容的第一个标志<code>NtGlobalFlag</code>：</p>
-<p>根据对<code>NtGlobalFlag</code>描述可知：在 32 位机器上, NtGlobalFlag 字段位于 PEB(进程环境块)0x68 的偏移处；</p>
-<p>首先，什么是 PEB?查询了许久之后又引出了 TEB，不太理解，但找到一些感觉描述很通俗的话：</p>
-<ul>
-<li><p>TEB：即 Thread Environment Block ，它记录相关线程的信息，每一个线程都有自己的 TEB，每个 TEB 都有自己的 TIB（Thread Information Block）,即线程信息块，每当创建一个线程，系统均会为每个线程分配 TEB，而且 TEB 永远放在 FS 寄存器指定的数据段的 0 偏移处；</p>
-</li>
-<li><p>PEB：即（Process Envirorment Block Structure），英文翻译过来就是进程环境信息块，在你进行打开这个程序或以调试方式打开这个程序，那么操作系统会对你这个进程的进程环境块的一些标志设置一系列的属性，如果你使用系统的调试方法，那么系统就会把相对应的标志位给设置上；</p>
-<ol>
-<li><p>TEB 结构体位于 FS 段选择符所指的段内存的起始地址处，也就是 0 偏移处；</p>
-</li>
-<li><p>PEB 成员位于距 TEB 结构体 Offset 30 的位置，也就是 0x30 偏移处；</p>
-</li>
-<li><p>那么就有两种获取 PEB 的方法：</p>
-<ul>
-<li>既然 TEB 位于 <code>FS 寄存器</code> 0 偏移处，在本文中就是<code>7FFDF000</code>，而 PEB 位于距 TEB 结构体 0x30 偏移处，那么是不是可以直接理解为：PEB 位于<code>FS 寄存器</code> 0x30 偏移处，即<code>FS:[30]</code>就是 PEB，在本文中就是<code>7FFDF030</code>；</li>
-<li>TEB 位于 <code>FS 寄存器</code> 0 偏移处，在本文中就是<code>7FFDF000</code>，如何获取<code>FS 寄存器</code> 0 偏移处即文中的<code>7FFDF000</code>呢？当然是<code>FS:[18]</code>了，既然拿到 TEB 本身，如何获取 PEB 呢？方法就和上面复习的一样了；</li>
-</ul>
-</li>
-</ol>
-</li>
-<li><p>既然找到了 PEB 的位置，而根据对<code>NtGlobalFlag</code>的定义得知，它位于 PEB 0x68 偏移处；</p>
-<p>本文中 PEB 为<code>7FFDF030</code>地址中的数据<code>7FFD8000</code>，也就是初始<code>EBX</code>指向的地址，再偏移 0x68 计算为<code>7FFD8068</code>，也就是说，如果<code>7FFD8068</code>地址的数据不为 0，则表示检测到正在调试程序：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkcwq4qc1j31ff0u0n7p.jpg" alt="NtGlobalFlag"></p>
-<p>整理一下代码的实现：</p>
-<figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">FS</span>:[<span class="number">18</span>]       <span class="comment">; 将 FS:[18] 中的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">30</span>]   <span class="comment">; 将 EAX 中的地址加 0x30 之后的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">68</span>]   <span class="comment">; 将 EAX 中的地址加 0x68 之后的数据拷贝到 EAX</span></span><br><span class="line"><span class="keyword">OR</span> <span class="built_in">EAX</span>,<span class="built_in">EAX</span>                      <span class="comment">; 是否为 0</span></span><br><span class="line"><span class="keyword">RETN</span>                            <span class="comment">; 返回</span></span><br></pre></td></tr></table></figure>
-
-<p>验证一下：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkdsmdg1kj31ff0u0tjp.jpg" alt="验证NtGlobalFlag"></p>
-</li>
-</ul>
-</li>
-<li><p>再来说说第二个标志<code>ProcessHeap</code>：</p>
-<p>对这个标志的了解少之又少，暂时没有查到直接关联的资料，只能大概总结一下：</p>
-<ol>
-<li><p>位于 PEB 偏移 0x18 处，本文中 PEB 是<code>7FFD8000</code>，偏移 0x18 之后是<code>7FFD8018</code>；</p>
-</li>
-<li><p>把偏移后的地址中的 DWORD 长度的数据作为地址，偏移 0x10，即对本文的<code>7FFD8018</code>中的数据<code>00140000</code>偏移 0x10；</p>
-</li>
-<li><p>如果这个位置的数据不为 0，即本文的<code>00140010</code>不为 0，则表示检测到正在调试程序：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkdjjn9lfj31ff0u0akf.jpg" alt="ProcessHeap"></p>
-<p>整理一下代码的实现：</p>
-<figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">FS</span>:[<span class="number">18</span>]       <span class="comment">; 将 FS:[18] 中的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">30</span>]   <span class="comment">; 将 EAX 中的地址加 0x30 之后的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">18</span>]   <span class="comment">; 将 EAX 中的地址加 0x18 之后的数据拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">10</span>]   <span class="comment">; 将 EAX 中的地址加 0x10 之后的数据拷贝到 EAX</span></span><br><span class="line"><span class="keyword">OR</span> <span class="built_in">EAX</span>,<span class="built_in">EAX</span>                      <span class="comment">; 是否为 0</span></span><br><span class="line"><span class="keyword">RETN</span>                            <span class="comment">; 返回</span></span><br></pre></td></tr></table></figure>
-
-<p>验证一下：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkdp9qncvj31ff0u0qdy.jpg" alt="验证ProcessHeap"></p>
-</li>
-</ol>
-</li>
-<li><p>两个标志分析完毕，接下来就要说说如何绕过了，不能每次都手动修改吧；</p>
-<p>这里需要借助两个<code>OD</code>插件<code>HideDebugger</code>和<code>HideOD</code>；</p>
-<p>设置如下图：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gll7skb4c3j31ff0u048h.jpg" alt="插件设置"></p>
-<p>细心的同学会发现，这里的设置和上节课一模一样，是的，设置相同，但是重点不同；</p>
-<p>虽然之前设置了某些选项，但只是照猫画虎，不知其意，相信学完这节内容，就会理解这样设置的意图；</p>
-</li>
-<li><p>验证一下插件是否生效：</p>
-<p>程序倒入<code>OD</code>不要运行，在<code>数据窗口</code>中跟随<code>EBX</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gll8umchjbj31ff0u07ez.jpg" alt="前两个绕过"></p>
-<p>可以在<code>数据窗口</code>直观的看到，<code>IsDebuggerPresent</code>和<code>NtGlobalFlag</code>检测的位置已经成功置 0，绕过检测，至于<code>ProcessHeap</code>，<code>Ctrl + G</code>跟随地址查看：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gll931b41xj31ff0u0qd9.jpg" alt="最后一个绕过"></p>
-</li>
-</ul>
-</li>
-<li><p>聊完两个标志，再来聊聊另外一个知识点：一个崩溃：</p>
-<p>一个崩溃不是说 Windows 的 API 又有特殊的用途或参数，或者说是开发人员思路清奇把 API 用出了花儿，而是<code>OD</code>的 bug：当被调试的程序通过 OutputDebugString 输出超长的一串调试字符串的时候，OllyDbg 无法处理导致崩溃；</p>
 </li>
 </ol>
 ]]></content>
@@ -963,6 +963,105 @@
       </tags>
   </entry>
   <entry>
+    <title>OllyDbg 断点</title>
+    <url>/posts/2731277808/</url>
+    <content><![CDATA[<h4 id="断点的分类"><a href="#断点的分类" class="headerlink" title="断点的分类"></a>断点的分类</h4><h5 id="F2-断点"><a href="#F2-断点" class="headerlink" title="F2 断点"></a>F2 断点</h5><ul>
+<li><p><code>F2断点</code>又叫<code>普通断点</code>、<code>CC断点</code>、<code>int3断点</code>；</p>
+</li>
+<li><p>在<code>OD</code>反汇编窗口（<code>C</code>窗口）中，双击语句的某一行或按下 F2 会设置（触发）一个<code>int3 断点</code>；</p>
+</li>
+<li><p><code>int3</code>是一个断点（中断）指令，在汇编中机器码是<code>CC</code>，所以，<code>F2断点</code>又可以称为<code>int3断点</code>或<code>CC断点</code>；</p>
+</li>
+<li><p>在使用 F2 设置断点后，CPU 会引发一个异常，而 OD 会捕获这个异常，从而中断程序；</p>
+<span id="more"></span></li>
+<li><p>可以使用命令<code>bp xxxxxxxx</code>快速设置一个<code>CC断点</code>；</p>
+</li>
+<li><p><code>bp</code>可以为内存地址设置断点，也就是为某条语句设置断点；</p>
+</li>
+<li><p><code>bp</code>当然也可以为<code>API（函数）</code>设置一个断点，如<code>bp MessageBoxA</code>，断点会设置在 API 的行首，也就是函数的第一行；</p>
+</li>
+<li><p>通常情况下，当使用<code>bp</code>为<code>API</code>设置断点时，该<code>API</code>应该是可见的，也就是在反汇编窗口按下<code>Ctrl + N</code>后，在函数窗口能找得到时，才能使用<code>bp</code>设置断点，不过偶尔在找不到的情况下，也能使用<code>bp</code>设置断点，这种情况时可以买一注彩票；</p>
+</li>
+<li><p>使用<code>bp MessageBoxA</code>也就是为<code>API</code>设置断点后，会在系统领空下，这个<code>API</code>的行首设置断点；</p>
+</li>
+<li><p>使用<code>bpx MessageBoxA</code>也就是为<code>API</code>设置断点后，会在程序领空下，所有调用这个<code>API</code>的位置设置断点；</p>
+</li>
+<li><p><code>F2断点</code>的设置没有数量限制，可以设置无数个；</p>
+</li>
+<li><p><code>F2断点</code>很容易被检测，从而触发反调试；</p>
+</li>
+<li><p><code>F2断点</code>重载程序后不会丢失；</p>
+</li>
+</ul>
+<p>当执行一个 int3 断点时，对应指令处第 1 个字节的内容会被调试器用 CC 指令替换，此时 OD 将 int3 隐藏，显示出来的仍是中断前的指令，实际上已经被替换为 CC；</p>
+<p>当被调试程序执行 int3 命令导致一个异常时，调试器就会捕捉到这个异常，从而停在断点处，然后将断点处的指令恢复成原来的指令；</p>
+<p>由于 int3 断点改变了原程序机器码，所以很容易被软件检测到，躲过检测的方法是将断点设置在函数内部或尾部；</p>
+<h5 id="内存断点"><a href="#内存断点" class="headerlink" title="内存断点"></a>内存断点</h5><ul>
+<li><code>内存断点</code>是通过修改内存属性为不可访问、不可执行来实现的；</li>
+<li><code>内存断点</code>同时只能存在一个；</li>
+<li><code>内存断点</code>在重载程序后会丢失，需要重新设置；</li>
+<li><code>内存断点</code>会影响程序的运行速度；</li>
+</ul>
+<h5 id="内存访问一次性断点"><a href="#内存访问一次性断点" class="headerlink" title="内存访问一次性断点"></a>内存访问一次性断点</h5><p>在内存窗口（Alt + M），每个区段都有相应的权限（属性），选择区段并按下 F2 后，可以设置一次断点，且属性可以单独设置；</p>
+<p>断点生效后会被自动删除，所以叫做一次性断点；</p>
+<h5 id="硬件断点"><a href="#硬件断点" class="headerlink" title="硬件断点"></a>硬件断点</h5><ul>
+<li><code>硬件断点</code>最多可以设置 4 个；</li>
+<li><code>硬件断点</code>在设置位置的下一条指令中断；</li>
+<li>可以使用命令<code>HE xxxxxxxx</code>快速设置一个<code>硬件执行断点</code>；</li>
+<li>可以使用命令<code>HE MessageBoxA</code>在<code>API</code>的行首快速设置一个<code>硬件执行断点</code>；</li>
+<li><code>HW xxxxxxxx</code>设置<code>硬件写入断点</code>；</li>
+<li><code>HR xxxxxxxx</code>设置<code>硬件读取断点</code>；</li>
+<li>硬件断点只能手动删除或执行删除；</li>
+</ul>
+<p>硬件断点和 DRx 调试寄存器有关；</p>
+<p>DRx 调试器一共有 8 个（DR0 ～ DR7）：</p>
+<ul>
+<li>DR0 ～ DR3:调试地址寄存器，用于保存需要监视的地址，例如设置硬件断点；</li>
+<li>DR4 ～ DR5：保留，未公开具体作用；</li>
+<li>DR6：调试寄存器组状态寄存器；</li>
+<li>DR7：调试寄存器组控制寄存器；</li>
+</ul>
+<p>硬件断点的原理是使用 DR0 ～ DR3 设定地址，并使用 DR7 设定状态，因此最多设置 4 个断点；</p>
+<p>硬件执行断点和 CC 断点的作用一样，但不会修改机器码，所以更难检测；</p>
+<p>硬件断点的优点是速度快，在 int3 断点容易发现的地方设置硬件断点效果更好，缺点是只能设置 4 个；</p>
+<h5 id="条件断点"><a href="#条件断点" class="headerlink" title="条件断点"></a>条件断点</h5><ul>
+<li>满足某个条件的<code>CC断点</code>;</li>
+<li>使用<code>shift + F2</code>快速设置条件断点；</li>
+<li>OD 的条件断点可以按寄存器、存储器、消息等设断；</li>
+</ul>
+<h5 id="条件记录断点"><a href="#条件记录断点" class="headerlink" title="条件记录断点"></a>条件记录断点</h5><ul>
+<li>多了记录断点处函数表达式或参数值的条件断点；</li>
+<li>使用<code>shift + F4</code>快速设置条件记录断点；</li>
+</ul>
+<h5 id="消息断点"><a href="#消息断点" class="headerlink" title="消息断点"></a>消息断点</h5><ul>
+<li>消息断点实际上就是条件记录断点；</li>
+<li>在操作窗口或控件时，都会发送一个消息；</li>
+<li>在<code>OD</code>的<code>W</code>窗口刷新来获取交互消息；</li>
+<li>检测交互（消息循环）来设置<code>消息断点</code>，如<code>101 按键抬起</code>、<code>202 鼠标左键抬起</code>等；</li>
+<li>断点生效后，修改条件来记录操作日志，在<code>OD</code>的<code>L</code>窗口查看记录的日志或将日志输出到指定文件来进一步进行分析；</li>
+</ul>
+<p>Windows 本身是由消息驱动的；</p>
+<p>当某个特定窗口函数接收到某个特定消息时，消息断点将使程序中断；</p>
+<p>消息断点与 int3 断点的区别是：int3 断点可以在程序启动前设置，消息断点只有在窗体被创建之后才能设置并拦截消息；</p>
+<p>所有发送的消息都有 4 个参数：1 个窗口句柄（hwnd）、1 个消息编号（msg）和 2 个 32 位长（long）的参数；</p>
+<p>Windows 通过句柄来标识它所代表的对象；</p>
+<h5 id="API-断点"><a href="#API-断点" class="headerlink" title="API 断点"></a>API 断点</h5><ul>
+<li>给系统提供的 API 设置的<code>CC断点</code>；</li>
+<li><code>MessageBoxA</code>中的<code>A</code>表示使用<code>ASCII</code>编码；</li>
+<li><code>MessageBoxW</code>中的<code>W</code>表示使用<code>Unicode</code>编码；</li>
+</ul>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>逆向分析</category>
+        <category>文章资料</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>断点</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>OllyDbg 反调试之综合练习</title>
     <url>/posts/3051308746/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -1117,102 +1216,71 @@
       </tags>
   </entry>
   <entry>
-    <title>OllyDbg 断点</title>
-    <url>/posts/2731277808/</url>
-    <content><![CDATA[<h4 id="断点的分类"><a href="#断点的分类" class="headerlink" title="断点的分类"></a>断点的分类</h4><h5 id="F2-断点"><a href="#F2-断点" class="headerlink" title="F2 断点"></a>F2 断点</h5><ul>
-<li><p><code>F2断点</code>又叫<code>普通断点</code>、<code>CC断点</code>、<code>int3断点</code>；</p>
-</li>
-<li><p>在<code>OD</code>反汇编窗口（<code>C</code>窗口）中，双击语句的某一行或按下 F2 会设置（触发）一个<code>int3 断点</code>；</p>
-</li>
-<li><p><code>int3</code>是一个断点（中断）指令，在汇编中机器码是<code>CC</code>，所以，<code>F2断点</code>又可以称为<code>int3断点</code>或<code>CC断点</code>；</p>
-</li>
-<li><p>在使用 F2 设置断点后，CPU 会引发一个异常，而 OD 会捕获这个异常，从而中断程序；</p>
-<span id="more"></span></li>
-<li><p>可以使用命令<code>bp xxxxxxxx</code>快速设置一个<code>CC断点</code>；</p>
-</li>
-<li><p><code>bp</code>可以为内存地址设置断点，也就是为某条语句设置断点；</p>
-</li>
-<li><p><code>bp</code>当然也可以为<code>API（函数）</code>设置一个断点，如<code>bp MessageBoxA</code>，断点会设置在 API 的行首，也就是函数的第一行；</p>
-</li>
-<li><p>通常情况下，当使用<code>bp</code>为<code>API</code>设置断点时，该<code>API</code>应该是可见的，也就是在反汇编窗口按下<code>Ctrl + N</code>后，在函数窗口能找得到时，才能使用<code>bp</code>设置断点，不过偶尔在找不到的情况下，也能使用<code>bp</code>设置断点，这种情况时可以买一注彩票；</p>
-</li>
-<li><p>使用<code>bp MessageBoxA</code>也就是为<code>API</code>设置断点后，会在系统领空下，这个<code>API</code>的行首设置断点；</p>
-</li>
-<li><p>使用<code>bpx MessageBoxA</code>也就是为<code>API</code>设置断点后，会在程序领空下，所有调用这个<code>API</code>的位置设置断点；</p>
-</li>
-<li><p><code>F2断点</code>的设置没有数量限制，可以设置无数个；</p>
-</li>
-<li><p><code>F2断点</code>很容易被检测，从而触发反调试；</p>
-</li>
-<li><p><code>F2断点</code>重载程序后不会丢失；</p>
-</li>
+    <title>SFX 功能定位 OEP</title>
+    <url>/posts/3371155739/</url>
+    <content><![CDATA[<blockquote>
+<p>对壳一无所知的情况下，通过简单的操作完成程序的脱壳，从而增加成就感，获得学习的乐趣及动力；</p>
+</blockquote>
+<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li>加壳工具使用了<a href="https://upx.github.io/">UPX</a>，感谢 🙏 开源，以及 <a href="http://www.aspack.com/">ASPACK</a>：收费软件，可以试用；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-7">UnPackMe</a>来自互联网，仅供学习使用；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
 </ul>
-<p>当执行一个 int3 断点时，对应指令处第 1 个字节的内容会被调试器用 CC 指令替换，此时 OD 将 int3 隐藏，显示出来的仍是中断前的指令，实际上已经被替换为 CC；</p>
-<p>当被调试程序执行 int3 命令导致一个异常时，调试器就会捕捉到这个异常，从而停在断点处，然后将断点处的指令恢复成原来的指令；</p>
-<p>由于 int3 断点改变了原程序机器码，所以很容易被软件检测到，躲过检测的方法是将断点设置在函数内部或尾部；</p>
-<h5 id="内存断点"><a href="#内存断点" class="headerlink" title="内存断点"></a>内存断点</h5><ul>
-<li><code>内存断点</code>是通过修改内存属性为不可访问、不可执行来实现的；</li>
-<li><code>内存断点</code>同时只能存在一个；</li>
-<li><code>内存断点</code>在重载程序后会丢失，需要重新设置；</li>
-<li><code>内存断点</code>会影响程序的运行速度；</li>
-</ul>
-<h5 id="内存访问一次性断点"><a href="#内存访问一次性断点" class="headerlink" title="内存访问一次性断点"></a>内存访问一次性断点</h5><p>在内存窗口（Alt + M），每个区段都有相应的权限（属性），选择区段并按下 F2 后，可以设置一次断点，且属性可以单独设置；</p>
-<p>断点生效后会被自动删除，所以叫做一次性断点；</p>
-<h5 id="硬件断点"><a href="#硬件断点" class="headerlink" title="硬件断点"></a>硬件断点</h5><ul>
-<li><code>硬件断点</code>最多可以设置 4 个；</li>
-<li><code>硬件断点</code>在设置位置的下一条指令中断；</li>
-<li>可以使用命令<code>HE xxxxxxxx</code>快速设置一个<code>硬件执行断点</code>；</li>
-<li>可以使用命令<code>HE MessageBoxA</code>在<code>API</code>的行首快速设置一个<code>硬件执行断点</code>；</li>
-<li><code>HW xxxxxxxx</code>设置<code>硬件写入断点</code>；</li>
-<li><code>HR xxxxxxxx</code>设置<code>硬件读取断点</code>；</li>
-<li>硬件断点只能手动删除或执行删除；</li>
-</ul>
-<p>硬件断点和 DRx 调试寄存器有关；</p>
-<p>DRx 调试器一共有 8 个（DR0 ～ DR7）：</p>
-<ul>
-<li>DR0 ～ DR3:调试地址寄存器，用于保存需要监视的地址，例如设置硬件断点；</li>
-<li>DR4 ～ DR5：保留，未公开具体作用；</li>
-<li>DR6：调试寄存器组状态寄存器；</li>
-<li>DR7：调试寄存器组控制寄存器；</li>
-</ul>
-<p>硬件断点的原理是使用 DR0 ～ DR3 设定地址，并使用 DR7 设定状态，因此最多设置 4 个断点；</p>
-<p>硬件执行断点和 CC 断点的作用一样，但不会修改机器码，所以更难检测；</p>
-<p>硬件断点的优点是速度快，在 int3 断点容易发现的地方设置硬件断点效果更好，缺点是只能设置 4 个；</p>
-<h5 id="条件断点"><a href="#条件断点" class="headerlink" title="条件断点"></a>条件断点</h5><ul>
-<li>满足某个条件的<code>CC断点</code>;</li>
-<li>使用<code>shift + F2</code>快速设置条件断点；</li>
-<li>OD 的条件断点可以按寄存器、存储器、消息等设断；</li>
-</ul>
-<h5 id="条件记录断点"><a href="#条件记录断点" class="headerlink" title="条件记录断点"></a>条件记录断点</h5><ul>
-<li>多了记录断点处函数表达式或参数值的条件断点；</li>
-<li>使用<code>shift + F4</code>快速设置条件记录断点；</li>
-</ul>
-<h5 id="消息断点"><a href="#消息断点" class="headerlink" title="消息断点"></a>消息断点</h5><ul>
-<li>消息断点实际上就是条件记录断点；</li>
-<li>在操作窗口或控件时，都会发送一个消息；</li>
-<li>在<code>OD</code>的<code>W</code>窗口刷新来获取交互消息；</li>
-<li>检测交互（消息循环）来设置<code>消息断点</code>，如<code>101 按键抬起</code>、<code>202 鼠标左键抬起</code>等；</li>
-<li>断点生效后，修改条件来记录操作日志，在<code>OD</code>的<code>L</code>窗口查看记录的日志或将日志输出到指定文件来进一步进行分析；</li>
-</ul>
-<p>Windows 本身是由消息驱动的；</p>
-<p>当某个特定窗口函数接收到某个特定消息时，消息断点将使程序中断；</p>
-<p>消息断点与 int3 断点的区别是：int3 断点可以在程序启动前设置，消息断点只有在窗体被创建之后才能设置并拦截消息；</p>
-<p>所有发送的消息都有 4 个参数：1 个窗口句柄（hwnd）、1 个消息编号（msg）和 2 个 32 位长（long）的参数；</p>
-<p>Windows 通过句柄来标识它所代表的对象；</p>
-<h5 id="API-断点"><a href="#API-断点" class="headerlink" title="API 断点"></a>API 断点</h5><ul>
-<li>给系统提供的 API 设置的<code>CC断点</code>；</li>
-<li><code>MessageBoxA</code>中的<code>A</code>表示使用<code>ASCII</code>编码；</li>
-<li><code>MessageBoxW</code>中的<code>W</code>表示使用<code>Unicode</code>编码；</li>
-</ul>
+<h4 id="壳"><a href="#壳" class="headerlink" title="壳"></a>壳</h4><p>壳（也叫“外壳”）是一种专用加密软件技术；</p>
+<p>壳分为：压缩壳、加密壳、虚拟机保护软件；</p>
+<h3 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h3><ol>
+<li><p>首先，将原始程序导入 OD，然后查看 OEP：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv7l4xkb9j31dp0u0jv3.jpg" alt="原始程序导入 OD"></p>
+<p>可以看到，原始程序的 OEP 是：00401000；</p>
+</li>
+<li><p>安装 UPX，然后打开并给 CM 加壳：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv797t16ij31340u076k.jpg" alt="给 CM 加壳"></p>
+<p>将 CM 拖入 UPX，选项默认，点击 RUN 即可；</p>
+<p>不会生成新文件，而是直接在源程序上加壳，所以，记得备份源程序；</p>
+</li>
+<li><p>打开 OD 设置 SFX：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv7j8uzeuj31dx0u0n2e.jpg" alt="设置 SFX"></p>
+<p>打开调试设置，在异常选项卡下，勾选全部选项，是为了防止 SFX 在自动分析中，中断在某个异常而导致失败；</p>
+<p>然后，在 SFX 选项卡下，勾选 <code>块方式跟踪</code>或<code>字节方式跟踪</code>其一，它们的区别是查找速度与准确率，首先选择速度较快的<code>块方式跟踪</code>；</p>
+</li>
+<li><p>然后将加壳后的程序载入 OD，发现没有任何反应，即使切换 SFX 选项卡为<code>字节方式跟踪</code>也没有任何反应，这是为什么呢？</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv7vp6yy2j31e30u0jut.jpg" alt="没有任何反应"></p>
+</li>
+<li><p>原来，SFX 使用是有限制的：程序在载入 OD 后，入口点必须位于代码段（.code）之外，才会生效；</p>
+<p>打开内存窗口：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv7xm4w2qj31e00u077c.jpg" alt="内存窗口"></p>
+<p>发现当前程序的代码段起始位置为：00409000，大小为 1000，也就是说，当前程序代码段的范围是 00409000 ～ 00409FFF；</p>
+<p>而程序载入 OD 后，EP（入口点）位于 00409BF0，处于代码段范围，所以 SFX 没有生效；</p>
+</li>
+<li><p>既然 UPX 加壳后入口点在代码段，那就切换加壳软件，使用 ASPACK；</p>
+<p>安装 ASPACK 并打开，在打开文件选项卡下点击打开并选择原始程序，就会自动加壳：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv8e3edj4j30n80iat9g.jpg" alt="ASPACK"></p>
+<p>ASPACK 同样不会生成新文件，所以，记得备份源程序；</p>
+</li>
+<li><p>首先，打开 OD 确认 SFX 以及异常选项卡设置 OK，然后将 ASPACK 加密后的程序导入 OD：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv8k4495oj31du0u0q6x.jpg" alt="ASPACK 加密后的程序导入 OD"></p>
+<p>CM 运行起来了，然而，程序并非停留在 OEP 上，因为第 1 步的时候，已经确认了原始程序的 OEP 是：00401000；</p>
+<p>看来 SFX 的<code>块方式跟踪</code>速度很快但是不够准确，不过，既然 CM 能够运行，也侧面说明了，ASPACK 加壳后，EP 位于代码段之外；</p>
+</li>
+<li><p>切换 SFX 选项为<code>字节方式跟踪</code>并删除 OD 操作日志（UDD 文件夹内），重新将 ASPACK 加密后的程序导入 OD：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv8u6b8v9j31dy0u0wi4.jpg" alt="程序已脱壳"></p>
+<p>此时 EP 停留在 00401000 上，也就 OEP 上，说明程序已经脱壳了；</p>
+</li>
+<li><p>加壳方式多种多样，这种脱壳方式可用范围应该很小，毕竟换了加壳工具后就失效了，不过，很振奋人心；</p>
+</li>
+</ol>
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>逆向分析</category>
-        <category>文章资料</category>
+        <category>脱壳技术</category>
         <category>Windows</category>
       </categories>
       <tags>
-        <tag>断点</tag>
+        <tag>OEP</tag>
+        <tag>SFX</tag>
+        <tag>UPX</tag>
       </tags>
   </entry>
   <entry>
@@ -1332,74 +1400,6 @@
       </tags>
   </entry>
   <entry>
-    <title>SFX 功能定位 OEP</title>
-    <url>/posts/3371155739/</url>
-    <content><![CDATA[<blockquote>
-<p>对壳一无所知的情况下，通过简单的操作完成程序的脱壳，从而增加成就感，获得学习的乐趣及动力；</p>
-</blockquote>
-<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li>加壳工具使用了<a href="https://upx.github.io/">UPX</a>，感谢 🙏 开源，以及 <a href="http://www.aspack.com/">ASPACK</a>：收费软件，可以试用；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-7">UnPackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
-</ul>
-<h4 id="壳"><a href="#壳" class="headerlink" title="壳"></a>壳</h4><p>壳（也叫“外壳”）是一种专用加密软件技术；</p>
-<p>壳分为：压缩壳、加密壳、虚拟机保护软件；</p>
-<h3 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h3><ol>
-<li><p>首先，将原始程序导入 OD，然后查看 OEP：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv7l4xkb9j31dp0u0jv3.jpg" alt="原始程序导入 OD"></p>
-<p>可以看到，原始程序的 OEP 是：00401000；</p>
-</li>
-<li><p>安装 UPX，然后打开并给 CM 加壳：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv797t16ij31340u076k.jpg" alt="给 CM 加壳"></p>
-<p>将 CM 拖入 UPX，选项默认，点击 RUN 即可；</p>
-<p>不会生成新文件，而是直接在源程序上加壳，所以，记得备份源程序；</p>
-</li>
-<li><p>打开 OD 设置 SFX：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv7j8uzeuj31dx0u0n2e.jpg" alt="设置 SFX"></p>
-<p>打开调试设置，在异常选项卡下，勾选全部选项，是为了防止 SFX 在自动分析中，中断在某个异常而导致失败；</p>
-<p>然后，在 SFX 选项卡下，勾选 <code>块方式跟踪</code>或<code>字节方式跟踪</code>其一，它们的区别是查找速度与准确率，首先选择速度较快的<code>块方式跟踪</code>；</p>
-</li>
-<li><p>然后将加壳后的程序载入 OD，发现没有任何反应，即使切换 SFX 选项卡为<code>字节方式跟踪</code>也没有任何反应，这是为什么呢？</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv7vp6yy2j31e30u0jut.jpg" alt="没有任何反应"></p>
-</li>
-<li><p>原来，SFX 使用是有限制的：程序在载入 OD 后，入口点必须位于代码段（.code）之外，才会生效；</p>
-<p>打开内存窗口：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv7xm4w2qj31e00u077c.jpg" alt="内存窗口"></p>
-<p>发现当前程序的代码段起始位置为：00409000，大小为 1000，也就是说，当前程序代码段的范围是 00409000 ～ 00409FFF；</p>
-<p>而程序载入 OD 后，EP（入口点）位于 00409BF0，处于代码段范围，所以 SFX 没有生效；</p>
-</li>
-<li><p>既然 UPX 加壳后入口点在代码段，那就切换加壳软件，使用 ASPACK；</p>
-<p>安装 ASPACK 并打开，在打开文件选项卡下点击打开并选择原始程序，就会自动加壳：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv8e3edj4j30n80iat9g.jpg" alt="ASPACK"></p>
-<p>ASPACK 同样不会生成新文件，所以，记得备份源程序；</p>
-</li>
-<li><p>首先，打开 OD 确认 SFX 以及异常选项卡设置 OK，然后将 ASPACK 加密后的程序导入 OD：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv8k4495oj31du0u0q6x.jpg" alt="ASPACK 加密后的程序导入 OD"></p>
-<p>CM 运行起来了，然而，程序并非停留在 OEP 上，因为第 1 步的时候，已经确认了原始程序的 OEP 是：00401000；</p>
-<p>看来 SFX 的<code>块方式跟踪</code>速度很快但是不够准确，不过，既然 CM 能够运行，也侧面说明了，ASPACK 加壳后，EP 位于代码段之外；</p>
-</li>
-<li><p>切换 SFX 选项为<code>字节方式跟踪</code>并删除 OD 操作日志（UDD 文件夹内），重新将 ASPACK 加密后的程序导入 OD：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv8u6b8v9j31dy0u0wi4.jpg" alt="程序已脱壳"></p>
-<p>此时 EP 停留在 00401000 上，也就 OEP 上，说明程序已经脱壳了；</p>
-</li>
-<li><p>加壳方式多种多样，这种脱壳方式可用范围应该很小，毕竟换了加壳工具后就失效了，不过，很振奋人心；</p>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>脱壳技术</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>OEP</tag>
-        <tag>SFX</tag>
-        <tag>UPX</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>VB 调试之 P-Code 寻找操作码</title>
     <url>/posts/3657232687/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -1494,282 +1494,6 @@
       <tags>
         <tag>OEP</tag>
         <tag>ASPack</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>VB 调试之分析 N-Code（二）</title>
-    <url>/posts/3794155287/</url>
-    <content><![CDATA[<blockquote>
-<p>之前分析过这个 CrackMe（参见：VB 调试之分析 N-Code（一）），需要借助修改版的 OD 才能去除 NAG 窗口，在阅读<a href="https://reversecore.com/">逆向工程核心原理</a>一书后，学到了一种新的技巧，记录下来；</p>
-</blockquote>
-<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-21">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
-</ul>
-<span id="more"></span>
-
-<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
-<li><p>将<code>CrackMe</code>倒入<code>OD</code>，查找<code>rtcMsgBox</code>并设置断点：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpdqgghp6j31b80u0jun.jpg" alt="查找"><br><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpdsakoemj31b40u0jv4.jpg" alt="设置断点"></p>
-</li>
-<li><p>然后<code>F9</code>运行程序，程序会中断在调用位置，与直接给 API 设置的断点不同，这样设置的断点会中断在调用位置，而给 API 设置的断点会中断在<code>rtcMsgBox</code>函数的行首：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpdxeqg7cj31b20u0n0o.jpg" alt="调用位置"></p>
-</li>
-<li><p>向上滚动代码，找到函数栈帧，然后设置断点：</p>
-<p>至于什么是栈帧？</p>
-<p>ESP 始终指向栈的顶端，程序运行中，ESP 寄存器的值随时变化，访问栈中函数的局部变量、参数时，若以 ESP 的值为基准会十分困难，使 CPU 很难引用到准确的位置；</p>
-<p>所以，调用函数时，先要把作为基准点（函数起始地址）的 ESP 值保存到 EBP，并维持在函数内部，这样，无论 ESP 如何变化，以 EBP 的值为基准总是能够安全的访问到相关函数的局部变量、参数、返回地址，这就是栈帧；</p>
-<p>也就是说，ESP 寄存器承担着栈顶指针的作用，而 EBP 寄存器则负责行使栈帧指针的职能；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpedvtcsej31b40u0tcb.jpg" alt="函数栈帧"></p>
-</li>
-<li><p>取消其它断点，重载并运行程序，程序会在断点处中断：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpeifwm5kj31b40u078b.jpg" alt="断点处中断"></p>
-<p>然后在<code>堆栈窗口</code>选择<code>反汇编窗口中跟随</code>到调用位置；</p>
-</li>
-<li><p>给调用位置和返回位置设置<code>F2</code>断点并取消其它断点：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpemqmyx6j31b40u0q6s.jpg" alt="设置两个断点"></p>
-</li>
-<li><p>重载并运行程序，程序中断在调用位置设置的断点处：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpepoqti8j31b40u078f.jpg" alt="调用位置栈顶指针"></p>
-<p>记录调用位置栈顶指针的地址；</p>
-</li>
-<li><p><code>F9</code>运行程序，NAG 窗口弹出，点击确定，程序中断在函数的返回位置：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpeuabiakj31au0u0wil.jpg" alt="返回位置栈顶指针"></p>
-<p>记录返回位置栈顶指针的地址；</p>
-</li>
-<li><p>用返回位置的栈顶指针也就是 ESP 的值减去调用位置 ESP 的值；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpey3glw9j30pk0go0tj.jpg" alt="ESP相减"></p>
-<p>以图为例：<code>0012FA10 - 0012FA08 = 8(16 进制)</code>，是不是可以这么理解：在调用函数中使用了 8 个字节的栈内存；</p>
-</li>
-<li><p>Win32 API 使用的函数调用约定是 stdcall 方式，这种方式的栈内存由被调用者清理，在这里就是由被调用的函数清理，如果在函数的起始位置直接清理栈内存，函数就不会被执行，也就不会弹出 NAG 窗口了；</p>
-<p>函数调用约定参见：寄存器小记</p>
-</li>
-<li><p>重载并运行程序，程序中断在调用位置，<code>F7</code>单步步入到函数内部：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpfnfbtjvj31b50u0wik.jpg" alt="再次中断"></p>
-<p>然后来到了 VB 程序类似于交通枢纽的位置，继续<code>F7</code>，跳转到创建 NAG 窗口的函数内部；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpfqj3wzxj31b60u0juw.jpg" alt="交通枢纽"></p>
-<p>创建 NAG 窗口的函数：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpfuhpl8ij31b70u041w.jpg" alt="创建 NAG 窗口的函数"></p>
-<p>咦，好眼熟啊，是的，这里就是设置程序第 1 个断点的函数，调用<code>rtcMsgBox</code>的函数；</p>
-</li>
-<li><p>之前的步骤终于派上用场了，根据计算，调用创建 NAG 窗口的函数会使用 8 个字节的栈内存，所以，修改函数的行首，清理栈内存：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpg1bxiquj31b40u0q6s.jpg" alt="清理栈内存"></p>
-<p>然后运行程序，没有 NAG 窗口，直接弹出程序主窗体；</p>
-</li>
-<li><p>保存修改到可执行文件，然后运行程序：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpg54qpa0j30f00eut95.jpg" alt="运行程序"></p>
-</li>
-<li><p>将修改后的 CrackMe 倒入<code>OD</code>，开始处理序列号的问题，然后发现，给<code>rtcMsgBox</code>设置断点后，程序并不会中断，怎么办？</p>
-<p>既然程序在输入错误的序列号后会弹出错误弹窗，那么程序内部肯定验证了序列号，那就查找关于字符串比较的函数：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpghdpk83j31b80u0adv.jpg" alt="vbastrcmp"></p>
-<p>找到<code>__vbaStrCmp</code>并设置断点，然后<code>F9</code>运行程序；</p>
-</li>
-<li><p>程序中断在调用<code>__vbaStrCmp</code>的位置，然后，在 EAX 中发现了输入的随机序列号：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpgllvlhaj31bk0u0787.jpg" alt="发现序列号"></p>
-<p>既然 EAX 是第 2 参数，那么 ECX 中存放的就是第 1 参数，可能就是真正的序列号；</p>
-</li>
-<li><p>数据窗口中跟随 ECX 后发现，西欧文字系统无法显示，就是一堆乱码，既然真实注册码无法使用，那有没有可能让任意字符成为注册码，继续向下分析：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnphe6x02uj31ba0u0q7k.jpg" alt="返回非0"></p>
-<p>首先，向下执行一行代码后，EAX 为非 0 值，这里使用的是<code>__vbaStrCmp</code>，所以非 0 说明不相等；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnphegy116j31bd0u0781.jpg" alt="操作EDI"></p>
-<p>接着，把返回值拷贝到 EDI 中，进行了一系列操作后，来到了一个跳转，这就很可疑了；</p>
-<p>这里对 EDI 进行的一系列操作，如果 EDI 为 0，则没有任何影响，最后的结果是跳转实现，但随机注册码和指定字符串比较，结果肯定不为 0，最终的结果是跳转失败；</p>
-<p>按照这个逻辑来推断，这个跳转应该是关键跳转，如何证明呢？修改<code>JE</code>为<code>JMP</code>，然后运行程序：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnphla0vxzj31b20u0jvy.jpg" alt="正确弹窗"></p>
-<p>修改<code>JE</code>为<code>JMP</code>并运行程序后，弹出提示序列号正确的弹窗，至于为什么这是正确的弹窗，很简单，因为它和错误弹窗不一样；</p>
-</li>
-<li><p>保存修改到可执行程序，然后运行程序：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnphohcvjij30si0cudgg.jpg" alt="成功了"></p>
-<p>输入任意字符，点击 OK 后，弹出成功弹窗，结束！</p>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>逆向分析</category>
-        <category>Windows</category>
-        <category>VB 汇总</category>
-      </categories>
-      <tags>
-        <tag>VB 调试</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>VB 调试之分析 N-Code（一）</title>
-    <url>/posts/1203909517/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-5">OllyDbg</a>修改版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-17">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
-</ul>
-<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
-<li><p>首先运行软件，了解一下程序：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwwx2zk5ij30cg0j474t.jpg" alt="运行程序"></p>
-<p>O, No!</p>
-<ul>
-<li><p>首先是一个<code>NAG 窗口</code>:</p>
-<blockquote>
-<p><code>NAG 窗口</code>：软件未注册或软件的试用版经常会弹出一些提示窗口要求注册，这些窗口被称为 nag 窗口，也叫烦人的窗口；</p>
-</blockquote>
-</li>
-<li><p>然后才是软件窗口，要求输入注册码；</p>
-</li>
-<li><p>输入随机字符点击 OK，一个奇怪的弹窗，应该是 No? Thanks?</p>
-</li>
-</ul>
-</li>
-<li><p>将<code>CrackMe</code>倒入<code>OD</code>，开始分析：</p>
-<ul>
-<li><p>首先，第一件事儿是去掉<code>烦人的窗口</code>：</p>
-<p>既然是弹窗，那么它肯定调用了<code>MessageBox</code>这个 API，不过，VB 有专有的 API <code>rtcMsgBox</code>：调用一个消息框，类似于 Windows 里的 MessageBox/A/EXA，此之前一定有个 PUSH 命令将要在消息框中显示的数据压入椎栈；</p>
-<ol>
-<li><p>既然已经知道了它调用的 API，那还等什么，给<code>rtcMsgBox</code>设置断点：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwf5ajmbfj319x0u0ado.jpg" alt="设置断点"></p>
-<p>按下<code>Ctrl + G</code>输入<code>rtcMsgBox</code>，然后点击确定，程序会跳转到<code>rtcMsgBox</code>函数的行首，然后双击该行设置断点，并做好备注；</p>
-</li>
-<li><p>设置好断点后，<code>F9</code>运行程序，程序会中断在断点位置，然后在<code>堆栈窗口</code>跟踪调用位置：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwfej14e2j31a10u0787.jpg" alt="反汇编窗口中跟随"></p>
-</li>
-<li><p>来到<code>反汇编窗口</code>，这个时候函数<code>rtcMsgBox</code>已经调用完成，既然找到了调用位置，那怎么能去掉<code>烦人的窗口</code>呢？</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwrwzbi2mj31a40u0q74.jpg" alt="返回位置"></p>
-<p>设置好断点，重载并运行程序后，程序中断在预先设置好的断点位置，而下面一行的<code>CALL</code>就是调用<code>rtcMsgBox</code>的位置，如果把这个调用<code>NOP</code>了，是不是就没有<code>NAG 窗口</code>了，听起来蛮靠谱，试一试：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmws2k2c0gj31a00u0adj.jpg" alt="NOP"></p>
-</li>
-<li><p><code>NOP</code>了调用<code>rtcMsgBox</code>的<code>CALL</code>后，继续运行程序，但并没有按照预期显示程序主窗口，而是程序结束了，这是怎么回事儿呢？</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmws7fd2l7j319y0u0jus.jpg" alt="程序终止了"></p>
-<p>按下<code>-</code>减号键，返回上层位置，把修改的内容保存下来试试：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwszp7i1mj31c90u0ag0.jpg" alt="保存到文件"></p>
-<p>双击运行保存的程序，没有任何反应，em ～～ 看来程序被玩坏了，此路不通；</p>
-</li>
-<li><p>重载并运行程序，重新来到<code>反汇编窗口</code>，既然把直接调用函数<code>NOP</code>了不行，那就只能继续运行程序，看看它的上一级调用：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwtwz0lpqj319u0u0gq0.jpg" alt="上级调用"></p>
-<p>来到上级调用的返回位置，上一行的<code>CALl</code>就是刚才整段代码的调用位置，如果把这个<code>CALl</code>干掉，那么弹窗也就没有了，试一试，但愿程序不被玩儿坏；</p>
-<p>在这个<code>CALl</code>的参数的上一行设置断点，重载并运行程序；</p>
-</li>
-<li><p>程序中断在预定位置，选择下面<code>CALl</code>和它的参数用<code>NOP</code>填充：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwu4tmu4yj319x0u0789.jpg" alt="用NOP填充"></p>
-</li>
-<li><p>继续运行程序，啊哈，期待已久的程序主窗口终于出现了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwu6csc67j319y0u0adb.jpg" alt="程序主窗口"></p>
-<p>主程序出现，说明这个方法可行；</p>
-</li>
-<li><p>为了后面找码方便，把修改后的程序另存为一个新的程序：终于要和<code>烦人的窗口</code>说拜拜了，至于保存的方法，上面已经说明，不再赘述；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwue6f08gj30fa0hyglz.jpg" alt="NoNAG"></p>
-<p>运行修改的程序，嗯，没有<code>NAG 窗口</code>，直接出现程序主窗体，一切 OK；</p>
-</li>
-</ol>
-</li>
-<li><p>搞定<code>NAG 窗口</code>后，是时候寻找一下注册码了：</p>
-<ol>
-<li><p>把修改后的程序倒入<code>OD</code>，然后运行程序，主窗体出现：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwujt8bmmj31a10u0whn.jpg" alt="运行修改程序"></p>
-</li>
-<li><p>输入随机注册码，但不要点 OK，但不要点 OK，但不要点 OK，重要的事情说三遍：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwunevjelj31a90u0419.jpg" alt="内存访问断点"></p>
-<p>接着到<code>内存窗口</code>，在<code>CODE 段</code>设置<code>内存访问断点</code>，然后到程序中点击 OK；</p>
-</li>
-<li><p>点击 OK 后，程序中断：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwuq1qlscj31a70u0dj1.jpg" alt="程序中断"></p>
-<p>这里的代码看不大懂，不过没关系，也没有找到需要的信息；</p>
-</li>
-<li><p>继续运行程序，直到看到了随机输入的注册码和字符串比较函数：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwuupo64mj319x0u0wi4.jpg" alt="字符串比较"></p>
-<p>随机输入的字符作为字符串比较函数的参数，那另一个参数毋庸置疑，肯定是真实的注册码；</p>
-</li>
-<li><p>不过遗憾的是，由于这个软件是西欧字符软件，好多字符无法正确显示，找到了真实的注册码也无法输入，复制也不行，因为系统字符集中没有某些字符：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwv3kqadtj319w0u0jxi.jpg" alt="字符集"></p>
-</li>
-<li><p>既然无法输入真实注册码，那就只能让任意字符成为注册码了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwvbq3c94j319r0u0wif.jpg" alt="比较不成立"></p>
-<p>首先，字符串比较函数的返回结果非 0，说明两个参数不相等，继续向下分析；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmww36rsqtj319z0u0jwe.jpg" alt="向下分析"></p>
-<p>把比较的结果从 EAX 拷贝到 EDI 中，然后进行了一系列的操作，然而，如果 EDI 为 0，则这些操作没有任何意义，至于中间夹杂的其他操作可以忽略了，因为没有涉及到 EDI：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmww36rsqtj319z0u0jwe.jpg" alt="操作 EDI"></p>
-<p>这里有一个 JE 跳转，上一行代码是<code>TEST DI, DI</code>，如果 EDI 自身为 0，则<code>TEST DI, DI</code>影响 ZF 标志位，ZF 置 1，反之为 0，而恰恰 JE 根据 ZF 标志位跳转，可以看到，程序运行到了这里，ZF 依然为 0，则间接说明了输入的注册码不正确；</p>
-<p>既然这个跳转根据比较的结果进行跳转，那就可以确定它是关键跳，如果将 JE 修改为 JMP，是否就能满足<code>让任意字符成为注册码</code>？值得一试：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwwqklr2hj319v0u0jv1.jpg" alt="修改为 JMP"></p>
-<p>修改 JE 为 JMP 后，取消内存访问断点，然后<code>F9</code>运行程序，It’s OK，终于看到了成功弹窗，不过由于字符集的原因，部分字符无法显示；</p>
-</li>
-<li><p>保存修改到文件，然后输入任意字符：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwwuohw0dj30ca0i4mxh.jpg" alt="成功"></p>
-<p>成功的弹窗是 Yes? Thanks?</p>
-</li>
-</ol>
-</li>
-</ul>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>逆向分析</category>
-        <category>Windows</category>
-        <category>VB 汇总</category>
-      </categories>
-      <tags>
-        <tag>VB 调试</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>修复 IAT 之初探</title>
-    <url>/posts/452711586/</url>
-    <content><![CDATA[<blockquote>
-<p>之前尝试了手动修复 IAT，了解修复的原理后，本次记录使用工具修复的过程；</p>
-</blockquote>
-<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-7">UnPackMe</a>来自互联网，仅供学习使用；</li>
-<li>加壳工具为<a href="https://upx.github.io/">UPX</a>，感谢 🙏 开源；</li>
-<li>Dump 工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-3">PETools</a>，来自互联网；</li>
-<li>IAT 重建工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-4">ImportREC</a>，来自互联网；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
-</ul>
-<h4 id="操作流程"><a href="#操作流程" class="headerlink" title="操作流程"></a>操作流程</h4><ol>
-<li><p>使用 UPX 加密 CM，然后导入 OD；</p>
-</li>
-<li><p>使用栈平衡法定位并跳转至 OEP，接下来在操作过程中不能关闭 OD 且程序需停留在 OEP 位置；</p>
-</li>
-<li><p>打开 PETools，将内存数据 Dump 出来并保存至可执行文件：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzu6nvencj31500u0tbv.jpg" alt="PETools"></p>
-<p>默认保存为 dumped.exe；</p>
-</li>
-<li><p>打开 ImportREC 选择 CM 进程：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzuc3dogbj30wm0omgmq.jpg" alt="选择 CM 进程"></p>
-<p>选择后，日志窗口会提示关联模块获取完成：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzudwpewvj30wo0omwfh.jpg" alt="关联模块获取"></p>
-<p>然后在下方填写 dumped.exe 程序 OEP 的 RVA，以及 IAT 的起始位置（RVA）和尺寸：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzuqyt15wj31e40u00yt.jpg" alt="计算 RVA"></p>
-<p>根据 VA 和 RVA 的转换公式计算如下（注意都是 16 进制哦）：</p>
-<p>OEP 的 RVA = 401000 - 400000 = 1000；</p>
-<p>IAT 的 RVA = 403184 - 400000 = 3184；</p>
-<p>IAT 的 Size = 40328C - 403184 = 108；</p>
-<p>填写 ImportREC 的选项：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzux3fy14j310u0ou75d.jpg" alt="填写 ImportREC"></p>
-<p>然后点击<code>Get Imports</code>，开始获取输入表的内容：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzv149j6vj30wi0oqgn3.jpg" alt="获取内容"></p>
-<p>获取完成后，需要检查获取的数据是否有效，如果 valid 为 NO，需要手动检查是否为无用信息，否则需要修正后重新获取（当前不涉及重定向）；</p>
-<p>接着点击<code>Fix Dump</code>选项，在弹出窗口选择 dumped.exe，用于修复；</p>
-</li>
-<li><p>修复后的程序可以正常运行，但导入 OD 后依然会提示入口点超出代码段范围：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzv6dfug9j313m06sjrl.jpg" alt="入口点超出代码段范围"></p>
-<p>修改代码段的起始地址（RVA）即可：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzvbrofegj31dm0u0gp3.jpg" alt="修改代码段的起始地址"></p>
-<p>然后选中修改并保存到可执行文件，完工！</p>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>脱壳技术</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>IAT</tag>
-        <tag>UPX</tag>
       </tags>
   </entry>
   <entry>
@@ -1927,6 +1651,123 @@
 <p>接着，运行保存的文件：</p>
 <p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmxpknxv21j30nc0m2n0o.jpg" alt="reverse"></p>
 <p>直接出现程序主窗体，NAG 窗口被去除；</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>逆向分析</category>
+        <category>Windows</category>
+        <category>VB 汇总</category>
+      </categories>
+      <tags>
+        <tag>VB 调试</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>VB 调试之分析 N-Code（一）</title>
+    <url>/posts/1203909517/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-5">OllyDbg</a>修改版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-17">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
+</ul>
+<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
+<li><p>首先运行软件，了解一下程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwwx2zk5ij30cg0j474t.jpg" alt="运行程序"></p>
+<p>O, No!</p>
+<ul>
+<li><p>首先是一个<code>NAG 窗口</code>:</p>
+<blockquote>
+<p><code>NAG 窗口</code>：软件未注册或软件的试用版经常会弹出一些提示窗口要求注册，这些窗口被称为 nag 窗口，也叫烦人的窗口；</p>
+</blockquote>
+</li>
+<li><p>然后才是软件窗口，要求输入注册码；</p>
+</li>
+<li><p>输入随机字符点击 OK，一个奇怪的弹窗，应该是 No? Thanks?</p>
+</li>
+</ul>
+</li>
+<li><p>将<code>CrackMe</code>倒入<code>OD</code>，开始分析：</p>
+<ul>
+<li><p>首先，第一件事儿是去掉<code>烦人的窗口</code>：</p>
+<p>既然是弹窗，那么它肯定调用了<code>MessageBox</code>这个 API，不过，VB 有专有的 API <code>rtcMsgBox</code>：调用一个消息框，类似于 Windows 里的 MessageBox/A/EXA，此之前一定有个 PUSH 命令将要在消息框中显示的数据压入椎栈；</p>
+<ol>
+<li><p>既然已经知道了它调用的 API，那还等什么，给<code>rtcMsgBox</code>设置断点：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwf5ajmbfj319x0u0ado.jpg" alt="设置断点"></p>
+<p>按下<code>Ctrl + G</code>输入<code>rtcMsgBox</code>，然后点击确定，程序会跳转到<code>rtcMsgBox</code>函数的行首，然后双击该行设置断点，并做好备注；</p>
+</li>
+<li><p>设置好断点后，<code>F9</code>运行程序，程序会中断在断点位置，然后在<code>堆栈窗口</code>跟踪调用位置：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwfej14e2j31a10u0787.jpg" alt="反汇编窗口中跟随"></p>
+</li>
+<li><p>来到<code>反汇编窗口</code>，这个时候函数<code>rtcMsgBox</code>已经调用完成，既然找到了调用位置，那怎么能去掉<code>烦人的窗口</code>呢？</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwrwzbi2mj31a40u0q74.jpg" alt="返回位置"></p>
+<p>设置好断点，重载并运行程序后，程序中断在预先设置好的断点位置，而下面一行的<code>CALL</code>就是调用<code>rtcMsgBox</code>的位置，如果把这个调用<code>NOP</code>了，是不是就没有<code>NAG 窗口</code>了，听起来蛮靠谱，试一试：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmws2k2c0gj31a00u0adj.jpg" alt="NOP"></p>
+</li>
+<li><p><code>NOP</code>了调用<code>rtcMsgBox</code>的<code>CALL</code>后，继续运行程序，但并没有按照预期显示程序主窗口，而是程序结束了，这是怎么回事儿呢？</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmws7fd2l7j319y0u0jus.jpg" alt="程序终止了"></p>
+<p>按下<code>-</code>减号键，返回上层位置，把修改的内容保存下来试试：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwszp7i1mj31c90u0ag0.jpg" alt="保存到文件"></p>
+<p>双击运行保存的程序，没有任何反应，em ～～ 看来程序被玩坏了，此路不通；</p>
+</li>
+<li><p>重载并运行程序，重新来到<code>反汇编窗口</code>，既然把直接调用函数<code>NOP</code>了不行，那就只能继续运行程序，看看它的上一级调用：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwtwz0lpqj319u0u0gq0.jpg" alt="上级调用"></p>
+<p>来到上级调用的返回位置，上一行的<code>CALl</code>就是刚才整段代码的调用位置，如果把这个<code>CALl</code>干掉，那么弹窗也就没有了，试一试，但愿程序不被玩儿坏；</p>
+<p>在这个<code>CALl</code>的参数的上一行设置断点，重载并运行程序；</p>
+</li>
+<li><p>程序中断在预定位置，选择下面<code>CALl</code>和它的参数用<code>NOP</code>填充：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwu4tmu4yj319x0u0789.jpg" alt="用NOP填充"></p>
+</li>
+<li><p>继续运行程序，啊哈，期待已久的程序主窗口终于出现了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwu6csc67j319y0u0adb.jpg" alt="程序主窗口"></p>
+<p>主程序出现，说明这个方法可行；</p>
+</li>
+<li><p>为了后面找码方便，把修改后的程序另存为一个新的程序：终于要和<code>烦人的窗口</code>说拜拜了，至于保存的方法，上面已经说明，不再赘述；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwue6f08gj30fa0hyglz.jpg" alt="NoNAG"></p>
+<p>运行修改的程序，嗯，没有<code>NAG 窗口</code>，直接出现程序主窗体，一切 OK；</p>
+</li>
+</ol>
+</li>
+<li><p>搞定<code>NAG 窗口</code>后，是时候寻找一下注册码了：</p>
+<ol>
+<li><p>把修改后的程序倒入<code>OD</code>，然后运行程序，主窗体出现：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwujt8bmmj31a10u0whn.jpg" alt="运行修改程序"></p>
+</li>
+<li><p>输入随机注册码，但不要点 OK，但不要点 OK，但不要点 OK，重要的事情说三遍：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwunevjelj31a90u0419.jpg" alt="内存访问断点"></p>
+<p>接着到<code>内存窗口</code>，在<code>CODE 段</code>设置<code>内存访问断点</code>，然后到程序中点击 OK；</p>
+</li>
+<li><p>点击 OK 后，程序中断：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwuq1qlscj31a70u0dj1.jpg" alt="程序中断"></p>
+<p>这里的代码看不大懂，不过没关系，也没有找到需要的信息；</p>
+</li>
+<li><p>继续运行程序，直到看到了随机输入的注册码和字符串比较函数：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwuupo64mj319x0u0wi4.jpg" alt="字符串比较"></p>
+<p>随机输入的字符作为字符串比较函数的参数，那另一个参数毋庸置疑，肯定是真实的注册码；</p>
+</li>
+<li><p>不过遗憾的是，由于这个软件是西欧字符软件，好多字符无法正确显示，找到了真实的注册码也无法输入，复制也不行，因为系统字符集中没有某些字符：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwv3kqadtj319w0u0jxi.jpg" alt="字符集"></p>
+</li>
+<li><p>既然无法输入真实注册码，那就只能让任意字符成为注册码了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwvbq3c94j319r0u0wif.jpg" alt="比较不成立"></p>
+<p>首先，字符串比较函数的返回结果非 0，说明两个参数不相等，继续向下分析；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmww36rsqtj319z0u0jwe.jpg" alt="向下分析"></p>
+<p>把比较的结果从 EAX 拷贝到 EDI 中，然后进行了一系列的操作，然而，如果 EDI 为 0，则这些操作没有任何意义，至于中间夹杂的其他操作可以忽略了，因为没有涉及到 EDI：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmww36rsqtj319z0u0jwe.jpg" alt="操作 EDI"></p>
+<p>这里有一个 JE 跳转，上一行代码是<code>TEST DI, DI</code>，如果 EDI 自身为 0，则<code>TEST DI, DI</code>影响 ZF 标志位，ZF 置 1，反之为 0，而恰恰 JE 根据 ZF 标志位跳转，可以看到，程序运行到了这里，ZF 依然为 0，则间接说明了输入的注册码不正确；</p>
+<p>既然这个跳转根据比较的结果进行跳转，那就可以确定它是关键跳，如果将 JE 修改为 JMP，是否就能满足<code>让任意字符成为注册码</code>？值得一试：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwwqklr2hj319v0u0jv1.jpg" alt="修改为 JMP"></p>
+<p>修改 JE 为 JMP 后，取消内存访问断点，然后<code>F9</code>运行程序，It’s OK，终于看到了成功弹窗，不过由于字符集的原因，部分字符无法显示；</p>
+</li>
+<li><p>保存修改到文件，然后输入任意字符：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwwuohw0dj30ca0i4mxh.jpg" alt="成功"></p>
+<p>成功的弹窗是 Yes? Thanks?</p>
+</li>
+</ol>
+</li>
+</ul>
 </li>
 </ol>
 ]]></content>
@@ -2272,6 +2113,232 @@
       </tags>
   </entry>
   <entry>
+    <title>VB 调试之分析 N-Code（二）</title>
+    <url>/posts/3794155287/</url>
+    <content><![CDATA[<blockquote>
+<p>之前分析过这个 CrackMe（参见：VB 调试之分析 N-Code（一）），需要借助修改版的 OD 才能去除 NAG 窗口，在阅读<a href="https://reversecore.com/">逆向工程核心原理</a>一书后，学到了一种新的技巧，记录下来；</p>
+</blockquote>
+<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-21">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
+</ul>
+<span id="more"></span>
+
+<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
+<li><p>将<code>CrackMe</code>倒入<code>OD</code>，查找<code>rtcMsgBox</code>并设置断点：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpdqgghp6j31b80u0jun.jpg" alt="查找"><br><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpdsakoemj31b40u0jv4.jpg" alt="设置断点"></p>
+</li>
+<li><p>然后<code>F9</code>运行程序，程序会中断在调用位置，与直接给 API 设置的断点不同，这样设置的断点会中断在调用位置，而给 API 设置的断点会中断在<code>rtcMsgBox</code>函数的行首：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpdxeqg7cj31b20u0n0o.jpg" alt="调用位置"></p>
+</li>
+<li><p>向上滚动代码，找到函数栈帧，然后设置断点：</p>
+<p>至于什么是栈帧？</p>
+<p>ESP 始终指向栈的顶端，程序运行中，ESP 寄存器的值随时变化，访问栈中函数的局部变量、参数时，若以 ESP 的值为基准会十分困难，使 CPU 很难引用到准确的位置；</p>
+<p>所以，调用函数时，先要把作为基准点（函数起始地址）的 ESP 值保存到 EBP，并维持在函数内部，这样，无论 ESP 如何变化，以 EBP 的值为基准总是能够安全的访问到相关函数的局部变量、参数、返回地址，这就是栈帧；</p>
+<p>也就是说，ESP 寄存器承担着栈顶指针的作用，而 EBP 寄存器则负责行使栈帧指针的职能；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpedvtcsej31b40u0tcb.jpg" alt="函数栈帧"></p>
+</li>
+<li><p>取消其它断点，重载并运行程序，程序会在断点处中断：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpeifwm5kj31b40u078b.jpg" alt="断点处中断"></p>
+<p>然后在<code>堆栈窗口</code>选择<code>反汇编窗口中跟随</code>到调用位置；</p>
+</li>
+<li><p>给调用位置和返回位置设置<code>F2</code>断点并取消其它断点：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpemqmyx6j31b40u0q6s.jpg" alt="设置两个断点"></p>
+</li>
+<li><p>重载并运行程序，程序中断在调用位置设置的断点处：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpepoqti8j31b40u078f.jpg" alt="调用位置栈顶指针"></p>
+<p>记录调用位置栈顶指针的地址；</p>
+</li>
+<li><p><code>F9</code>运行程序，NAG 窗口弹出，点击确定，程序中断在函数的返回位置：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpeuabiakj31au0u0wil.jpg" alt="返回位置栈顶指针"></p>
+<p>记录返回位置栈顶指针的地址；</p>
+</li>
+<li><p>用返回位置的栈顶指针也就是 ESP 的值减去调用位置 ESP 的值；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpey3glw9j30pk0go0tj.jpg" alt="ESP相减"></p>
+<p>以图为例：<code>0012FA10 - 0012FA08 = 8(16 进制)</code>，是不是可以这么理解：在调用函数中使用了 8 个字节的栈内存；</p>
+</li>
+<li><p>Win32 API 使用的函数调用约定是 stdcall 方式，这种方式的栈内存由被调用者清理，在这里就是由被调用的函数清理，如果在函数的起始位置直接清理栈内存，函数就不会被执行，也就不会弹出 NAG 窗口了；</p>
+<p>函数调用约定参见：寄存器小记</p>
+</li>
+<li><p>重载并运行程序，程序中断在调用位置，<code>F7</code>单步步入到函数内部：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpfnfbtjvj31b50u0wik.jpg" alt="再次中断"></p>
+<p>然后来到了 VB 程序类似于交通枢纽的位置，继续<code>F7</code>，跳转到创建 NAG 窗口的函数内部；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpfqj3wzxj31b60u0juw.jpg" alt="交通枢纽"></p>
+<p>创建 NAG 窗口的函数：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpfuhpl8ij31b70u041w.jpg" alt="创建 NAG 窗口的函数"></p>
+<p>咦，好眼熟啊，是的，这里就是设置程序第 1 个断点的函数，调用<code>rtcMsgBox</code>的函数；</p>
+</li>
+<li><p>之前的步骤终于派上用场了，根据计算，调用创建 NAG 窗口的函数会使用 8 个字节的栈内存，所以，修改函数的行首，清理栈内存：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpg1bxiquj31b40u0q6s.jpg" alt="清理栈内存"></p>
+<p>然后运行程序，没有 NAG 窗口，直接弹出程序主窗体；</p>
+</li>
+<li><p>保存修改到可执行文件，然后运行程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpg54qpa0j30f00eut95.jpg" alt="运行程序"></p>
+</li>
+<li><p>将修改后的 CrackMe 倒入<code>OD</code>，开始处理序列号的问题，然后发现，给<code>rtcMsgBox</code>设置断点后，程序并不会中断，怎么办？</p>
+<p>既然程序在输入错误的序列号后会弹出错误弹窗，那么程序内部肯定验证了序列号，那就查找关于字符串比较的函数：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpghdpk83j31b80u0adv.jpg" alt="vbastrcmp"></p>
+<p>找到<code>__vbaStrCmp</code>并设置断点，然后<code>F9</code>运行程序；</p>
+</li>
+<li><p>程序中断在调用<code>__vbaStrCmp</code>的位置，然后，在 EAX 中发现了输入的随机序列号：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpgllvlhaj31bk0u0787.jpg" alt="发现序列号"></p>
+<p>既然 EAX 是第 2 参数，那么 ECX 中存放的就是第 1 参数，可能就是真正的序列号；</p>
+</li>
+<li><p>数据窗口中跟随 ECX 后发现，西欧文字系统无法显示，就是一堆乱码，既然真实注册码无法使用，那有没有可能让任意字符成为注册码，继续向下分析：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnphe6x02uj31ba0u0q7k.jpg" alt="返回非0"></p>
+<p>首先，向下执行一行代码后，EAX 为非 0 值，这里使用的是<code>__vbaStrCmp</code>，所以非 0 说明不相等；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnphegy116j31bd0u0781.jpg" alt="操作EDI"></p>
+<p>接着，把返回值拷贝到 EDI 中，进行了一系列操作后，来到了一个跳转，这就很可疑了；</p>
+<p>这里对 EDI 进行的一系列操作，如果 EDI 为 0，则没有任何影响，最后的结果是跳转实现，但随机注册码和指定字符串比较，结果肯定不为 0，最终的结果是跳转失败；</p>
+<p>按照这个逻辑来推断，这个跳转应该是关键跳转，如何证明呢？修改<code>JE</code>为<code>JMP</code>，然后运行程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnphla0vxzj31b20u0jvy.jpg" alt="正确弹窗"></p>
+<p>修改<code>JE</code>为<code>JMP</code>并运行程序后，弹出提示序列号正确的弹窗，至于为什么这是正确的弹窗，很简单，因为它和错误弹窗不一样；</p>
+</li>
+<li><p>保存修改到可执行程序，然后运行程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnphohcvjij30si0cudgg.jpg" alt="成功了"></p>
+<p>输入任意字符，点击 OK 后，弹出成功弹窗，结束！</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>逆向分析</category>
+        <category>Windows</category>
+        <category>VB 汇总</category>
+      </categories>
+      <tags>
+        <tag>VB 调试</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>修复 IAT 之初探</title>
+    <url>/posts/452711586/</url>
+    <content><![CDATA[<blockquote>
+<p>之前尝试了手动修复 IAT，了解修复的原理后，本次记录使用工具修复的过程；</p>
+</blockquote>
+<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-7">UnPackMe</a>来自互联网，仅供学习使用；</li>
+<li>加壳工具为<a href="https://upx.github.io/">UPX</a>，感谢 🙏 开源；</li>
+<li>Dump 工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-3">PETools</a>，来自互联网；</li>
+<li>IAT 重建工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-4">ImportREC</a>，来自互联网；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
+</ul>
+<h4 id="操作流程"><a href="#操作流程" class="headerlink" title="操作流程"></a>操作流程</h4><ol>
+<li><p>使用 UPX 加密 CM，然后导入 OD；</p>
+</li>
+<li><p>使用栈平衡法定位并跳转至 OEP，接下来在操作过程中不能关闭 OD 且程序需停留在 OEP 位置；</p>
+</li>
+<li><p>打开 PETools，将内存数据 Dump 出来并保存至可执行文件：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzu6nvencj31500u0tbv.jpg" alt="PETools"></p>
+<p>默认保存为 dumped.exe；</p>
+</li>
+<li><p>打开 ImportREC 选择 CM 进程：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzuc3dogbj30wm0omgmq.jpg" alt="选择 CM 进程"></p>
+<p>选择后，日志窗口会提示关联模块获取完成：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzudwpewvj30wo0omwfh.jpg" alt="关联模块获取"></p>
+<p>然后在下方填写 dumped.exe 程序 OEP 的 RVA，以及 IAT 的起始位置（RVA）和尺寸：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzuqyt15wj31e40u00yt.jpg" alt="计算 RVA"></p>
+<p>根据 VA 和 RVA 的转换公式计算如下（注意都是 16 进制哦）：</p>
+<p>OEP 的 RVA = 401000 - 400000 = 1000；</p>
+<p>IAT 的 RVA = 403184 - 400000 = 3184；</p>
+<p>IAT 的 Size = 40328C - 403184 = 108；</p>
+<p>填写 ImportREC 的选项：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzux3fy14j310u0ou75d.jpg" alt="填写 ImportREC"></p>
+<p>然后点击<code>Get Imports</code>，开始获取输入表的内容：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzv149j6vj30wi0oqgn3.jpg" alt="获取内容"></p>
+<p>获取完成后，需要检查获取的数据是否有效，如果 valid 为 NO，需要手动检查是否为无用信息，否则需要修正后重新获取（当前不涉及重定向）；</p>
+<p>接着点击<code>Fix Dump</code>选项，在弹出窗口选择 dumped.exe，用于修复；</p>
+</li>
+<li><p>修复后的程序可以正常运行，但导入 OD 后依然会提示入口点超出代码段范围：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzv6dfug9j313m06sjrl.jpg" alt="入口点超出代码段范围"></p>
+<p>修改代码段的起始地址（RVA）即可：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzvbrofegj31dm0u0gp3.jpg" alt="修改代码段的起始地址"></p>
+<p>然后选中修改并保存到可执行文件，完工！</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>脱壳技术</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>UPX</tag>
+        <tag>IAT</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>修复 IAT 之剔除无用数据</title>
+    <url>/posts/1928138386/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/UnPackMe-3">UnPackMe</a>来自互联网，仅供学习使用；</li>
+<li>Dump 工具为 OD 插件 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Plugin-1">OllyDump</a>，来自互联网；</li>
+<li>IAT 重建工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-4">ImportREC</a>，来自互联网；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
+</ul>
+<h4 id="操作流程"><a href="#操作流程" class="headerlink" title="操作流程"></a>操作流程</h4><p>Import REConstructor（简称 ImportREC）是目前最好用的输入表重建工具，它可以从杂乱的 IAT 中重建一个输入表；</p>
+<p>要运行 ImportREC，必须满足以下条件：</p>
+<ul>
+<li>目标文件已完全被 Dump 并保存为另外一个文件；</li>
+<li>目标文件必须正在运行；</li>
+<li>事先找到目标程序真正的 OEP 或知晓 IAT 的偏移量和大小；</li>
+</ul>
+<ol>
+<li><p>将 CM 导入 OD，使用栈平衡法找到 OEP，并停留在 OEP（目标文件必须正在运行）；</p>
+</li>
+<li><p>使用 OllyDump 将内存数据 Dump 出来并保存至可执行文件（目标文件已完全被 Dump 并保存为另外一个文件）：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0n79lxu4j31dt0u0jvk.jpg" alt="OllyDump"></p>
+<p>在插件菜单选择 OllyDump 或右键菜单选择转存调试的进程都可以，然后确认 Dump 选项：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0n2xcja2j31e00u0djx.jpg" alt="Dump"></p>
+<p>插件 Dump 数据方面没有问题，但重建 IAT 功能不够强大，因此，取消勾选重建输入表选项；</p>
+</li>
+<li><p>在 OD 中定位到 IAT，查看起始 RVA 以及结束 RVA，计算 Size：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0nfnw56mj310w0o8ta0.jpg" alt="Size"></p>
+<p>在输入表中，一个 DLl 对应于一份 IAT，多个 IAT 之间一般以一个 DWORD 的 0 隔开；</p>
+<p>此处 CM 的 IAT 之间被添加了无效信息；</p>
+</li>
+<li><p>用 ImportREC 打开 CM 进程，填写 OEP（RVA）以及 IAT 的起始地址（RVA）和大小，然后点击获取：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0no2nckij30we0oojsj.jpg" alt="ImportREC"></p>
+<p>获取输入表后，可以看到有一组<code>valid：NO</code>的数据，这就是两个 IAT 之间的无效信息：</p>
+<p>确认是无效信息后，在无效信息上右键菜单执行“Cut thunk(s)”命令：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0nzzqto3j31e10u0aeq.jpg" alt="Cut thunk(s)"></p>
+<p>剔除无效信息后，数据还是不正确：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0o4b5w5kj31dy0u078u.jpg" alt="数据还是不正确"></p>
+<p>因为 CM 中调用了 3 个 DLL，分别是 user32.dll、kernel32.dll 以及 ntdll.dll；</p>
+<p>而 ImportREC 只找到了两个，看来这玩意儿也不好使啊；</p>
+<p>NoNoNo，它找到了三个，但因为 ntdll 中的 API 混合在 kernel32 的 API 中，所以被替换了，看 log 窗口的提示信息；</p>
+<p>此时如果直接修复 dump.exe，在当前环境（xp）下是可以运行的，但可能会在其它 OS 中遇到兼容性问题；</p>
+<p>所以还需要修复 API：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0olk6qhmj31lk0qu0v8.jpg" alt="修复"></p>
+<p>在获取的信息中，双击对应的 API，在弹出的函数编辑框中修改对应的 DLL 名称和 API 名称；</p>
+<ul>
+<li>查看 RVA 来获取对应的函数比较直观，如：00001200 和 00001210；</li>
+<li>双击函数行打开函数编辑框；</li>
+<li>在编辑框中首先选择 DLL 名称，然后可以在下面的输入框中搜索指定的函数名，接着选择函数，点击 OK 确认修改；</li>
+<li>修改完成后，依然显示的是未修改的状态，但修复程序后，显示已修改；</li>
+</ul>
+<p>修改完成后，点击<code>Fix Dump</code>，选择需要修复的程序，完成修复：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0p1ijxbfj31e20u0ada.jpg" alt="完成修复"></p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>脱壳技术</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>IAT</tag>
+        <tag>ASPack</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>修复 IAT 重定向（二）</title>
     <url>/posts/3434170335/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -2469,73 +2536,6 @@
       </tags>
   </entry>
   <entry>
-    <title>修复 IAT 之剔除无用数据</title>
-    <url>/posts/1928138386/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/UnPackMe-3">UnPackMe</a>来自互联网，仅供学习使用；</li>
-<li>Dump 工具为 OD 插件 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Plugin-1">OllyDump</a>，来自互联网；</li>
-<li>IAT 重建工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-4">ImportREC</a>，来自互联网；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
-</ul>
-<h4 id="操作流程"><a href="#操作流程" class="headerlink" title="操作流程"></a>操作流程</h4><p>Import REConstructor（简称 ImportREC）是目前最好用的输入表重建工具，它可以从杂乱的 IAT 中重建一个输入表；</p>
-<p>要运行 ImportREC，必须满足以下条件：</p>
-<ul>
-<li>目标文件已完全被 Dump 并保存为另外一个文件；</li>
-<li>目标文件必须正在运行；</li>
-<li>事先找到目标程序真正的 OEP 或知晓 IAT 的偏移量和大小；</li>
-</ul>
-<ol>
-<li><p>将 CM 导入 OD，使用栈平衡法找到 OEP，并停留在 OEP（目标文件必须正在运行）；</p>
-</li>
-<li><p>使用 OllyDump 将内存数据 Dump 出来并保存至可执行文件（目标文件已完全被 Dump 并保存为另外一个文件）：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0n79lxu4j31dt0u0jvk.jpg" alt="OllyDump"></p>
-<p>在插件菜单选择 OllyDump 或右键菜单选择转存调试的进程都可以，然后确认 Dump 选项：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0n2xcja2j31e00u0djx.jpg" alt="Dump"></p>
-<p>插件 Dump 数据方面没有问题，但重建 IAT 功能不够强大，因此，取消勾选重建输入表选项；</p>
-</li>
-<li><p>在 OD 中定位到 IAT，查看起始 RVA 以及结束 RVA，计算 Size：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0nfnw56mj310w0o8ta0.jpg" alt="Size"></p>
-<p>在输入表中，一个 DLl 对应于一份 IAT，多个 IAT 之间一般以一个 DWORD 的 0 隔开；</p>
-<p>此处 CM 的 IAT 之间被添加了无效信息；</p>
-</li>
-<li><p>用 ImportREC 打开 CM 进程，填写 OEP（RVA）以及 IAT 的起始地址（RVA）和大小，然后点击获取：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0no2nckij30we0oojsj.jpg" alt="ImportREC"></p>
-<p>获取输入表后，可以看到有一组<code>valid：NO</code>的数据，这就是两个 IAT 之间的无效信息：</p>
-<p>确认是无效信息后，在无效信息上右键菜单执行“Cut thunk(s)”命令：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0nzzqto3j31e10u0aeq.jpg" alt="Cut thunk(s)"></p>
-<p>剔除无效信息后，数据还是不正确：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0o4b5w5kj31dy0u078u.jpg" alt="数据还是不正确"></p>
-<p>因为 CM 中调用了 3 个 DLL，分别是 user32.dll、kernel32.dll 以及 ntdll.dll；</p>
-<p>而 ImportREC 只找到了两个，看来这玩意儿也不好使啊；</p>
-<p>NoNoNo，它找到了三个，但因为 ntdll 中的 API 混合在 kernel32 的 API 中，所以被替换了，看 log 窗口的提示信息；</p>
-<p>此时如果直接修复 dump.exe，在当前环境（xp）下是可以运行的，但可能会在其它 OS 中遇到兼容性问题；</p>
-<p>所以还需要修复 API：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0olk6qhmj31lk0qu0v8.jpg" alt="修复"></p>
-<p>在获取的信息中，双击对应的 API，在弹出的函数编辑框中修改对应的 DLL 名称和 API 名称；</p>
-<ul>
-<li>查看 RVA 来获取对应的函数比较直观，如：00001200 和 00001210；</li>
-<li>双击函数行打开函数编辑框；</li>
-<li>在编辑框中首先选择 DLL 名称，然后可以在下面的输入框中搜索指定的函数名，接着选择函数，点击 OK 确认修改；</li>
-<li>修改完成后，依然显示的是未修改的状态，但修复程序后，显示已修改；</li>
-</ul>
-<p>修改完成后，点击<code>Fix Dump</code>，选择需要修复的程序，完成修复：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0p1ijxbfj31e20u0ada.jpg" alt="完成修复"></p>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>脱壳技术</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>IAT</tag>
-        <tag>ASPack</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>内存访问定位 OEP</title>
     <url>/posts/3449356463/</url>
     <content><![CDATA[<blockquote>
@@ -2604,6 +2604,119 @@
       </tags>
   </entry>
   <entry>
+    <title>基址重定位</title>
+    <url>/posts/4077178284/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li>PE 查看工具为<a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-2">LoadPE</a>，来自互联网；</li>
+<li><code>WinHex</code>来自互联网；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
+</ul>
+<span id="more"></span>
+
+<h4 id="基址重定位的概念"><a href="#基址重定位的概念" class="headerlink" title="基址重定位的概念"></a>基址重定位的概念</h4><blockquote>
+<p>基址重定位是指 PE 文件无法加载到 ImageBase 所指的位置，而是被加载到其它地址时所发生的一系列的处理行为；</p>
+</blockquote>
+<p>当链接器生成 PE 文件时，会假设这个文件在执行时会被装载到默认的基地址处，即 ImageBase 所指的地址处；</p>
+<p>如果载入时将 ImageBase 默认的值作为基地址写入，则不需要重定位；</p>
+<p>如果载入时 PE 文件被装载到虚拟内存的另一个地址中，此时，链接器登记的地址就是错误的，这时就需要用重定位表来调整；</p>
+<p>在 PE 文件中，重地位表往往单独作为一块，用<code>.reloc</code>表示；</p>
+<p>对 EXE 文件来说，每个文件总是使用独立的虚拟地址空间，且创建好线程后，EXE 文件会首先加载到内存，所以 EXE 总是能够按照基址载入，这意味着 EXE 文件无需考虑重定位的问题（不需要重定位信息）；</p>
+<p>对 DLL 文件来说，因为多个 DLL 文件使用宿主 EXE 文件的地址空间，不能保证载入地址没有被其它 DLL 使用，所以 DLL 文件中必须包含重定位信息；</p>
+<p>但是，Windows Vista 之后的版本引入了 ASLR 安全机制，每次运行 EXE 文件都会被加载到随机地址，这样大大增强了系统安全性；</p>
+<p>ASLR 机制也适用于 DLL/SYS 文件，对于各 OS 的主要系统 DLL，根据不同版本会分别赋予不同的 ImageBase 地址；</p>
+<h5 id="ASLR"><a href="#ASLR" class="headerlink" title="ASLR"></a>ASLR</h5><p>ASLR（Address Space Layout Randomization，地址空间布局随机化）是一种针对缓冲区溢出的安全保护技术，微软从 Windows Vista 开始采用该技术；</p>
+<p>在以前的 OS 中，根据 OS 版本的不同，特定 DLL 总是会加载到固定地址，所以大部分安全漏洞（一般为内存缓冲区溢出）只出现在特定 OS、特定模块、特定版本中，漏洞利用代码（exploit code）会在特定内存地址中以硬编码形式编入，因此，微软采用 ASLR 技术来增加恶意用户编写漏洞利用代码的难度，从而降低利用 OS 安全漏洞破坏系统的风险；</p>
+<p>借助 ASLR 技术，PE 文件每次加载到内存中的起始地址都会随机变化，并且每次运行程序时相应进程的栈以及堆的起始地址也会随机变化，也就是说，每次 EXE 文件运行时加载到进程内存的实际地址都不同，最初加载 DLL 文件时装载到内存中的实际地址也是不同的；</p>
+<p>但是，并不是所有可执行文件都会自动应用 ASLR 技术，要应用 ASLR 技术，必须满足两个条件：</p>
+<ul>
+<li>OS 的内核版本必须为 6 以上，即系统版本不低于 Windows Vista（Kernel Version 6）；</li>
+<li>使用的编程工具要支持 /DYNAMICBASE 选项；</li>
+</ul>
+<p>应用 ASLR 技术的 PE 文件会增加 1 个名为<code>.reloc</code>的节区，它是编译时由编译器生成并保留在可执行文件中的，PE 文件被加载到内存时，该节区被用作重定位的参考，它不是 EXE 文件运行时的必须部分，可以从 PE 文件中删除，但是，由于 DLL 文件总是需要重定位，所以在 DLL 文件中不可将其删除；</p>
+<p>应用 ASLR 技术的 PE 文件，其 IMAGE_FILE_HEADER（映像文件头）结构中的 Characteristics 字段将缺少 IMAGE_FILE_RELOCS_STRIPPED 标志（特征值为：0001），但 NumberOfSections 字段会增加 1；</p>
+<p>应用 ASLR 技术的 PE 文件，其 IMAGE_OPTIONAL_HEADER（可选映像头）结构中的 DllCharacteristics 字段会设置 IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE（特征值为：0040）标志；</p>
+<p>若要删除 ASLR 功能，只需将 DllCharacteristics 字段设置的 IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE（特征值为：0040）标志置 0 即可；</p>
+<h5 id="基址重定位的处理"><a href="#基址重定位的处理" class="headerlink" title="基址重定位的处理"></a>基址重定位的处理</h5><p>PE 格式不参考外部 DLL 或模块中的其它区块，而是把文件中所有可能需要修正的地址放在一个数组中；</p>
+<p>如果 PE 文件不在首选的地址载入，那么文件中的每个定位都需要被修正；</p>
+<p>对加载器来说，它不需要知道关于地址使用的任何细节，只要知道有一系列的数据需要以某种一致的方式来修正就可以了；</p>
+<h4 id="基址重定位表"><a href="#基址重定位表" class="headerlink" title="基址重定位表"></a>基址重定位表</h4><p>基址重定位表（Base Relocation Table）位于一个<code>.reloc</code>区块内，基址重定位表地址位于 PE 头的 DataDirectory 数组的第 6 个元素（索引为 5），即 IMAGE_DIRECTORY_ENTRY_BASERELOC(IMAGE_NT_HEADERS/IMAGE_OPTIONAL_HEADER/IMAGE_DATA_DIRECTORY[5])条目；</p>
+<p>基址重定位数据采用类似按页分割的方法组织，是由许多重定位块串接而成的；</p>
+<p>每个块存放 4KB（1000）的重定位信息，每个重定位数据块的大小必须以 DWORD（4 字节）对齐；</p>
+<p>基址重定位表是 IMAGE_BASE_RELOCATION 结构体数组；</p>
+<p>IMAGE_BASE_RELOCATION 结构如下：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">IMAGE_BASE_RELOCATION STRUCT</span><br><span class="line">    VirtualAddress      DWORD   ?   ;重定位数据的开始 RVA 地址</span><br><span class="line">    SizeOfBlock         DWORD   ?   ;重定位数据块的尺寸</span><br><span class="line">    TypeOffset          WORD    ?   ;重定位项数组</span><br><span class="line">IMAGE_BASE_RELOCATION ENDS</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>VirtualAddress：这组重定位数据的起始 RVA 地址，各重定位项的地址加上这个值才是该重定位项的完整 RVA 地址；</li>
+<li>SizeOfBlock：当前重定位结构的大小，因为 VirtualAddress 和 SizeOfBlock 都是固定的 4 字节，所以这个值减去 8（字节）就是 TypeOffset 数组的大小；</li>
+<li>TypeOffset：重定位项数组，数组每项大小为 2 字节，共 16 位，分为高 4 位和低 12 位；<br>高 4 位代表重定位类型，低 12 位是重定位地址，它与 VirtualAddress 相加就是指向 PE 映像中需要修改的地址数据的指针；</li>
+</ul>
+<p>常见的重定位类型：</p>
+<table>
+<thead>
+<tr>
+<th align="center">类型</th>
+<th align="center">winnt.h 中的预定义值</th>
+<th align="center">含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">0</td>
+<td align="center">IMAGE_REL_BASED_ABSOLUTE</td>
+<td align="center">没有具体含义，只是为了让每个段 4 字节对齐</td>
+</tr>
+<tr>
+<td align="center">3</td>
+<td align="center">IMAGE_REL_BASED_HIGHLOW</td>
+<td align="center">重定位指向的整个地址都需要修正，实际上大部分情况下都是这样的</td>
+</tr>
+<tr>
+<td align="center">10（A）</td>
+<td align="center">IMAGE_REL_BASED_DIR64</td>
+<td align="center">出现在 64 位 PE 文件中，对指向的整个地址进行修正</td>
+</tr>
+</tbody></table>
+<p>在一组重定位结束的地方会出现类型是 IMAGE_REL_BASED_ABSOLUTE 的重定位，这些重定位什么都不做，只是用于填充，以便下一个 IMAGE_BASE_RELOCATION 结构按 4 字节分界线对齐；<br>对于 PE 文件来说，所有的基址重定位类型都是 IMAGE_REL_BASED_HIGHLOW；<br>对于 64 位的 PE+ 文件来说，重定位类型似乎总是 IMAGE_REL_BASED_DIR64；<br>尽管 64 位的 PE+ 文件页大小是 8KB，但基址重定位仍是 4KB 的块；</p>
+<h4 id="删除-reloc节区"><a href="#删除-reloc节区" class="headerlink" title="删除.reloc节区"></a>删除<code>.reloc</code>节区</h4><ol>
+<li><p>使用 WinHex 打开程序，定位到节区头：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1goo7uawuehj318t0u0abr.jpg" alt="WinHex"></p>
+<p>节区头从文件偏移 270 处开始，到 297 处结束，节区大小为 1000，磁盘偏移为 C000；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1goo81feiycj31dg0u0q5x.jpg" alt="用 00 填充"></p>
+<p>选中节区头的全部数据，用 00 覆盖填充；</p>
+</li>
+<li><p>在 WinHex 中定位到节区起始偏移 C000，然后选中节区所有数据：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1goo947rcyvj31d60u00um.jpg" alt="选中节区所有数据"></p>
+<p>删除<code>.reloc</code>节区：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1goo98jz4lhj31dr0u0jv3.jpg" alt="删除`.reloc`节区"></p>
+<p>这样<code>.reloc</code>节区就被物理删除了，同时 PE 文件的体积也会变小；</p>
+</li>
+<li><p>由于删除了一个节区， IMAGE_FILE_HEADER 结构中表示节区数目的 NumberOfSections 字段就需要修正：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1goo9h5ch0pj31a40u0adc.jpg" alt="NumberOfSections"></p>
+</li>
+<li><p>删除<code>.reloc</code>节区后，整个映像体积随之减少了相应的大小，IMAGE_OPTIONAL_HEADER 结构中的 SizeOfImage 字段同样需要修正：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1goo9oawnrij31i80u041b.jpg" alt="SizeOfImage"></p>
+</li>
+<li><p>保存所有修改后，将程序导入 OD，观察内存映射窗口：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1goo9w7wknqj31f70u0gp6.jpg" alt="内存映射窗口"></p>
+<p>同时，使用 LoadPE 查看程序的区段信息：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gooa0nt21uj30te0pqdgs.jpg" alt="LoadPE"></p>
+<p><code>.reloc</code>区段已经被剔除了；</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>脱壳技术</category>
+        <category>文章资料</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>PE</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>壳常用函数定位 OEP</title>
     <url>/posts/1066637783/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -2664,6 +2777,92 @@
       <tags>
         <tag>OEP</tag>
         <tag>Crunch</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>壳的加载过程</title>
+    <url>/posts/1754370069/</url>
+    <content><![CDATA[<blockquote>
+<p>记录<a href="https://bbs.pediy.com/forum-99.htm">加密解密</a>一书中对<code>壳的加载过程</code>的描述，第 16 章：16.1；</p>
+<p>眼过千遍，不如手过一遍；</p>
+</blockquote>
+<span id="more"></span>
+
+<h4 id="壳的加载过程"><a href="#壳的加载过程" class="headerlink" title="壳的加载过程"></a>壳的加载过程</h4><p>加壳软件通过修改原程序执行文件的组织结构，从而使壳比原程序代码更早获得控制权，且不影响原程序的正常运行，以下是壳的常见加载过程:</p>
+<ol>
+<li><p>保存入口参数</p>
+<p>加壳程序在初始化时会保存各寄存器的值，待外壳执行完毕，再恢复各寄存器的内容，最后跳到原程序执行，通常使用 PUSHAD/PUSHFD、POPAD/POPFD 指令来保存与恢复现场；</p>
+</li>
+<li><p>获取壳本身需要使用的 API 地址</p>
+<p>在一般情况下，外壳的输入表中只有 GetProcAddress、GetModuleHandle 和 LoadLibrary 这 3 个 API 函数，甚至只有 Kernel32.dll 及 GetProcAddress；</p>
+<p>如果需要使用其它 API 函数，可以通过函数 LoadLibraryA（W）或 LoadLibraryExA（W）将 DLL 文件映像映射到调用进程的地址空间中，函数返回的 HINSTANCE 值用于标识文件映像所映射的虚拟内存地址；</p>
+<p>LoadLibrary 函数原型：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">HINSTANCE LoadLibrary(</span><br><span class="line">    LPCTSTR lpLibFileName    // DLL 文件名地址</span><br><span class="line">     );</span><br></pre></td></tr></table></figure>
+
+<p>返回值：成功则返回模块的句柄，失败返回 NULL；</p>
+<p>如果 DLL 文件已经被映射到调用进程的地址空间中，可以调用 GetModuleHandleA（W）函数获取 DLL 模块的句柄；</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">HMODULE GetModuleHandle(</span><br><span class="line">    LPCTSTR lpModuleName    // DLL 文件名地址</span><br><span class="line">     );</span><br></pre></td></tr></table></figure>
+
+<p>返回值：成功则返回模块的句柄，失败返回 NULL；</p>
+<p>一旦 DLL 模块被加载，线程就可以调用 GetProcAddress 函数获取输入函数的地址了；</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">FARPROC GetProcAddress(</span><br><span class="line">    HMODULE hModule,        // DLl 模块句柄</span><br><span class="line">    LPCSTR  lpProcName      // 函数名</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
+<p>参数 hModule 是 DLL 模块的句柄，是调用 LoadLibrary（Ex） 或 GetModuleHandle 函数的返回值；</p>
+<p>参数 lpProcName 是函数名或函数序数值，如果此参数是序数值，则必须使用低位字；高位必须为零；</p>
+<p>返回值：成功则返回函数地址，失败返回 NULL；</p>
+<p>在外壳中使用的其他函数都是由这 3 个函数调用的；</p>
+<p>有些壳为了提高强度，连系统提供的 GetProcAddress 函数都不使用，而是自己实现一个相同功能的函数来代替 GetProcAddress，从而增加函数调用的隐蔽性；</p>
+</li>
+<li><p>解密原程序各区块的数据</p>
+<p>出于保护原程序代码和数据的目的，壳一般会加密原程序文件的各个区段；</p>
+<p>在程序执行时，外壳将解密这些区段数据，从而使程序能够正常运行；</p>
+<p>壳一般是按区块加密的，所以解密时也按区块解密，并把解密的区块数据按照区块的定义放入内存中合适的位置；</p>
+</li>
+<li><p>IAT 的初始化</p>
+<p>IAT 的填写本来应该由 PE 装载器实现，但由于在加壳时构造了一个自建输入表，并让 PE 文件头数据目录表中的输入表指针指向自建输入表，PE 装载器会对自建输入表进行填写；</p>
+<p>程序的原始输入表会被外壳变形后存储，IAT 的填写会由外壳程序实现；</p>
+<p>外壳程序要做的就是将这个变形输入表的结构从头到尾扫描一遍，重新获取每个 DLL 引入的所有函数的地址，并将其填写在 IAT 中；</p>
+</li>
+<li><p>重定位项的处理</p>
+<p>文件执行时将被映射到指定内存地址中，这个初始内存地址称为基址，当然，这只是程序文件中声明的，当程序运行时，操作系统一定会满足其要求吗？</p>
+<p>对 EXE 文件来说，操作系统会尽量满足其要求，如：程序声明的基址是 400000，操作系统提供的基址也是 400000，在这种情况下就不需要基址重定位了；</p>
+<p>由于不需要对 EXE 文件进行重定位，加壳软件会删除原程序文件中用于保存重定位信息的区块，使加壳后的程序更小巧；</p>
+<p>对 DLL 的动态链接库文件来说，操作系统无法保证 DLL 每次运行时都提供相同的基址，所以重定位就很重要了；</p>
+<p>此时，壳中也要有用于重定位的代码，否则原程序将无法正常运行；</p>
+<p>所以，加壳的 DLL 比加壳的 EXE 在修正时多了一个重定位表；</p>
+</li>
+<li><p>Hook API<br>在程序文件中，输入表的作用是让 Windows 操作系统在程序运行时将 API 的实际地址提供给程序使用，在程序的第 1 行代码执行前，Windows 操作系统就完成了这项工作；</p>
+<p>壳大都在修改原程序的输入表后，自己模仿 Windows 操作系统的工作流程，向输入表中填充相关的数据，在填充过程中，外壳可以填充 Hook API 代码的地址，从而间接获得程序的控制权；</p>
+</li>
+<li><p>跳转到程序原始入口点（OEP）</p>
+<p>从这个时候起，壳就把控制权还给原程序了，一般的壳在这里会有一条明显的分界线；</p>
+<p>现在越来越多的加密壳先将 OEP 代码段搬到外壳的地址空间里，再将这段代码清除（这种技术称为“Stolen Bytes”），这样，OEP 与外壳之间那条明显的分界线就消失了，脱壳的难度也增加了；</p>
+</li>
+</ol>
+<h4 id="脱壳机"><a href="#脱壳机" class="headerlink" title="脱壳机"></a>脱壳机</h4><p>针对特定的壳开发出来的脱壳软件称为“脱壳机”；</p>
+<p>脱壳就是将加壳后的程序恢复到原来的状态，脱壳成功的标志是文件能正常运行；</p>
+<p>由于脱壳时可能没有将壳本身的代码去除，脱壳后程序的体积通常会比原程序的体积大；</p>
+<p>脱壳机一般分为专用脱壳机和通用脱壳机；</p>
+<p>专用脱壳机是针对某种壳专门编写的，只能脱特定的壳，虽然使用范围小，但效果好；</p>
+<p>通用脱壳机具有通用性，可以脱多种不同类型的壳（主要是压缩壳）；</p>
+<p>在分析一个软件前，可以使用 PEiD 确定壳的种类，再选择合适的脱壳机；</p>
+<h4 id="手动脱壳"><a href="#手动脱壳" class="headerlink" title="手动脱壳"></a>手动脱壳</h4><p>对一些加密壳或修改的壳，没有脱壳机，因此必须要分析外壳并手动脱壳；</p>
+<p>手动脱壳过程一般分为 3 步：</p>
+<ol>
+<li>查找真正的程序入口点（OEP）；</li>
+<li>抓取内存映像文件；</li>
+<li>重建 PE 文件；</li>
+</ol>
+<p>当程序执行时，外壳代码首先获得控制权，模拟 Windows 加载器，将原程序恢复到内存中，这时，内存中的数据就是加壳前的映像文件了，适时将其抓取并修改，即可还原到加壳前的状态；</p>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>脱壳技术</category>
+        <category>文章资料</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>壳基础</tag>
       </tags>
   </entry>
   <entry>
@@ -2896,84 +3095,6 @@
       </categories>
       <tags>
         <tag>寄存器</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>异常处理小记</title>
-    <url>/posts/996855490/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-16">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
-</ul>
-<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
-<li><p>内存访问异常总结下来就一句话：在没有权限的地方做了没权限的事儿；</p>
-</li>
-<li><p>将任意<code>CrackMe</code>倒入<code>OD</code>:</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonfurw1oj31ff0u0gwo.jpg" alt="倒入OD"></p>
-<ul>
-<li><p>当前处于代码段，只有只读权限，如果要写入内容会怎么样？</p>
-<p>修改第一行代码，把<code>EAX</code>的内容写入指定地址；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gloniemvqrj31ff0u0gxc.jpg" alt="修改代码"></p>
-<p>然后执行代码：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonkvl23pj31ff0u0wq7.jpg" alt="访问违规"></p>
-<p>可以看到，根本无法执行代码；</p>
-</li>
-<li><p>那每个代码段的权限如何查看呢？</p>
-<ol>
-<li><p>方法一：</p>
-<p>打开<code>内存窗口</code>，找到<code>PE 头文件</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonoefqwhj31ff0u048w.jpg" alt="内存窗口"></p>
-<p>然后双击<code>PE 头文件</code>所在行，打开<code>数据窗口</code>，找到 PE 头偏移量<code>Offset to PE signature</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonqf357jj31ff0u0k1l.jpg" alt="偏移量"></p>
-<p>既然偏移量是 100， 那地址就是<code>00400100</code>，往下翻找到这个地址：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonx75sh8j31ff0u0499.jpg" alt="找到地址"></p>
-<p>在这里，发现了代码段和数据段的地址信息，偏移量分别是 1000 和 2000，那地址就分别是<code>00401000</code>和<code>00402000</code>喽，如何确定呢？重载程序就知道了；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glop9kcs3qj31ff0u049x.jpg" alt="起始位置"></p>
-<p>至于它们的权限，继续往下翻：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gloo34nk41j31ff0u0n80.jpg" alt="权限"></p>
-<p>在这里可以清楚的看到，CODE 段只有只读权限，而 DATA 段有读写权限；</p>
-</li>
-<li><p>方法二：</p>
-<p>在<code>数据窗口</code>按下<code>Ctrl + G</code>，转到<code>00400000</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glooawpu9qj31ff0u0alk.jpg" alt="转到表达式"></p>
-<p>然后在<code>数据窗口</code>右键<code>指定 &gt; PE 头文件</code>，就可以定位到<code>PE 头文件</code>了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gloofb56bhj31ff0u0qe1.jpg" alt="定位"></p>
-<p>其他操作和方法一一致；</p>
-</li>
-</ol>
-</li>
-<li><p>测试一下修改代码段权限，写入内容：</p>
-<p>在<code>数据窗口</code>选择代码段权限行，右键选择<code>修改整数</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glooklxgtpj31ff0u0dq1.jpg" alt="修改整数"></p>
-<p>然后修改权限：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gloonxmrfcj31ff0u0qeh.jpg" alt="修改成功"></p>
-<p>修改后可以看到，CODE 段有写的权限了，然后将修改保存到新的可执行文件；</p>
-<p>接着，将保存的新文件倒入<code>OD</code>并修改第一行代码：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glop0ua22cj31ff0u0wqa.jpg" alt="打开新文件"></p>
-<p>运行程序：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glop2jpw4zj31ff0u013f.jpg" alt="运行程序"></p>
-<p>可以看到，<code>EAX</code>的内容成功写入到以指定地址为开始的位置；</p>
-</li>
-</ul>
-</li>
-<li><p>最后，来说说一个小的知识点<code>除零异常</code>；</p>
-<p>刚上学开始学习加减乘除的时候，老师就告诉我们 0 不能作为除数，而在程序设计中，当遇上正整数除以零程序会中止：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glov7g67kij31ff0u013c.jpg" alt="调试语句"></p>
-<p>在这里，由于<code>EAX</code>自身为 0，为了区分被除数和除数，让<code>EAX</code>加上一个随机的立即数以区分，这里以 123 为例，接着通过<code>xor</code>让准备作为除数的<code>ECX</code>置 0，最后用<code>EAX</code>除以<code>ECX</code>，接下来，看一下运算的结果：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glovdctagcj31ff0u049u.jpg" alt="除零异常"></p>
-<p>可以看到，执行<code>DIV ECX</code>后，也就是除以 0 后，这里产生了一个异常，这个异常就叫作除零异常；</p>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>逆向分析</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>异常处理</tag>
       </tags>
   </entry>
   <entry>
@@ -3214,33 +3335,77 @@
       </tags>
   </entry>
   <entry>
-    <title>异常处理流程小记</title>
-    <url>/posts/192684570/</url>
-    <content><![CDATA[<h4 id="异常处理流程图"><a href="#异常处理流程图" class="headerlink" title="异常处理流程图"></a>异常处理流程图</h4><p>总结一下异常处理的流程：</p>
-<!-- htmlmin:ignore -->
-
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">graph TB</span><br><span class="line">  A[|&quot;系统发现产生了一个异常|&quot;] --&gt; B&#123;&quot;程序是否正在被调试&quot;&#125;</span><br><span class="line">  B -- |&quot;是，程序正在被调试&quot;| --&gt; C&#123;&quot;权限转给调试器，并判断调试器是否忽略了异常&quot;&#125;</span><br><span class="line">  C -- |&quot;是，忽略了&quot;| --&gt; D&#123;&quot;程序是否安装 SEH&quot;&#125;</span><br><span class="line">  D -- |&quot;是，安装了&quot;| --&gt; E&#123;&quot;SEH 是否解决异常&quot;&#125;</span><br><span class="line">  E -- |&quot;是，解决了&quot;| --&gt; F&#123;&quot;程序可以继续正常运行&quot;&#125;</span><br><span class="line">  B -- |&quot;否，程序没有被调试&quot;| --&gt; D</span><br><span class="line">  C -- |&quot;否，未忽略，但未能解决异常&quot;| --&gt; G&#123;&quot;系统默认异常处理流程&quot;&#125;</span><br><span class="line">  D -- |&quot;否，未安装&quot;| --&gt; G</span><br><span class="line">  E -- |&quot;否，未解决&quot;| --&gt; G</span><br></pre></td></tr></table></figure>
-
-<!-- htmlmin:ignore -->
-
-<p>已经写好<code>Mermaid</code>的语法，准备输出流程图了，发现<code>Hexo</code>的<code>mermaid</code>插件已是多年前的产物，不兼容最新的版本，无奈只能用<a href="https://app.diagrams.net/">draw.io</a>画了张图；</p>
-<span id="more"></span>
-
-<p>图片镇楼：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glprz3752lj31ay0u0tcd.jpg" alt="图片镇楼"></p>
-<p>总结一下，共有 7 种流程：</p>
-<p>1.<code>系统发现异常</code>&gt;&gt;<code>是否调试状态</code>&gt;&gt;<code>是</code>&gt;&gt;<code>交给调试器处理</code>&gt;&gt;<code>调试器是否忽略异常</code>&gt;&gt;<code>是</code>&gt;&gt;<code>检查是否安装 SEH</code>&gt;&gt;<code>已安装</code>&gt;&gt;<code>是否解决异常</code>&gt;&gt;<code>已解决</code>&gt;&gt;<code>程序继续运行</code>；</p>
-<p>2.<code>系统发现异常</code>&gt;&gt;<code>是否调试状态</code>&gt;&gt;<code>是</code>&gt;&gt;<code>交给调试器处理</code>&gt;&gt;<code>调试器是否忽略异常</code>&gt;&gt;<code>是</code>&gt;&gt;<code>检查是否安装 SEH</code>&gt;&gt;<code>已安装</code>&gt;&gt;<code>是否解决异常</code>&gt;&gt;<code>未解决</code>&gt;&gt;<code>系统默认异常处理流程</code>；</p>
-<p>3.<code>系统发现异常</code>&gt;&gt;<code>是否调试状态</code>&gt;&gt;<code>是</code>&gt;&gt;<code>交给调试器处理</code>&gt;&gt;<code>调试器是否忽略异常</code>&gt;&gt;<code>是</code>&gt;&gt;<code>检查是否安装 SEH</code>&gt;&gt;<code>未安装</code>&gt;&gt;<code>系统默认异常处理流程</code>；</p>
-<p>4.<code>系统发现异常</code>&gt;&gt;<code>是否调试状态</code>&gt;&gt;<code>是</code>&gt;&gt;<code>交给调试器处理</code>&gt;&gt;<code>调试器是否忽略异常</code>&gt;&gt;<code>否，但未解决</code>&gt;&gt;<code>系统默认异常处理流程</code>；</p>
-<p>5.<code>系统发现异常</code>&gt;&gt;<code>是否调试状态</code>&gt;&gt;<code>否</code>&gt;&gt;<code>检查是否安装 SEH</code>&gt;&gt;<code>已安装</code>&gt;&gt;<code>是否解决异常</code>&gt;&gt;<code>已解决</code>&gt;&gt;<code>程序继续运行</code>；</p>
-<p>6.<code>系统发现异常</code>&gt;&gt;<code>是否调试状态</code>&gt;&gt;<code>否</code>&gt;&gt;<code>检查是否安装 SEH</code>&gt;&gt;<code>已安装</code>&gt;&gt;<code>是否解决异常</code>&gt;&gt;<code>未解决</code>&gt;&gt;<code>系统默认异常处理流程</code>；</p>
-<p>7.<code>系统发现异常</code>&gt;&gt;<code>是否调试状态</code>&gt;&gt;<code>否</code>&gt;&gt;<code>检查是否安装 SEH</code>&gt;&gt;<code>未安装</code>&gt;&gt;<code>系统默认异常处理流程</code>；</p>
+    <title>异常处理小记</title>
+    <url>/posts/996855490/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-16">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
+</ul>
+<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
+<li><p>内存访问异常总结下来就一句话：在没有权限的地方做了没权限的事儿；</p>
+</li>
+<li><p>将任意<code>CrackMe</code>倒入<code>OD</code>:</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonfurw1oj31ff0u0gwo.jpg" alt="倒入OD"></p>
+<ul>
+<li><p>当前处于代码段，只有只读权限，如果要写入内容会怎么样？</p>
+<p>修改第一行代码，把<code>EAX</code>的内容写入指定地址；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gloniemvqrj31ff0u0gxc.jpg" alt="修改代码"></p>
+<p>然后执行代码：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonkvl23pj31ff0u0wq7.jpg" alt="访问违规"></p>
+<p>可以看到，根本无法执行代码；</p>
+</li>
+<li><p>那每个代码段的权限如何查看呢？</p>
+<ol>
+<li><p>方法一：</p>
+<p>打开<code>内存窗口</code>，找到<code>PE 头文件</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonoefqwhj31ff0u048w.jpg" alt="内存窗口"></p>
+<p>然后双击<code>PE 头文件</code>所在行，打开<code>数据窗口</code>，找到 PE 头偏移量<code>Offset to PE signature</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonqf357jj31ff0u0k1l.jpg" alt="偏移量"></p>
+<p>既然偏移量是 100， 那地址就是<code>00400100</code>，往下翻找到这个地址：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonx75sh8j31ff0u0499.jpg" alt="找到地址"></p>
+<p>在这里，发现了代码段和数据段的地址信息，偏移量分别是 1000 和 2000，那地址就分别是<code>00401000</code>和<code>00402000</code>喽，如何确定呢？重载程序就知道了；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glop9kcs3qj31ff0u049x.jpg" alt="起始位置"></p>
+<p>至于它们的权限，继续往下翻：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gloo34nk41j31ff0u0n80.jpg" alt="权限"></p>
+<p>在这里可以清楚的看到，CODE 段只有只读权限，而 DATA 段有读写权限；</p>
+</li>
+<li><p>方法二：</p>
+<p>在<code>数据窗口</code>按下<code>Ctrl + G</code>，转到<code>00400000</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glooawpu9qj31ff0u0alk.jpg" alt="转到表达式"></p>
+<p>然后在<code>数据窗口</code>右键<code>指定 &gt; PE 头文件</code>，就可以定位到<code>PE 头文件</code>了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gloofb56bhj31ff0u0qe1.jpg" alt="定位"></p>
+<p>其他操作和方法一一致；</p>
+</li>
+</ol>
+</li>
+<li><p>测试一下修改代码段权限，写入内容：</p>
+<p>在<code>数据窗口</code>选择代码段权限行，右键选择<code>修改整数</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glooklxgtpj31ff0u0dq1.jpg" alt="修改整数"></p>
+<p>然后修改权限：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gloonxmrfcj31ff0u0qeh.jpg" alt="修改成功"></p>
+<p>修改后可以看到，CODE 段有写的权限了，然后将修改保存到新的可执行文件；</p>
+<p>接着，将保存的新文件倒入<code>OD</code>并修改第一行代码：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glop0ua22cj31ff0u0wqa.jpg" alt="打开新文件"></p>
+<p>运行程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glop2jpw4zj31ff0u013f.jpg" alt="运行程序"></p>
+<p>可以看到，<code>EAX</code>的内容成功写入到以指定地址为开始的位置；</p>
+</li>
+</ul>
+</li>
+<li><p>最后，来说说一个小的知识点<code>除零异常</code>；</p>
+<p>刚上学开始学习加减乘除的时候，老师就告诉我们 0 不能作为除数，而在程序设计中，当遇上正整数除以零程序会中止：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glov7g67kij31ff0u013c.jpg" alt="调试语句"></p>
+<p>在这里，由于<code>EAX</code>自身为 0，为了区分被除数和除数，让<code>EAX</code>加上一个随机的立即数以区分，这里以 123 为例，接着通过<code>xor</code>让准备作为除数的<code>ECX</code>置 0，最后用<code>EAX</code>除以<code>ECX</code>，接下来，看一下运算的结果：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glovdctagcj31ff0u049u.jpg" alt="除零异常"></p>
+<p>可以看到，执行<code>DIV ECX</code>后，也就是除以 0 后，这里产生了一个异常，这个异常就叫作除零异常；</p>
+</li>
+</ol>
 ]]></content>
       <categories>
         <category>逆向工程</category>
         <category>逆向分析</category>
-        <category>文章资料</category>
         <category>Windows</category>
       </categories>
       <tags>
@@ -3472,155 +3637,94 @@
       </tags>
   </entry>
   <entry>
-    <title>壳的加载过程</title>
-    <url>/posts/1754370069/</url>
-    <content><![CDATA[<blockquote>
-<p>记录<a href="https://bbs.pediy.com/forum-99.htm">加密解密</a>一书中对<code>壳的加载过程</code>的描述，第 16 章：16.1；</p>
-<p>眼过千遍，不如手过一遍；</p>
-</blockquote>
+    <title>异常处理流程小记</title>
+    <url>/posts/192684570/</url>
+    <content><![CDATA[<h4 id="异常处理流程图"><a href="#异常处理流程图" class="headerlink" title="异常处理流程图"></a>异常处理流程图</h4><p>总结一下异常处理的流程：</p>
+<!-- htmlmin:ignore -->
+
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">graph TB</span><br><span class="line">  A[|&quot;系统发现产生了一个异常|&quot;] --&gt; B&#123;&quot;程序是否正在被调试&quot;&#125;</span><br><span class="line">  B -- |&quot;是，程序正在被调试&quot;| --&gt; C&#123;&quot;权限转给调试器，并判断调试器是否忽略了异常&quot;&#125;</span><br><span class="line">  C -- |&quot;是，忽略了&quot;| --&gt; D&#123;&quot;程序是否安装 SEH&quot;&#125;</span><br><span class="line">  D -- |&quot;是，安装了&quot;| --&gt; E&#123;&quot;SEH 是否解决异常&quot;&#125;</span><br><span class="line">  E -- |&quot;是，解决了&quot;| --&gt; F&#123;&quot;程序可以继续正常运行&quot;&#125;</span><br><span class="line">  B -- |&quot;否，程序没有被调试&quot;| --&gt; D</span><br><span class="line">  C -- |&quot;否，未忽略，但未能解决异常&quot;| --&gt; G&#123;&quot;系统默认异常处理流程&quot;&#125;</span><br><span class="line">  D -- |&quot;否，未安装&quot;| --&gt; G</span><br><span class="line">  E -- |&quot;否，未解决&quot;| --&gt; G</span><br></pre></td></tr></table></figure>
+
+<!-- htmlmin:ignore -->
+
+<p>已经写好<code>Mermaid</code>的语法，准备输出流程图了，发现<code>Hexo</code>的<code>mermaid</code>插件已是多年前的产物，不兼容最新的版本，无奈只能用<a href="https://app.diagrams.net/">draw.io</a>画了张图；</p>
 <span id="more"></span>
 
-<h4 id="壳的加载过程"><a href="#壳的加载过程" class="headerlink" title="壳的加载过程"></a>壳的加载过程</h4><p>加壳软件通过修改原程序执行文件的组织结构，从而使壳比原程序代码更早获得控制权，且不影响原程序的正常运行，以下是壳的常见加载过程:</p>
-<ol>
-<li><p>保存入口参数</p>
-<p>加壳程序在初始化时会保存各寄存器的值，待外壳执行完毕，再恢复各寄存器的内容，最后跳到原程序执行，通常使用 PUSHAD/PUSHFD、POPAD/POPFD 指令来保存与恢复现场；</p>
-</li>
-<li><p>获取壳本身需要使用的 API 地址</p>
-<p>在一般情况下，外壳的输入表中只有 GetProcAddress、GetModuleHandle 和 LoadLibrary 这 3 个 API 函数，甚至只有 Kernel32.dll 及 GetProcAddress；</p>
-<p>如果需要使用其它 API 函数，可以通过函数 LoadLibraryA（W）或 LoadLibraryExA（W）将 DLL 文件映像映射到调用进程的地址空间中，函数返回的 HINSTANCE 值用于标识文件映像所映射的虚拟内存地址；</p>
-<p>LoadLibrary 函数原型：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">HINSTANCE LoadLibrary(</span><br><span class="line">    LPCTSTR lpLibFileName    // DLL 文件名地址</span><br><span class="line">     );</span><br></pre></td></tr></table></figure>
-
-<p>返回值：成功则返回模块的句柄，失败返回 NULL；</p>
-<p>如果 DLL 文件已经被映射到调用进程的地址空间中，可以调用 GetModuleHandleA（W）函数获取 DLL 模块的句柄；</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">HMODULE GetModuleHandle(</span><br><span class="line">    LPCTSTR lpModuleName    // DLL 文件名地址</span><br><span class="line">     );</span><br></pre></td></tr></table></figure>
-
-<p>返回值：成功则返回模块的句柄，失败返回 NULL；</p>
-<p>一旦 DLL 模块被加载，线程就可以调用 GetProcAddress 函数获取输入函数的地址了；</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">FARPROC GetProcAddress(</span><br><span class="line">    HMODULE hModule,        // DLl 模块句柄</span><br><span class="line">    LPCSTR  lpProcName      // 函数名</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
-
-<p>参数 hModule 是 DLL 模块的句柄，是调用 LoadLibrary（Ex） 或 GetModuleHandle 函数的返回值；</p>
-<p>参数 lpProcName 是函数名或函数序数值，如果此参数是序数值，则必须使用低位字；高位必须为零；</p>
-<p>返回值：成功则返回函数地址，失败返回 NULL；</p>
-<p>在外壳中使用的其他函数都是由这 3 个函数调用的；</p>
-<p>有些壳为了提高强度，连系统提供的 GetProcAddress 函数都不使用，而是自己实现一个相同功能的函数来代替 GetProcAddress，从而增加函数调用的隐蔽性；</p>
-</li>
-<li><p>解密原程序各区块的数据</p>
-<p>出于保护原程序代码和数据的目的，壳一般会加密原程序文件的各个区段；</p>
-<p>在程序执行时，外壳将解密这些区段数据，从而使程序能够正常运行；</p>
-<p>壳一般是按区块加密的，所以解密时也按区块解密，并把解密的区块数据按照区块的定义放入内存中合适的位置；</p>
-</li>
-<li><p>IAT 的初始化</p>
-<p>IAT 的填写本来应该由 PE 装载器实现，但由于在加壳时构造了一个自建输入表，并让 PE 文件头数据目录表中的输入表指针指向自建输入表，PE 装载器会对自建输入表进行填写；</p>
-<p>程序的原始输入表会被外壳变形后存储，IAT 的填写会由外壳程序实现；</p>
-<p>外壳程序要做的就是将这个变形输入表的结构从头到尾扫描一遍，重新获取每个 DLL 引入的所有函数的地址，并将其填写在 IAT 中；</p>
-</li>
-<li><p>重定位项的处理</p>
-<p>文件执行时将被映射到指定内存地址中，这个初始内存地址称为基址，当然，这只是程序文件中声明的，当程序运行时，操作系统一定会满足其要求吗？</p>
-<p>对 EXE 文件来说，操作系统会尽量满足其要求，如：程序声明的基址是 400000，操作系统提供的基址也是 400000，在这种情况下就不需要基址重定位了；</p>
-<p>由于不需要对 EXE 文件进行重定位，加壳软件会删除原程序文件中用于保存重定位信息的区块，使加壳后的程序更小巧；</p>
-<p>对 DLL 的动态链接库文件来说，操作系统无法保证 DLL 每次运行时都提供相同的基址，所以重定位就很重要了；</p>
-<p>此时，壳中也要有用于重定位的代码，否则原程序将无法正常运行；</p>
-<p>所以，加壳的 DLL 比加壳的 EXE 在修正时多了一个重定位表；</p>
-</li>
-<li><p>Hook API<br>在程序文件中，输入表的作用是让 Windows 操作系统在程序运行时将 API 的实际地址提供给程序使用，在程序的第 1 行代码执行前，Windows 操作系统就完成了这项工作；</p>
-<p>壳大都在修改原程序的输入表后，自己模仿 Windows 操作系统的工作流程，向输入表中填充相关的数据，在填充过程中，外壳可以填充 Hook API 代码的地址，从而间接获得程序的控制权；</p>
-</li>
-<li><p>跳转到程序原始入口点（OEP）</p>
-<p>从这个时候起，壳就把控制权还给原程序了，一般的壳在这里会有一条明显的分界线；</p>
-<p>现在越来越多的加密壳先将 OEP 代码段搬到外壳的地址空间里，再将这段代码清除（这种技术称为“Stolen Bytes”），这样，OEP 与外壳之间那条明显的分界线就消失了，脱壳的难度也增加了；</p>
-</li>
-</ol>
-<h4 id="脱壳机"><a href="#脱壳机" class="headerlink" title="脱壳机"></a>脱壳机</h4><p>针对特定的壳开发出来的脱壳软件称为“脱壳机”；</p>
-<p>脱壳就是将加壳后的程序恢复到原来的状态，脱壳成功的标志是文件能正常运行；</p>
-<p>由于脱壳时可能没有将壳本身的代码去除，脱壳后程序的体积通常会比原程序的体积大；</p>
-<p>脱壳机一般分为专用脱壳机和通用脱壳机；</p>
-<p>专用脱壳机是针对某种壳专门编写的，只能脱特定的壳，虽然使用范围小，但效果好；</p>
-<p>通用脱壳机具有通用性，可以脱多种不同类型的壳（主要是压缩壳）；</p>
-<p>在分析一个软件前，可以使用 PEiD 确定壳的种类，再选择合适的脱壳机；</p>
-<h4 id="手动脱壳"><a href="#手动脱壳" class="headerlink" title="手动脱壳"></a>手动脱壳</h4><p>对一些加密壳或修改的壳，没有脱壳机，因此必须要分析外壳并手动脱壳；</p>
-<p>手动脱壳过程一般分为 3 步：</p>
-<ol>
-<li>查找真正的程序入口点（OEP）；</li>
-<li>抓取内存映像文件；</li>
-<li>重建 PE 文件；</li>
-</ol>
-<p>当程序执行时，外壳代码首先获得控制权，模拟 Windows 加载器，将原程序恢复到内存中，这时，内存中的数据就是加壳前的映像文件了，适时将其抓取并修改，即可还原到加壳前的状态；</p>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>脱壳技术</category>
-        <category>文章资料</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>壳基础</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>硬编码寻找序列号（一）</title>
-    <url>/posts/2293324257/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-1">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
-</ul>
-<span id="more"></span>
-
-<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
-<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
-</li>
-<li><p>倒入<code>OD</code>开始分析：</p>
-<ul>
-<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
-</li>
-<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，咦，发现可疑函数：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy1j9yekwj30oc065t9q.jpg" alt="分析"></p>
-<p>就是它了，选中它并右键<code>在输入函数上切换断点</code>，然后去<code>断点窗口（B 窗口）</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
-</li>
-<li><p>然后运行程序，“随便输入”一些字符后点击验证，可以随便输入，但请记住它；</p>
-</li>
-<li><p>程序停在了设置断点的<code>API</code>的行首，在堆栈窗口可以看到<code>API</code>的各种参数，而参数<code>Buffer</code>里存放着函数返回的数据，选中<code>Buffer</code>右键<code>数据窗口中跟随</code>，可以看到，由于断点中断在了函数的第一行，所以这个地址里什么也没有：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy267st5oj30t00drq4u.jpg" alt="Buffer"></p>
-</li>
-<li><p>接着按下<code>Ctrl + F9</code>或点击菜单栏的调试选项并选择<code>执行到返回</code>，然后发现<code>Buffer</code>对应的地址里有数据了，并且是我们输入的字符串；</p>
-</li>
-<li><p>在上一步中，我们<code>执行到返回</code>，那就意味着接下来登场的将会是<code>RETN</code>了，按下<code>F7 或 F8</code>，返回到调用<code>API</code>的程序，发现接下来将要执行的代码很可疑：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy2kqa9a0j30sz0dt0uo.jpg" alt="程序"></p>
-<p>一个比较，一个跳转，并且文字显示和序列号有关；</p>
-</li>
-<li><p>分析一下这几行可疑的代码：</p>
-<ul>
-<li><p><code>MOV EDX,CrackMe.00403008</code>将<code>00403008</code>这个地址拷贝到<code>EDX</code>，执行一下这行代码：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy2xlpyn3j308805374d.jpg" alt="EDX"></p>
-<p>在<code>EDX</code>存放的地址中发现一串可疑字符串，选中<code>EDX</code>右键<code>数据窗口中跟随</code>，原来可疑字符串只是前面几位，而后面那几个字符是我们输入的字符；</p>
-</li>
-<li><p><code>MOV EBX,DWORD PTR DS:[403010]</code>将<code>00403010</code>这个地址中的数据的前四个字节拷贝到<code>EBX</code>，执行一下这行代码：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy3ehrs27j30as0ay3zf.jpg" alt="EBX"></p>
-<p>既然<code>EBX</code>中存放的是数据，而数据又看不懂，怎么知道是什么呢？<code>OD</code>很强大，选择那行代码并右键<code>数据窗口中跟随，然后选择内存地址</code>或者在数据窗口选中那行代码的数据并选择<code>数据窗口中跟随地址</code>就可以看到<code>EBX</code>中存放的内容了，原来是我们输入的“序列号”；</p>
-</li>
-<li><p><code>CMP EBX,DWORD PTR DS:[403008]</code>这行代码就没什么好说的了，减法比较是否相等，还使用了一个障眼法，<code>EDX</code>放地址，<code>EBX</code>放数据，在这里再取出<code>EDX</code>的数据进行比较；</p>
-</li>
-<li><p><code>JE SHORT CrackMe.00401087</code>这行也没啥说的，<code>JE</code>根据<code>ZF 标志位</code>进行跳转，而如果上一步的计算结果为<code>0</code>，则<code>ZF</code>为<code>1</code>，<code>JE</code>跳转成立，也就是说，如果<code>EDX</code>和<code>EBX</code>中的数据相同，那么序列号就是对的，<code>JE</code>跳转并向下执行，最后弹出<code>正确！</code>，反之则不跳转向下执行，弹出<code>序列号错误！</code>，看来第一步中发现的可疑字符串就是真正的序列号了；</p>
-</li>
-<li><p>如果想要输入啥都能通过验证，那么可以将<code>JE</code>改为<code>JMP</code>无条件跳转，保存修改到文件就获得了一个新的程序；</p>
-</li>
-<li><p>但我们的目的是找出真正的序列号，所以嘛，复制那串字符去试一下，果然，一切如我们所料！</p>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ol>
+<p>图片镇楼：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glprz3752lj31ay0u0tcd.jpg" alt="图片镇楼"></p>
+<p>总结一下，共有 7 种流程：</p>
+<p>1.<code>系统发现异常</code>&gt;&gt;<code>是否调试状态</code>&gt;&gt;<code>是</code>&gt;&gt;<code>交给调试器处理</code>&gt;&gt;<code>调试器是否忽略异常</code>&gt;&gt;<code>是</code>&gt;&gt;<code>检查是否安装 SEH</code>&gt;&gt;<code>已安装</code>&gt;&gt;<code>是否解决异常</code>&gt;&gt;<code>已解决</code>&gt;&gt;<code>程序继续运行</code>；</p>
+<p>2.<code>系统发现异常</code>&gt;&gt;<code>是否调试状态</code>&gt;&gt;<code>是</code>&gt;&gt;<code>交给调试器处理</code>&gt;&gt;<code>调试器是否忽略异常</code>&gt;&gt;<code>是</code>&gt;&gt;<code>检查是否安装 SEH</code>&gt;&gt;<code>已安装</code>&gt;&gt;<code>是否解决异常</code>&gt;&gt;<code>未解决</code>&gt;&gt;<code>系统默认异常处理流程</code>；</p>
+<p>3.<code>系统发现异常</code>&gt;&gt;<code>是否调试状态</code>&gt;&gt;<code>是</code>&gt;&gt;<code>交给调试器处理</code>&gt;&gt;<code>调试器是否忽略异常</code>&gt;&gt;<code>是</code>&gt;&gt;<code>检查是否安装 SEH</code>&gt;&gt;<code>未安装</code>&gt;&gt;<code>系统默认异常处理流程</code>；</p>
+<p>4.<code>系统发现异常</code>&gt;&gt;<code>是否调试状态</code>&gt;&gt;<code>是</code>&gt;&gt;<code>交给调试器处理</code>&gt;&gt;<code>调试器是否忽略异常</code>&gt;&gt;<code>否，但未解决</code>&gt;&gt;<code>系统默认异常处理流程</code>；</p>
+<p>5.<code>系统发现异常</code>&gt;&gt;<code>是否调试状态</code>&gt;&gt;<code>否</code>&gt;&gt;<code>检查是否安装 SEH</code>&gt;&gt;<code>已安装</code>&gt;&gt;<code>是否解决异常</code>&gt;&gt;<code>已解决</code>&gt;&gt;<code>程序继续运行</code>；</p>
+<p>6.<code>系统发现异常</code>&gt;&gt;<code>是否调试状态</code>&gt;&gt;<code>否</code>&gt;&gt;<code>检查是否安装 SEH</code>&gt;&gt;<code>已安装</code>&gt;&gt;<code>是否解决异常</code>&gt;&gt;<code>未解决</code>&gt;&gt;<code>系统默认异常处理流程</code>；</p>
+<p>7.<code>系统发现异常</code>&gt;&gt;<code>是否调试状态</code>&gt;&gt;<code>否</code>&gt;&gt;<code>检查是否安装 SEH</code>&gt;&gt;<code>未安装</code>&gt;&gt;<code>系统默认异常处理流程</code>；</p>
 ]]></content>
       <categories>
         <category>逆向工程</category>
         <category>逆向分析</category>
+        <category>文章资料</category>
         <category>Windows</category>
       </categories>
       <tags>
-        <tag>硬编码</tag>
+        <tag>异常处理</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>最后一次异常法定位 OEP</title>
+    <url>/posts/2614075303/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-5">OllyDbg</a>修改版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/UnPackMe-2">UnPackMe</a>来自互联网，仅供学习使用；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
+</ul>
+<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
+<li><p>拿到 CM 后，第 1 想法就是栈平衡，将 CM 导入原版 OD：</p>
+<p>首先弹出警告弹窗，说明程序有壳（这不是废话嘛）</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwou1dw2sj31eb0u0n0j.jpg" alt="将 CM 导入原版 OD"></p>
+<p>然后到达 EP 位置，行首却不是 PUSHAD/PUSHFD，这就让人很尴尬了，不过又想到了栈平衡的第 2 种方法；</p>
+</li>
+<li><p>大胆的猜测一下，如果 OEP 行首是压栈指令，那么压栈的地址就是：0012FFC0:</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwp0hlhrej31eg0u0aez.jpg" alt="压栈的地址"></p>
+<p>所以，给 0012FFC0 设置硬件写入断点，然后运行程序；</p>
+</li>
+<li><p>程序会中断两次，第 2 次才会到达 OEP，因为第 2 中断时才处于代码段：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwp87zzrwj31e70u043k.jpg" alt="OEP"></p>
+</li>
+<li><p>然后又尝试了设置访问断点来到达 OEP，两种方法皆是可行的，不过这 3 种方法并不是今天的重点；</p>
+</li>
+<li><p>将程序导入改版 OD，<code>F9</code>运行程序，待程序主窗体出现后，打开日志窗口（请不要关闭程序主窗体）：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwpf8lzy7j31a80u0diy.jpg" alt="一大堆异常"></p>
+<p>来到日志窗口后，发现程序运行期间，有一大堆异常，但程序却正常运行了，很是奇怪；</p>
+</li>
+<li><p>程序可以正常运行，是因为 OD 的调试选项忽略了所有异常，如果不忽略异常，程序会在每一次异常时暂停，而在最后一次异常后，程序正常运行了；</p>
+<p>如果在最后一次异常时（也可以说是程序运行前）给代码段设置内存访问断点，是否可以到达 OEP 呢？</p>
+</li>
+<li><p>首先设置 OD 调试选项：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwpwb6stlj31ab0u077r.jpg" alt="不忽略异常"></p>
+<p>在日志窗口可以看到，最后一次异常是 INT3，所以取消忽略 INT3 异常，同时取消忽略异常范围选项，因为从 00000000 ～ FFFFFFFF 就忽略了所有异常；</p>
+</li>
+<li><p>然后运行程序，在几次中断后，就来到了最后一次异常所在位置：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwq3u0p0fj31a50u00wx.jpg" alt="最后一次异常"></p>
+</li>
+<li><p>来到内存窗口，给代码段设置<code>内存执行断点</code>，然后按下<code>Shift + F9</code>忽略异常并运行程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwq6yj16mj31a50u077g.jpg" alt="OEP"></p>
+<p>程序到达 OEP，Perfect！</p>
+</li>
+<li><p>既然有那么多方法，问什么要用这么复杂的方法呢？</p>
+<p>是因为，加壳不仅可以隐藏 OEP，还可以反调试，而为了绕过反调试，在执行部分代码后，再设置断点相对会更安全，这是一种好的思路；</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>脱壳技术</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>OEP</tag>
       </tags>
   </entry>
   <entry>
@@ -3818,6 +3922,72 @@
       </tags>
   </entry>
   <entry>
+    <title>硬编码寻找序列号（一）</title>
+    <url>/posts/2293324257/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-1">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
+</ul>
+<span id="more"></span>
+
+<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
+<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
+</li>
+<li><p>倒入<code>OD</code>开始分析：</p>
+<ul>
+<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
+</li>
+<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，咦，发现可疑函数：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy1j9yekwj30oc065t9q.jpg" alt="分析"></p>
+<p>就是它了，选中它并右键<code>在输入函数上切换断点</code>，然后去<code>断点窗口（B 窗口）</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
+</li>
+<li><p>然后运行程序，“随便输入”一些字符后点击验证，可以随便输入，但请记住它；</p>
+</li>
+<li><p>程序停在了设置断点的<code>API</code>的行首，在堆栈窗口可以看到<code>API</code>的各种参数，而参数<code>Buffer</code>里存放着函数返回的数据，选中<code>Buffer</code>右键<code>数据窗口中跟随</code>，可以看到，由于断点中断在了函数的第一行，所以这个地址里什么也没有：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy267st5oj30t00drq4u.jpg" alt="Buffer"></p>
+</li>
+<li><p>接着按下<code>Ctrl + F9</code>或点击菜单栏的调试选项并选择<code>执行到返回</code>，然后发现<code>Buffer</code>对应的地址里有数据了，并且是我们输入的字符串；</p>
+</li>
+<li><p>在上一步中，我们<code>执行到返回</code>，那就意味着接下来登场的将会是<code>RETN</code>了，按下<code>F7 或 F8</code>，返回到调用<code>API</code>的程序，发现接下来将要执行的代码很可疑：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy2kqa9a0j30sz0dt0uo.jpg" alt="程序"></p>
+<p>一个比较，一个跳转，并且文字显示和序列号有关；</p>
+</li>
+<li><p>分析一下这几行可疑的代码：</p>
+<ul>
+<li><p><code>MOV EDX,CrackMe.00403008</code>将<code>00403008</code>这个地址拷贝到<code>EDX</code>，执行一下这行代码：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy2xlpyn3j308805374d.jpg" alt="EDX"></p>
+<p>在<code>EDX</code>存放的地址中发现一串可疑字符串，选中<code>EDX</code>右键<code>数据窗口中跟随</code>，原来可疑字符串只是前面几位，而后面那几个字符是我们输入的字符；</p>
+</li>
+<li><p><code>MOV EBX,DWORD PTR DS:[403010]</code>将<code>00403010</code>这个地址中的数据的前四个字节拷贝到<code>EBX</code>，执行一下这行代码：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy3ehrs27j30as0ay3zf.jpg" alt="EBX"></p>
+<p>既然<code>EBX</code>中存放的是数据，而数据又看不懂，怎么知道是什么呢？<code>OD</code>很强大，选择那行代码并右键<code>数据窗口中跟随，然后选择内存地址</code>或者在数据窗口选中那行代码的数据并选择<code>数据窗口中跟随地址</code>就可以看到<code>EBX</code>中存放的内容了，原来是我们输入的“序列号”；</p>
+</li>
+<li><p><code>CMP EBX,DWORD PTR DS:[403008]</code>这行代码就没什么好说的了，减法比较是否相等，还使用了一个障眼法，<code>EDX</code>放地址，<code>EBX</code>放数据，在这里再取出<code>EDX</code>的数据进行比较；</p>
+</li>
+<li><p><code>JE SHORT CrackMe.00401087</code>这行也没啥说的，<code>JE</code>根据<code>ZF 标志位</code>进行跳转，而如果上一步的计算结果为<code>0</code>，则<code>ZF</code>为<code>1</code>，<code>JE</code>跳转成立，也就是说，如果<code>EDX</code>和<code>EBX</code>中的数据相同，那么序列号就是对的，<code>JE</code>跳转并向下执行，最后弹出<code>正确！</code>，反之则不跳转向下执行，弹出<code>序列号错误！</code>，看来第一步中发现的可疑字符串就是真正的序列号了；</p>
+</li>
+<li><p>如果想要输入啥都能通过验证，那么可以将<code>JE</code>改为<code>JMP</code>无条件跳转，保存修改到文件就获得了一个新的程序；</p>
+</li>
+<li><p>但我们的目的是找出真正的序列号，所以嘛，复制那串字符去试一下，果然，一切如我们所料！</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>逆向分析</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>硬编码</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>硬编码寻找序列号（二）</title>
     <url>/posts/3097998650/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -3892,6 +4062,73 @@
 </li>
 <li><p>最后，完整的分析图：</p>
 <p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giyciwo9jqj30y80u0tf0.jpg" alt="完整图"></p>
+</li>
+</ul>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>逆向分析</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>硬编码</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>硬编码寻找序列号（五）</title>
+    <url>/posts/755681865/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-5">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
+</ul>
+<span id="more"></span>
+
+<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
+<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
+</li>
+<li><p>倒入<code>OD</code>开始分析：</p>
+<ul>
+<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
+</li>
+<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，翻了翻还真不少，善用搜索，<code>GetDlgItemTextA</code>没找到，那就试试<code>GetWindowTextA</code>，还真有，就它了，在<code>GetWindowTextA</code>上设置断点，然后去<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
+</li>
+<li><p><code>F9</code>运行程序，然鹅，输入内容并点击验证按钮后，程序并没有暂停；</p>
+</li>
+<li><p>界面有按钮，试试消息断点，还是没用，又尝试<code>硬件断点</code>以及<code>内存断点</code>均无效；</p>
+</li>
+<li><p>使用一个特殊的<code>API：TranslateMessage</code>，没错，它的功能就是字面的意思<code>翻译虚拟按键消息为字符消息</code>，很好很强大；</p>
+</li>
+<li><p>在<code>API</code>列表页面搜索，还真有，设置断点，然后在<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，还没有完，在断点上右键<code>断点&gt;&gt;条件记录</code>或者<code>Shift + F4</code>（也就是<code>条件记录断点</code>，毕竟<code>API断点</code>的本质就是<code>CC断点</code>），修改条件：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjea06qzj311u0nfad3.jpg" alt="TranslateMessage"></p>
+</li>
+<li><p>然后运行程序，输入并点击验证，程序在<code>TranslateMessage</code>函数的行首暂停下来，然后<code>Ctrl + F9</code>或者点击菜单栏的调试选项并选择<code>执行到返回</code>，然后<code>F8</code>单步执行到程序领空；</p>
+</li>
+<li><p>然后在<code>内存窗口</code>按下<code>Ctrl + B</code>或者右键选择<code>查找</code>，搜索输入的序列号：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjv4k2qij311w0ngn0d.jpg" alt="查找"></p>
+<p>找到最接近<code>输入的序列号</code>的内容，设置<code>内存访问断点</code>:</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjz6z1umj311m0n7tc9.jpg" alt="内存访问断点"></p>
+</li>
+<li><p>运行程序，程序暂停在了读取序列号的地方，开始分析：<br>好聪明的“程序”，开始转移数据了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizk98xwaej313w0ncdis.jpg" alt="转移数据"></p>
+</li>
+<li><p>既然它都挪窝儿了，咱也别闲着了：在<code>EDI</code>上右键选择<code>数据窗口中跟随</code>,果然，输入的序列号在这里了，选择序列号的数据右键<code>断点&gt;&gt;删除内存访问断点</code>删除第一次设置的<code>内存访问断点</code>，也可以理解为设置在<code>ESI</code>上的<code>内存访问断点</code>，既然数据都转移了，断点也就没意义了，所以要重新设置在<code>EDI</code>上，再次选择序列号的数据右键<code>断点&gt;&gt;内存访问</code>，这样就实时掌握了输入的序列号的动向了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizko5erudj31450o7gpl.jpg" alt="EDI"></p>
+</li>
+<li><p>继续运行程序，终于来到来最关键的地方：比较</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizlfw3ua4j313q0s4dky.jpg" alt="比较"></p>
+<p>分析完毕，逻辑简单粗暴：</p>
+<ul>
+<li>首先，假码 和 可疑字符串 的前 4 个字节的机器码进行比较，不相等跳转到下一步；</li>
+<li>接着，假码 和 可疑字符串 的第 1 个字节的机器码进行比较，不相等跳转到下一步；</li>
+<li>最后，恢复寄存器的内容并<code>RETN</code>，直接弹出错误的弹窗；</li>
+</ul>
+</li>
+<li><p>分析的时候已经发现了正确的序列号，也就是可疑字符串，试一下：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizm3afyiyj30am0btacd.jpg" alt="完工"></p>
 </li>
 </ul>
 </li>
@@ -3995,73 +4232,6 @@
 </li>
 <li><p>测试一下：</p>
 <p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gj0mxfxvr3j30v508p758.jpg" alt="测试"></p>
-</li>
-</ul>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>逆向分析</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>硬编码</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>硬编码寻找序列号（五）</title>
-    <url>/posts/755681865/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-5">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
-</ul>
-<span id="more"></span>
-
-<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
-<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
-</li>
-<li><p>倒入<code>OD</code>开始分析：</p>
-<ul>
-<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
-</li>
-<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，翻了翻还真不少，善用搜索，<code>GetDlgItemTextA</code>没找到，那就试试<code>GetWindowTextA</code>，还真有，就它了，在<code>GetWindowTextA</code>上设置断点，然后去<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
-</li>
-<li><p><code>F9</code>运行程序，然鹅，输入内容并点击验证按钮后，程序并没有暂停；</p>
-</li>
-<li><p>界面有按钮，试试消息断点，还是没用，又尝试<code>硬件断点</code>以及<code>内存断点</code>均无效；</p>
-</li>
-<li><p>使用一个特殊的<code>API：TranslateMessage</code>，没错，它的功能就是字面的意思<code>翻译虚拟按键消息为字符消息</code>，很好很强大；</p>
-</li>
-<li><p>在<code>API</code>列表页面搜索，还真有，设置断点，然后在<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，还没有完，在断点上右键<code>断点&gt;&gt;条件记录</code>或者<code>Shift + F4</code>（也就是<code>条件记录断点</code>，毕竟<code>API断点</code>的本质就是<code>CC断点</code>），修改条件：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjea06qzj311u0nfad3.jpg" alt="TranslateMessage"></p>
-</li>
-<li><p>然后运行程序，输入并点击验证，程序在<code>TranslateMessage</code>函数的行首暂停下来，然后<code>Ctrl + F9</code>或者点击菜单栏的调试选项并选择<code>执行到返回</code>，然后<code>F8</code>单步执行到程序领空；</p>
-</li>
-<li><p>然后在<code>内存窗口</code>按下<code>Ctrl + B</code>或者右键选择<code>查找</code>，搜索输入的序列号：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjv4k2qij311w0ngn0d.jpg" alt="查找"></p>
-<p>找到最接近<code>输入的序列号</code>的内容，设置<code>内存访问断点</code>:</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjz6z1umj311m0n7tc9.jpg" alt="内存访问断点"></p>
-</li>
-<li><p>运行程序，程序暂停在了读取序列号的地方，开始分析：<br>好聪明的“程序”，开始转移数据了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizk98xwaej313w0ncdis.jpg" alt="转移数据"></p>
-</li>
-<li><p>既然它都挪窝儿了，咱也别闲着了：在<code>EDI</code>上右键选择<code>数据窗口中跟随</code>,果然，输入的序列号在这里了，选择序列号的数据右键<code>断点&gt;&gt;删除内存访问断点</code>删除第一次设置的<code>内存访问断点</code>，也可以理解为设置在<code>ESI</code>上的<code>内存访问断点</code>，既然数据都转移了，断点也就没意义了，所以要重新设置在<code>EDI</code>上，再次选择序列号的数据右键<code>断点&gt;&gt;内存访问</code>，这样就实时掌握了输入的序列号的动向了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizko5erudj31450o7gpl.jpg" alt="EDI"></p>
-</li>
-<li><p>继续运行程序，终于来到来最关键的地方：比较</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizlfw3ua4j313q0s4dky.jpg" alt="比较"></p>
-<p>分析完毕，逻辑简单粗暴：</p>
-<ul>
-<li>首先，假码 和 可疑字符串 的前 4 个字节的机器码进行比较，不相等跳转到下一步；</li>
-<li>接着，假码 和 可疑字符串 的第 1 个字节的机器码进行比较，不相等跳转到下一步；</li>
-<li>最后，恢复寄存器的内容并<code>RETN</code>，直接弹出错误的弹窗；</li>
-</ul>
-</li>
-<li><p>分析的时候已经发现了正确的序列号，也就是可疑字符串，试一下：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizm3afyiyj30am0btacd.jpg" alt="完工"></p>
 </li>
 </ul>
 </li>
@@ -4187,50 +4357,119 @@
       </tags>
   </entry>
   <entry>
-    <title>最后一次异常法定位 OEP</title>
-    <url>/posts/2614075303/</url>
+    <title>脱壳小练习（一）</title>
+    <url>/posts/2471182341/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-5">OllyDbg</a>修改版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/UnPackMe-2">UnPackMe</a>来自互联网，仅供学习使用；</li>
+<li>Dump 工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-3">PETools</a>，来自互联网；</li>
+<li>IAT 重建工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-4">ImportREC</a>，来自互联网；</li>
 <li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
 </ul>
-<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
-<li><p>拿到 CM 后，第 1 想法就是栈平衡，将 CM 导入原版 OD：</p>
-<p>首先弹出警告弹窗，说明程序有壳（这不是废话嘛）</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwou1dw2sj31eb0u0n0j.jpg" alt="将 CM 导入原版 OD"></p>
-<p>然后到达 EP 位置，行首却不是 PUSHAD/PUSHFD，这就让人很尴尬了，不过又想到了栈平衡的第 2 种方法；</p>
+<h4 id="操作流程"><a href="#操作流程" class="headerlink" title="操作流程"></a>操作流程</h4><ol>
+<li><p>将 CM 导入 OD，使用内存访问法定位 OEP（这种方式设置的断点是一次性的）：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0wlp01l2j31dz0u0diq.jpg" alt="F2 断点"></p>
+<p>原理是：加壳程序运行时，会依次解压各区段，所以，访问后会中断；</p>
 </li>
-<li><p>大胆的猜测一下，如果 OEP 行首是压栈指令，那么压栈的地址就是：0012FFC0:</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwp0hlhrej31eg0u0aez.jpg" alt="压栈的地址"></p>
-<p>所以，给 0012FFC0 设置硬件写入断点，然后运行程序；</p>
+<li><p>运行程序后，程序中断两次：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0woppgmtj31e00u0jv3.jpg" alt="第一次重点"></p>
+<p>中断后查看提示信息，程序访问了代码段，所以触发了断点，再次运行程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0wqml26dj31e30u0djj.jpg" alt="第二次中断"></p>
+<p>程序再次中断，程序访问了第 2 个设置断点的区段，此时说明代码段已经解压完成了；</p>
 </li>
-<li><p>程序会中断两次，第 2 次才会到达 OEP，因为第 2 中断时才处于代码段：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwp87zzrwj31e70u043k.jpg" alt="OEP"></p>
+<li><p>再次来到内存窗口，给代码段设置 F2 断点，然后运行程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0wve0v2wj31e60u041p.jpg" alt="再次设置断点"></p>
+<p>原理是：既然代码段已经解压完毕了，如果再次访问，就是原程序运行的时候；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0x0nx0ndj31e00u0q7e.jpg" alt="到达 OEP"></p>
+<p>从模块中删除分析后，就可以看到程序的本来面目了；</p>
 </li>
-<li><p>然后又尝试了设置访问断点来到达 OEP，两种方法皆是可行的，不过这 3 种方法并不是今天的重点；</p>
+<li><p>然后打开 PETools，选择当前 CM 进程，右键菜单选择完整转存并保存到可执行文件：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0x64np0kj314y0u0adf.jpg" alt="PETools"></p>
 </li>
-<li><p>将程序导入改版 OD，<code>F9</code>运行程序，待程序主窗体出现后，打开日志窗口（请不要关闭程序主窗体）：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwpf8lzy7j31a80u0diy.jpg" alt="一大堆异常"></p>
-<p>来到日志窗口后，发现程序运行期间，有一大堆异常，但程序却正常运行了，很是奇怪；</p>
+<li><p>回到 OD，定位到 IAT，查看 IAT 起始位置（RVA）及结束位置（RVA），计算 Size：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0x9gmecfj31dt0u0q6v.jpg" alt="定位到 IAT"></p>
+<p>通过 GetVersion 函数的地址，定位到 IAT；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0xenogn6j31e10u0jvs.jpg" alt="计算 RVA"></p>
+<p>通过计算得知：</p>
+<ul>
+<li>OEP 的 RVA 为：271B0；</li>
+<li>IAT 的 起始地址 RVA 为：60818；</li>
+<li>IAT 的 Size 为：60F28 - 60818 = 710（Hex）；</li>
+</ul>
 </li>
-<li><p>程序可以正常运行，是因为 OD 的调试选项忽略了所有异常，如果不忽略异常，程序会在每一次异常时暂停，而在最后一次异常后，程序正常运行了；</p>
-<p>如果在最后一次异常时（也可以说是程序运行前）给代码段设置内存访问断点，是否可以到达 OEP 呢？</p>
+<li><p>打开 ImportREC 填写相关选项并获取：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0xk307itj30wi0oqt9p.jpg" alt="填写选项"></p>
+<p>获取完成后，检查获取的数据：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0xlkacwwj30wi0oo3zu.jpg" alt="检查"></p>
+<p>手动或通过显示无效选项检查获取数据是否有效；</p>
+<p>确认无误后点击修复转存按钮，选择转存的程序，就完成修复了；</p>
 </li>
-<li><p>首先设置 OD 调试选项：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwpwb6stlj31ab0u077r.jpg" alt="不忽略异常"></p>
-<p>在日志窗口可以看到，最后一次异常是 INT3，所以取消忽略 INT3 异常，同时取消忽略异常范围选项，因为从 00000000 ～ FFFFFFFF 就忽略了所有异常；</p>
+<li><p>将修复后的程序导入 OD，查看 log 窗口：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0xswrszgj31dy0u0ju8.jpg" alt="log"></p>
+<p>没有异常，说明程序正常运行；</p>
+<p>然后定位到 IAT，随便选择一个函数，右键菜单查看可执行文件，到达函数 IMAGE_THUNK_DATA 结构体；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0xuvyplsj31e50u00wl.jpg" alt="查看可执行程序"></p>
+<p>这里存放的是函数名字符串的 RVA，<code>Ctrl + G</code>跳转到 VA 查看函数名字符串；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0y4g6n1sj31dy0u0wlb.jpg" alt="确认 IAT"></p>
+<p>确认函数名和 IAT 显示的函数名一致，脱壳完成；</p>
 </li>
-<li><p>然后运行程序，在几次中断后，就来到了最后一次异常所在位置：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwq3u0p0fj31a50u00wx.jpg" alt="最后一次异常"></p>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>脱壳技术</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>IAT</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>脱壳小练习（二）</title>
+    <url>/posts/2304111146/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-5">OllyDbg</a>修改版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/UnPackMe-5">UnPackMe</a>来自互联网，仅供学习使用；</li>
+<li>Dump 工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-3">PETools</a>，来自互联网；</li>
+<li>IAT 重建工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-4">ImportREC</a>，来自互联网；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
+</ul>
+<h4 id="操作流程"><a href="#操作流程" class="headerlink" title="操作流程"></a>操作流程</h4><ol>
+<li><p>将 CM 导入 OD，在尝试了<code>内存访问法</code>和<code>栈平衡法</code>都不能到达 OEP 后，使用 SPOD（Special OD，个人称呼）配合<code>常用函数法</code>最终到达 OEP；</p>
 </li>
-<li><p>来到内存窗口，给代码段设置<code>内存执行断点</code>，然后按下<code>Shift + F9</code>忽略异常并运行程序：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwq6yj16mj31a50u077g.jpg" alt="OEP"></p>
-<p>程序到达 OEP，Perfect！</p>
+<li><p>将 CM 导入 SPOD，goto 到 GetProcAddress 函数的行首，设置条件记录断点，记录调用 GetProcAddress 函数的地址及参数：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1ysq1mtyj31a90u0goz.jpg" alt="条件记录断点"></p>
+<p>清空 log，然后运行程序；</p>
 </li>
-<li><p>既然有那么多方法，问什么要用这么复杂的方法呢？</p>
-<p>是因为，加壳不仅可以隐藏 OEP，还可以反调试，而为了绕过反调试，在执行部分代码后，再设置断点相对会更安全，这是一种好的思路；</p>
+<li><p>打开 log 窗口，对比各区段偏移后，发现外壳最后一次调用 GetProcAddress 函数的地址为 00478095：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1yw9u35dj31a50u0acu.jpg" alt="最后一次调用"></p>
+<p>重载程序，修改条件记录断点为条件断点：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1z1co1n6j31a40u0tbn.jpg" alt="条件断点"></p>
+<p>然后运行程序；</p>
+</li>
+<li><p>程序中断后，给代码段设置内存执行断点，取消其它断点，运行程序；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1z3ur4g5j31a10u0goy.jpg" alt="删除模块分析"></p>
+<p>删除模块分析后，确认程序到达 OEP；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1zat8x4kj319z0u0dl7.jpg" alt="IAT"></p>
+<p>跟随任意 CALL，确认有调用输入函数后，继续跟随即可定位 IAT，此处为间接调用；</p>
+</li>
+<li><p>查看 IAT 的起始地址和结束地址，计算 Size；</p>
+<p>OEP 的 RVA 为：40300；<br>IAT 的起始地址 RVA 为：430F0；<br>IAT 的结束地址 RVA 为：43674；<br>IAT 的 Size = 43674 - 430F0 = 584；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1zjm7x68j31a60u0tcs.jpg" alt="计算 RVA"></p>
+</li>
+<li><p>使用 PETools 将内存数据 Dump 并保存为可执行文件；</p>
+</li>
+<li><p>打开 ImportREC，填写相关选项，然后获取输入表：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1znp815mj30wk0osdh9.jpg" alt="ImportREC"></p>
+<p>检查没有无效信息，修复程序；</p>
+</li>
+<li><p>程序可以运行，将程序导入 OD，检查 IAT：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1zynliujj31a40u0422.jpg" alt="检查 IAT"></p>
+<p>检查任意函数的名称字符串：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go200xh5ztj31a10u079p.jpg" alt="函数的名称字符串"></p>
+<p>都没有问题，脱壳完成！</p>
 </li>
 </ol>
 ]]></content>
@@ -4241,6 +4480,8 @@
       </categories>
       <tags>
         <tag>OEP</tag>
+        <tag>IAT</tag>
+        <tag>FSG</tag>
       </tags>
   </entry>
   <entry>
@@ -4872,134 +5113,6 @@
       <tags>
         <tag>软编码</tag>
         <tag>算法分析</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>脱壳小练习（一）</title>
-    <url>/posts/2471182341/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/UnPackMe-2">UnPackMe</a>来自互联网，仅供学习使用；</li>
-<li>Dump 工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-3">PETools</a>，来自互联网；</li>
-<li>IAT 重建工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-4">ImportREC</a>，来自互联网；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
-</ul>
-<h4 id="操作流程"><a href="#操作流程" class="headerlink" title="操作流程"></a>操作流程</h4><ol>
-<li><p>将 CM 导入 OD，使用内存访问法定位 OEP（这种方式设置的断点是一次性的）：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0wlp01l2j31dz0u0diq.jpg" alt="F2 断点"></p>
-<p>原理是：加壳程序运行时，会依次解压各区段，所以，访问后会中断；</p>
-</li>
-<li><p>运行程序后，程序中断两次：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0woppgmtj31e00u0jv3.jpg" alt="第一次重点"></p>
-<p>中断后查看提示信息，程序访问了代码段，所以触发了断点，再次运行程序：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0wqml26dj31e30u0djj.jpg" alt="第二次中断"></p>
-<p>程序再次中断，程序访问了第 2 个设置断点的区段，此时说明代码段已经解压完成了；</p>
-</li>
-<li><p>再次来到内存窗口，给代码段设置 F2 断点，然后运行程序：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0wve0v2wj31e60u041p.jpg" alt="再次设置断点"></p>
-<p>原理是：既然代码段已经解压完毕了，如果再次访问，就是原程序运行的时候；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0x0nx0ndj31e00u0q7e.jpg" alt="到达 OEP"></p>
-<p>从模块中删除分析后，就可以看到程序的本来面目了；</p>
-</li>
-<li><p>然后打开 PETools，选择当前 CM 进程，右键菜单选择完整转存并保存到可执行文件：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0x64np0kj314y0u0adf.jpg" alt="PETools"></p>
-</li>
-<li><p>回到 OD，定位到 IAT，查看 IAT 起始位置（RVA）及结束位置（RVA），计算 Size：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0x9gmecfj31dt0u0q6v.jpg" alt="定位到 IAT"></p>
-<p>通过 GetVersion 函数的地址，定位到 IAT；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0xenogn6j31e10u0jvs.jpg" alt="计算 RVA"></p>
-<p>通过计算得知：</p>
-<ul>
-<li>OEP 的 RVA 为：271B0；</li>
-<li>IAT 的 起始地址 RVA 为：60818；</li>
-<li>IAT 的 Size 为：60F28 - 60818 = 710（Hex）；</li>
-</ul>
-</li>
-<li><p>打开 ImportREC 填写相关选项并获取：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0xk307itj30wi0oqt9p.jpg" alt="填写选项"></p>
-<p>获取完成后，检查获取的数据：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0xlkacwwj30wi0oo3zu.jpg" alt="检查"></p>
-<p>手动或通过显示无效选项检查获取数据是否有效；</p>
-<p>确认无误后点击修复转存按钮，选择转存的程序，就完成修复了；</p>
-</li>
-<li><p>将修复后的程序导入 OD，查看 log 窗口：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0xswrszgj31dy0u0ju8.jpg" alt="log"></p>
-<p>没有异常，说明程序正常运行；</p>
-<p>然后定位到 IAT，随便选择一个函数，右键菜单查看可执行文件，到达函数 IMAGE_THUNK_DATA 结构体；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0xuvyplsj31e50u00wl.jpg" alt="查看可执行程序"></p>
-<p>这里存放的是函数名字符串的 RVA，<code>Ctrl + G</code>跳转到 VA 查看函数名字符串；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0y4g6n1sj31dy0u0wlb.jpg" alt="确认 IAT"></p>
-<p>确认函数名和 IAT 显示的函数名一致，脱壳完成；</p>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>脱壳技术</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>IAT</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>脱壳小练习（二）</title>
-    <url>/posts/2304111146/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-5">OllyDbg</a>修改版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/UnPackMe-5">UnPackMe</a>来自互联网，仅供学习使用；</li>
-<li>Dump 工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-3">PETools</a>，来自互联网；</li>
-<li>IAT 重建工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-4">ImportREC</a>，来自互联网；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
-</ul>
-<h4 id="操作流程"><a href="#操作流程" class="headerlink" title="操作流程"></a>操作流程</h4><ol>
-<li><p>将 CM 导入 OD，在尝试了<code>内存访问法</code>和<code>栈平衡法</code>都不能到达 OEP 后，使用 SPOD（Special OD，个人称呼）配合<code>常用函数法</code>最终到达 OEP；</p>
-</li>
-<li><p>将 CM 导入 SPOD，goto 到 GetProcAddress 函数的行首，设置条件记录断点，记录调用 GetProcAddress 函数的地址及参数：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1ysq1mtyj31a90u0goz.jpg" alt="条件记录断点"></p>
-<p>清空 log，然后运行程序；</p>
-</li>
-<li><p>打开 log 窗口，对比各区段偏移后，发现外壳最后一次调用 GetProcAddress 函数的地址为 00478095：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1yw9u35dj31a50u0acu.jpg" alt="最后一次调用"></p>
-<p>重载程序，修改条件记录断点为条件断点：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1z1co1n6j31a40u0tbn.jpg" alt="条件断点"></p>
-<p>然后运行程序；</p>
-</li>
-<li><p>程序中断后，给代码段设置内存执行断点，取消其它断点，运行程序；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1z3ur4g5j31a10u0goy.jpg" alt="删除模块分析"></p>
-<p>删除模块分析后，确认程序到达 OEP；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1zat8x4kj319z0u0dl7.jpg" alt="IAT"></p>
-<p>跟随任意 CALL，确认有调用输入函数后，继续跟随即可定位 IAT，此处为间接调用；</p>
-</li>
-<li><p>查看 IAT 的起始地址和结束地址，计算 Size；</p>
-<p>OEP 的 RVA 为：40300；<br>IAT 的起始地址 RVA 为：430F0；<br>IAT 的结束地址 RVA 为：43674；<br>IAT 的 Size = 43674 - 430F0 = 584；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1zjm7x68j31a60u0tcs.jpg" alt="计算 RVA"></p>
-</li>
-<li><p>使用 PETools 将内存数据 Dump 并保存为可执行文件；</p>
-</li>
-<li><p>打开 ImportREC，填写相关选项，然后获取输入表：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1znp815mj30wk0osdh9.jpg" alt="ImportREC"></p>
-<p>检查没有无效信息，修复程序；</p>
-</li>
-<li><p>程序可以运行，将程序导入 OD，检查 IAT：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1zynliujj31a40u0422.jpg" alt="检查 IAT"></p>
-<p>检查任意函数的名称字符串：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go200xh5ztj31a10u079p.jpg" alt="函数的名称字符串"></p>
-<p>都没有问题，脱壳完成！</p>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>脱壳技术</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>OEP</tag>
-        <tag>IAT</tag>
-        <tag>FSG</tag>
       </tags>
   </entry>
   <entry>
@@ -6164,7 +6277,7 @@
 <p>记录<a href="https://reversecore.com/">逆向工程核心原理</a>一书中对<code>PE 文件格式</code>的描述，辅助阅读<a href="https://bbs.pediy.com/forum-99.htm">加密解密</a>第 11 章节，补充、印证，加强学习，同时作为备忘，初始对很多内容理解不够深刻且容易忘记，日后需多加练习；</p>
 </blockquote>
 <h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li>OllyDbg 1.1 原版，简称<code>OD</code>；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
 <li><code>WinHex</code>来自互联网；</li>
 <li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
