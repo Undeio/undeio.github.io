@@ -2272,6 +2272,73 @@
       </tags>
   </entry>
   <entry>
+    <title>修复 IAT 之剔除无用数据</title>
+    <url>/posts/1928138386/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/UnPackMe-3">UnPackMe</a>来自互联网，仅供学习使用；</li>
+<li>Dump 工具为 OD 插件 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Plugin-1">OllyDump</a>，来自互联网；</li>
+<li>IAT 重建工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-4">ImportREC</a>，来自互联网；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
+</ul>
+<h4 id="操作流程"><a href="#操作流程" class="headerlink" title="操作流程"></a>操作流程</h4><p>Import REConstructor（简称 ImportREC）是目前最好用的输入表重建工具，它可以从杂乱的 IAT 中重建一个输入表；</p>
+<p>要运行 ImportREC，必须满足以下条件：</p>
+<ul>
+<li>目标文件已完全被 Dump 并保存为另外一个文件；</li>
+<li>目标文件必须正在运行；</li>
+<li>事先找到目标程序真正的 OEP 或知晓 IAT 的偏移量和大小；</li>
+</ul>
+<ol>
+<li><p>将 CM 导入 OD，使用栈平衡法找到 OEP，并停留在 OEP（目标文件必须正在运行）；</p>
+</li>
+<li><p>使用 OllyDump 将内存数据 Dump 出来并保存至可执行文件（目标文件已完全被 Dump 并保存为另外一个文件）：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0n79lxu4j31dt0u0jvk.jpg" alt="OllyDump"></p>
+<p>在插件菜单选择 OllyDump 或右键菜单选择转存调试的进程都可以，然后确认 Dump 选项：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0n2xcja2j31e00u0djx.jpg" alt="Dump"></p>
+<p>插件 Dump 数据方面没有问题，但重建 IAT 功能不够强大，因此，取消勾选重建输入表选项；</p>
+</li>
+<li><p>在 OD 中定位到 IAT，查看起始 RVA 以及结束 RVA，计算 Size：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0nfnw56mj310w0o8ta0.jpg" alt="Size"></p>
+<p>在输入表中，一个 DLl 对应于一份 IAT，多个 IAT 之间一般以一个 DWORD 的 0 隔开；</p>
+<p>此处 CM 的 IAT 之间被添加了无效信息；</p>
+</li>
+<li><p>用 ImportREC 打开 CM 进程，填写 OEP（RVA）以及 IAT 的起始地址（RVA）和大小，然后点击获取：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0no2nckij30we0oojsj.jpg" alt="ImportREC"></p>
+<p>获取输入表后，可以看到有一组<code>valid：NO</code>的数据，这就是两个 IAT 之间的无效信息：</p>
+<p>确认是无效信息后，在无效信息上右键菜单执行“Cut thunk(s)”命令：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0nzzqto3j31e10u0aeq.jpg" alt="Cut thunk(s)"></p>
+<p>剔除无效信息后，数据还是不正确：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0o4b5w5kj31dy0u078u.jpg" alt="数据还是不正确"></p>
+<p>因为 CM 中调用了 3 个 DLL，分别是 user32.dll、kernel32.dll 以及 ntdll.dll；</p>
+<p>而 ImportREC 只找到了两个，看来这玩意儿也不好使啊；</p>
+<p>NoNoNo，它找到了三个，但因为 ntdll 中的 API 混合在 kernel32 的 API 中，所以被替换了，看 log 窗口的提示信息；</p>
+<p>此时如果直接修复 dump.exe，在当前环境（xp）下是可以运行的，但可能会在其它 OS 中遇到兼容性问题；</p>
+<p>所以还需要修复 API：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0olk6qhmj31lk0qu0v8.jpg" alt="修复"></p>
+<p>在获取的信息中，双击对应的 API，在弹出的函数编辑框中修改对应的 DLL 名称和 API 名称；</p>
+<ul>
+<li>查看 RVA 来获取对应的函数比较直观，如：00001200 和 00001210；</li>
+<li>双击函数行打开函数编辑框；</li>
+<li>在编辑框中首先选择 DLL 名称，然后可以在下面的输入框中搜索指定的函数名，接着选择函数，点击 OK 确认修改；</li>
+<li>修改完成后，依然显示的是未修改的状态，但修复程序后，显示已修改；</li>
+</ul>
+<p>修改完成后，点击<code>Fix Dump</code>，选择需要修复的程序，完成修复：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0p1ijxbfj31e20u0ada.jpg" alt="完成修复"></p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>脱壳技术</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>IAT</tag>
+        <tag>ASPack</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>修复 IAT 重定向（一）</title>
     <url>/posts/228051751/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -2469,73 +2536,6 @@
       </tags>
   </entry>
   <entry>
-    <title>修复 IAT 之剔除无用数据</title>
-    <url>/posts/1928138386/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/UnPackMe-3">UnPackMe</a>来自互联网，仅供学习使用；</li>
-<li>Dump 工具为 OD 插件 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Plugin-1">OllyDump</a>，来自互联网；</li>
-<li>IAT 重建工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-4">ImportREC</a>，来自互联网；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
-</ul>
-<h4 id="操作流程"><a href="#操作流程" class="headerlink" title="操作流程"></a>操作流程</h4><p>Import REConstructor（简称 ImportREC）是目前最好用的输入表重建工具，它可以从杂乱的 IAT 中重建一个输入表；</p>
-<p>要运行 ImportREC，必须满足以下条件：</p>
-<ul>
-<li>目标文件已完全被 Dump 并保存为另外一个文件；</li>
-<li>目标文件必须正在运行；</li>
-<li>事先找到目标程序真正的 OEP 或知晓 IAT 的偏移量和大小；</li>
-</ul>
-<ol>
-<li><p>将 CM 导入 OD，使用栈平衡法找到 OEP，并停留在 OEP（目标文件必须正在运行）；</p>
-</li>
-<li><p>使用 OllyDump 将内存数据 Dump 出来并保存至可执行文件（目标文件已完全被 Dump 并保存为另外一个文件）：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0n79lxu4j31dt0u0jvk.jpg" alt="OllyDump"></p>
-<p>在插件菜单选择 OllyDump 或右键菜单选择转存调试的进程都可以，然后确认 Dump 选项：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0n2xcja2j31e00u0djx.jpg" alt="Dump"></p>
-<p>插件 Dump 数据方面没有问题，但重建 IAT 功能不够强大，因此，取消勾选重建输入表选项；</p>
-</li>
-<li><p>在 OD 中定位到 IAT，查看起始 RVA 以及结束 RVA，计算 Size：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0nfnw56mj310w0o8ta0.jpg" alt="Size"></p>
-<p>在输入表中，一个 DLl 对应于一份 IAT，多个 IAT 之间一般以一个 DWORD 的 0 隔开；</p>
-<p>此处 CM 的 IAT 之间被添加了无效信息；</p>
-</li>
-<li><p>用 ImportREC 打开 CM 进程，填写 OEP（RVA）以及 IAT 的起始地址（RVA）和大小，然后点击获取：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0no2nckij30we0oojsj.jpg" alt="ImportREC"></p>
-<p>获取输入表后，可以看到有一组<code>valid：NO</code>的数据，这就是两个 IAT 之间的无效信息：</p>
-<p>确认是无效信息后，在无效信息上右键菜单执行“Cut thunk(s)”命令：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0nzzqto3j31e10u0aeq.jpg" alt="Cut thunk(s)"></p>
-<p>剔除无效信息后，数据还是不正确：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0o4b5w5kj31dy0u078u.jpg" alt="数据还是不正确"></p>
-<p>因为 CM 中调用了 3 个 DLL，分别是 user32.dll、kernel32.dll 以及 ntdll.dll；</p>
-<p>而 ImportREC 只找到了两个，看来这玩意儿也不好使啊；</p>
-<p>NoNoNo，它找到了三个，但因为 ntdll 中的 API 混合在 kernel32 的 API 中，所以被替换了，看 log 窗口的提示信息；</p>
-<p>此时如果直接修复 dump.exe，在当前环境（xp）下是可以运行的，但可能会在其它 OS 中遇到兼容性问题；</p>
-<p>所以还需要修复 API：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0olk6qhmj31lk0qu0v8.jpg" alt="修复"></p>
-<p>在获取的信息中，双击对应的 API，在弹出的函数编辑框中修改对应的 DLL 名称和 API 名称；</p>
-<ul>
-<li>查看 RVA 来获取对应的函数比较直观，如：00001200 和 00001210；</li>
-<li>双击函数行打开函数编辑框；</li>
-<li>在编辑框中首先选择 DLL 名称，然后可以在下面的输入框中搜索指定的函数名，接着选择函数，点击 OK 确认修改；</li>
-<li>修改完成后，依然显示的是未修改的状态，但修复程序后，显示已修改；</li>
-</ul>
-<p>修改完成后，点击<code>Fix Dump</code>，选择需要修复的程序，完成修复：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0p1ijxbfj31e20u0ada.jpg" alt="完成修复"></p>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>脱壳技术</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>IAT</tag>
-        <tag>ASPack</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>内存访问定位 OEP</title>
     <url>/posts/3449356463/</url>
     <content><![CDATA[<blockquote>
@@ -2649,8 +2649,8 @@
 <figure class="highlight text"><table><tr><td class="code"><pre><span class="line">IMAGE_BASE_RELOCATION STRUCT</span><br><span class="line">    VirtualAddress      DWORD   ?   ;重定位数据的开始 RVA 地址</span><br><span class="line">    SizeOfBlock         DWORD   ?   ;重定位数据块的尺寸</span><br><span class="line">    TypeOffset          WORD    ?   ;重定位项数组</span><br><span class="line">IMAGE_BASE_RELOCATION ENDS</span><br></pre></td></tr></table></figure>
 
 <ul>
-<li>VirtualAddress：这组重定位数据的起始 RVA 地址，各重定位项的地址加上这个值才是该重定位项的完整 RVA 地址；</li>
-<li>SizeOfBlock：当前重定位结构的大小，因为 VirtualAddress 和 SizeOfBlock 都是固定的 4 字节，所以这个值减去 8（字节）就是 TypeOffset 数组的大小；</li>
+<li>VirtualAddress：双字，这组重定位数据的起始 RVA 地址，各重定位项的地址加上这个值才是该重定位项的完整 RVA 地址；</li>
+<li>SizeOfBlock：双字，当前重定位结构的大小，因为 VirtualAddress 和 SizeOfBlock 都是固定的 4 字节，所以这个值减去 8（字节）就是 TypeOffset 数组的大小；</li>
 <li>TypeOffset：重定位项数组，数组每项大小为 2 字节，共 16 位，分为高 4 位和低 12 位；<br>高 4 位代表重定位类型，低 12 位是重定位地址，它与 VirtualAddress 相加就是指向 PE 映像中需要修改的地址数据的指针；</li>
 </ul>
 <p>常见的重定位类型：</p>
@@ -3348,7 +3348,7 @@
       </tags>
   </entry>
   <entry>
-    <title>异常处理小记</title>
+    <title>异常处理初探</title>
     <url>/posts/996855490/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
 <li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
@@ -3426,233 +3426,9 @@
       </tags>
   </entry>
   <entry>
-    <title>异常处理流程</title>
-    <url>/posts/724103910/</url>
-    <content><![CDATA[<blockquote>
-<p>记录<a href="https://bbs.pediy.com/forum-99.htm">加密解密</a>第 8 章：8.1 中对异常处理的原理及流程的描述；</p>
-</blockquote>
-<p>Windows 的异常处理是操作系统处理程序错误或异常的一系列流程和技术的总称；</p>
-<p>开发人员主要使用的两种异常处理技术是：</p>
-<ul>
-<li>SEH（Structured Exception Handling，结构化异常处理）：全局异常链表，不同的线程共用一个；</li>
-<li>VEH（Vectored Exception Handler，向量化异常处理）：局部异常链表，线程相关，位于当前线程的堆栈当中，不同线程不同堆栈；</li>
-</ul>
-<span id="more"></span>
-
-<h3 id="异常基本概念"><a href="#异常基本概念" class="headerlink" title="异常基本概念"></a>异常基本概念</h3><p>Intel 在从 386 开始的 IA-32 家族处理中引入了中断（Interrupt）和 异常（Exception）的概念；</p>
-<ol>
-<li>中断是由外部硬件设备或异步事件产生的；</li>
-<li>异常是由内部事件产生的，可分为故障、陷阱和终止 3 种；</li>
-<li>故障和陷阱是可恢复的；</li>
-<li>终止类异常是不可恢复的，发生此类异常，系统必须重启；</li>
-</ol>
-<p>异常就是在应用程序正常执行过程中发生的不正常事件；</p>
-<p>由 CPU 引发的异常称为硬件异常，例如访问无效的内存地址；</p>
-<p>由操作系统或应用程序引发的异常称为软件异常；</p>
-<p>常见的异常列表：</p>
-<table>
-<thead>
-<tr>
-<th align="center">中断类型号</th>
-<th align="center">类型</th>
-<th align="center">相关指令</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">00</td>
-<td align="center">除数为 0 时中断</td>
-<td align="center">DIV、IDIV</td>
-</tr>
-<tr>
-<td align="center">01</td>
-<td align="center">调试异常</td>
-<td align="center">任何指令</td>
-</tr>
-<tr>
-<td align="center">03</td>
-<td align="center">断点中断</td>
-<td align="center">INT3 指令</td>
-</tr>
-<tr>
-<td align="center">04</td>
-<td align="center">溢出中断</td>
-<td align="center">INT0</td>
-</tr>
-<tr>
-<td align="center">05</td>
-<td align="center">边界检查</td>
-<td align="center">BOUND</td>
-</tr>
-<tr>
-<td align="center">06</td>
-<td align="center">非法指令故障</td>
-<td align="center">非法指令编码或操作数</td>
-</tr>
-<tr>
-<td align="center">07</td>
-<td align="center">设备不可用</td>
-<td align="center">浮点指令或 W AIT</td>
-</tr>
-<tr>
-<td align="center">08</td>
-<td align="center">双重故障</td>
-<td align="center">任何指令</td>
-</tr>
-<tr>
-<td align="center">0A</td>
-<td align="center">无效 TSS 中断</td>
-<td align="center">JMP、CALL、IRET、中断</td>
-</tr>
-<tr>
-<td align="center">0B</td>
-<td align="center">段不存在异常</td>
-<td align="center">装载段寄存器</td>
-</tr>
-<tr>
-<td align="center">0C</td>
-<td align="center">栈异常</td>
-<td align="center">装载 SS 寄存器或 SS 段寻址</td>
-</tr>
-<tr>
-<td align="center">0D</td>
-<td align="center">通用保护异常</td>
-<td align="center">任何特权指令，任何访问存储器的指令</td>
-</tr>
-<tr>
-<td align="center">0E</td>
-<td align="center">页异常</td>
-<td align="center">任何访问存储器的指令</td>
-</tr>
-</tbody></table>
-<p>除了 CPU 能够捕获一个事件并引发一个硬件异常外，在代码段中可以主动引发一个软件异常，只需调用 RaiseException() 函数；</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">VOID RaiseException(</span><br><span class="line">    DWORD dwExceptionCode,      //标识引发异常的代码</span><br><span class="line">    DWORD dwExceptionFlags,     //异常是否继续执行的标识</span><br><span class="line">    DWORD nNumberOfArguments，  //附加信息</span><br><span class="line">    CONST DWORD *lpArguments    //附加信息</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
-
-<p>程序捕获软件异常的方法与捕获硬件异常的方法完全相同；</p>
-<h3 id="异常处理的基本过程"><a href="#异常处理的基本过程" class="headerlink" title="异常处理的基本过程"></a>异常处理的基本过程</h3><p>Windows 正常启动后，将运行在保护模式下，当有中断或异常发生时，CPU 会通过中断描述符表（Interrupt Descriptor Table，IDT）来寻找处理函数；</p>
-<p>IDT 表是 CPU（硬件）和操作系统（软件）交接中断和异常的关口；</p>
-<h4 id="IDT"><a href="#IDT" class="headerlink" title="IDT"></a>IDT</h4><p>IDT 是一张位于物理内存中的线性表，共有 256 项；</p>
-<p>在 32 位模式下每个 IDT 项的长度是 8 字节，在 64 位模式下则为 16 字节；</p>
-<p>操作系统在启动阶段会初始化这个表，系统中的每个 CPU 都有一份 IDT 的拷贝；</p>
-<p>IDT 的位置和长度是由 CPU 的 IDTR 寄存器描述的；</p>
-<p>IDTR 寄存器共有 48 位，其中高 32 位是表的基址，低 16 位是表的长度；</p>
-<p>尽管可以使用 SIDT 和 LIDT 指令来读写该寄存器，但 LIDT 是特权指令，只能在 Ring0 特权级下运行；</p>
-<p>IDT 的每一项都是一个门结构，它是发生中断或异常时 CPU 转移控制权的必经之路：</p>
-<ul>
-<li>任务门（Task-gate）描述符，主要用于 CPU 的任务切换（TSS 功能）；</li>
-<li>中断门（Interrupt-gate）描述符，主要用于描述中断处理程序的入口；</li>
-<li>陷阱门（Trap-gate）描述符，主要用于描述异常处理程序的入口；</li>
-</ul>
-<h4 id="异常处理的准备工作"><a href="#异常处理的准备工作" class="headerlink" title="异常处理的准备工作"></a>异常处理的准备工作</h4><p>当有中断或异常发生时，CPU 会根据中断类型号（这里把异常也视为一种中断）转而执行对应的中断处理程序，对异常来说就是 KiTrapXX 函数；</p>
-<p>例如 KiTrap03：</p>
-<ul>
-<li>处理 INT3 异常的函数；</li>
-<li>在开始异常处理时，先构造 TRAP_FRAME 陷阱帧结构，用来保存系统调用、中断、异常发生时的寄存器现场，方便之后回到用户空间 / 回到中断处时，恢复寄存器的值，继续执行；</li>
-<li>KiTrap03 实际上调用了 CommonDispatchException；</li>
-</ul>
-<p>CommonDisPatchException：</p>
-<ul>
-<li>判断是用户异常还是内核异常，使用的是 CS 段寄存器的最后两位；</li>
-<li>构建一个异常记录的结构；</li>
-<li>实际上调用了 KiDispatchException 来处理异常；</li>
-</ul>
-<p>KiDispatchException：</p>
-<ul>
-<li>该函数用于分发异常，根据异常所产生的模式找到异常的函数；</li>
-<li>如果异常发生在内核模式，函数会直接调用一个异常处理函数直接处理异常；</li>
-<li>如果异常发生在用户模式，则函数会将异常记录、异常栈帧和陷阱栈帧拷贝到用户模式的线程的栈（这些信息在用户态可以被修改，被修改会重新设置到线程环境上），随后函数会进入到用户态，到了用户态之后会被专门的函数去处理异常；</li>
-</ul>
-<p>各个异常处理函数除了针对本异常的特定处理外，通常会将异常信息进行封装，以便进行后续处理；</p>
-<p>封装的内存主要有两部分，一部分是异常记录，包含本次异常的信息，该结构定义如下：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">typedef struct _EXCEPTION_RECORD&#123;</span><br><span class="line">    NTSTATUS ExceptionCode;                     //异常代码</span><br><span class="line">    ULONG ExceptionFlags;                       //异常标志</span><br><span class="line">    struct _EXCEPTION_RECORD *ExceptionRecord;  //指向另一个 EXCEPTION_RECORD 的指针</span><br><span class="line">    PVOID ExceptionAddress;                     //异常发生的地址</span><br><span class="line">    ULONG NumberParameters;                     // ExceptionInformation 含有的元素数量</span><br><span class="line">    ULONG_PTR ExceptionInformation;             //附加信息</span><br><span class="line">&#125; EXCEPTION_RECORD</span><br></pre></td></tr></table></figure>
-
-<p>另一部分被封装的内容称为陷阱帧，它精确描述了发生异常时线程的状态（Windows 的任务调度是基于线程的）；<br>TRAP_FRAME 陷阱帧结构与处理器高度相关，因此在不同的平台上有不同的定义；</p>
-<p>TRAP_FRAME 陷阱帧结构包含每个寄存器的状态，但该结构一般仅供系统内核自身或调试系统使用，当需要把控制权交给用户注册的异常处理程序时，会将 TRAP_FRAME 转换成一个名为 CONTEXT 的结构，它包含线程运行时处理器各主要寄存器的完整镜像，用于保存线程运行环境；</p>
-<p>包装完毕后，异常处理函数会进一步调用系统内核的 nt!KiDispatchException 函数来处理异常；<br>该函数原型定义如下，其中第 1 参数和第 3 参数正是上面封装的两个结构体：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">VOID</span><br><span class="line">KiDispatchException(</span><br><span class="line">    IN PEXCEPTION_RECORD ExceptionRecord,       //异常结构信息</span><br><span class="line">    IN PKEXCEPTION_FRAME ExceptionFrame,        //对 NT386 系统总是为 NULL，未使用</span><br><span class="line">    IN PKTRAP_FRAME TrapFrame,                  //发生异常时的陷阱帧</span><br><span class="line">    IN KPROCESSOR_MODE PreviousMode,            //发生异常时的 CPU 模式是内核模式还是用户模式</span><br><span class="line">    IN BOOLEAN FirstChance                      //是否第 1 次处理该异常</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
-
-<h4 id="内核状态的异常处理过程"><a href="#内核状态的异常处理过程" class="headerlink" title="内核状态的异常处理过程"></a>内核状态的异常处理过程</h4><p>当 PreviousMode 为 KernelMode 时，表示是内核模式下产生的异常，此时 KiDispatchException 会按以下步骤分发异常：</p>
-<ol>
-<li><p>检测当前系统是否正在被内核调试器调试，如果内核调试器不存在，将跳过本步骤；</p>
-<p>如果内核调试器存在，系统就会把异常处理的控制权转交给内核调试器，并注明是第 1 次处理机会（FirstChance）；</p>
-<p>内核调试器取得控制权之后，会根据用户对异常处理的设置来确定是否要处理该异常；</p>
-<p>如果无法确定该异常是否要处理，就会发生中断，把控制权交给用户，由用户决定是否处理；</p>
-<p>如果调试器正确处理了该异常，那么发生异常的线程就会回到原来产生异常的位置继续执行；</p>
-</li>
-<li><p>如果不存在内核调试器，或者在第 1 次处理机会时调试器选择不处理该异常，系统就会调用 nt!RtlDispatchException 函数，根据线程注册的结构化异常处理（SEH）过程来处理该异常；</p>
-</li>
-<li><p>如果 nt!RtlDispatchException 函数没有处理该异常，系统会给调试器第 2 次处理机会（Second Chance），此时调试器可以再次取得对异常的处理权；</p>
-</li>
-<li><p>如果不存在内核调试器，或者第 2 次机会调试器仍不处理，系统就认为在这种情况下不能继续运行了，为了避免引起更加严重的、不可预知的错误，系统会直接调用 KeBugCheckEx 产生一个错误码为“KERNEL_MODE_EXCEPTION_NO_HANDLED”（其值为 0x0000008E）的 BSOD（俗称蓝屏错误）；</p>
-</li>
-</ol>
-<h4 id="用户态的异常处理过程"><a href="#用户态的异常处理过程" class="headerlink" title="用户态的异常处理过程"></a>用户态的异常处理过程</h4><p>当 PreviousMode 为 UserMode 时，表示是用户模式下产生的异常，此时 KiDispatchException 函数仍然会检测内核调试器是否存在；</p>
-<p>如果内核调试器存在，会优先把控制权交给内核调试器进行处理，所以，使用内核调试器调试用户态程序是完全可行的，并且不依赖进程的调试端口；</p>
-<p>在大多数情况下，内核调试器对用户态的异常不感兴趣，也就不会去处理它，此时，nt!KiDispatchException 函数仍然像处理内核态异常一样按两次处理机会进行分发；</p>
-<ol>
-<li><p>如果发生异常的程序正在被调试，那么将异常信息发送给正在调试它的用户态调试器，给调试器第 1 次处理机会，如果没有调试器，则跳过本步骤；</p>
-</li>
-<li><p>如果不存在用户态调试器或调试器未处理该异常，那么在栈上放置 EXCEPTION_RECORD 和 CONTEXT（ 用户态 TRAP_FRAME 陷阱帧结构） 两个结构，并将控制权返回用户态的 ntdll.dll 中的 KiUserExceptionDispatcher 函数，由它调用 ntdll!KiDispatchException 函数进行用户态的异常处理，这一部分涉及 SEH 和 VEH 两种异常处理机制；</p>
-<p>其中，SEH 部分包括应用程序调用 API 函数 SetUnhandleExceptionFilter 设置的顶级异常处理程序；</p>
-<p>但如果有调试器存在，顶级异常处理将被跳过，进入下一阶段的处理，否则将由顶级异常处理程序进行终结处理（通常是显示一个应用程序错误对话框并根据用户的选择决定是终止程序还是附加到调试器）；</p>
-<p>如果没有调试器能附加于其上或调试器还是处理不了异常，系统就调用 ExitProcess 函数来终结程序；</p>
-<p>KiUserExceptionDispatcher：</p>
-<ul>
-<li>函数第 1 个参数为异常类型，第 2 个参数为产生异常时的上下文记录；</li>
-<li>KiUserExceptionDispatcher 的核心是对 RtlDispatchException 的调用；<br>如果某个处理程序处理这个异常并继续执行，那么对 RtlDispatchException 的调用就不会返回；<br>如果它返回了，只有两种可能：调用了 NtContinue 以便让进程继续执行，或者产生了新的异常，如果是这样，那异常就不能再继续处理了，必须终止进程；</li>
-</ul>
-</li>
-<li><p>如果 ntdll!KiDispatchException 函数在调用用户态的异常处理过程中未能处理该异常，那么异常处理过程会再次返回 nt!KiDispatchException ，它将再次把异常信息发送给用户态的调试器，给调试器第 2 次处理机会；</p>
-<p>如果没有调试器存在，则不会进行第 2 次分发，而是直接结束进程；</p>
-</li>
-<li><p>如果第 2 次机会调试器仍不处理，nt!KiDispatchException 会再次尝试把异常分发给进程的异常端口进行处理；</p>
-<p>该端口通常由子系统进程 csrss.exe 进行监听，子系统监听到该错误后，通常会显示一个“应用程序错误”对话框，用户可以点击“确定”按钮或者最后将其附加到调试器上的“取消”按钮；</p>
-<p>如果没有调试器能附加于其上，或者调试器还是处理不了异常，系统就调用 ExitProcess 函数来终结程序；</p>
-</li>
-<li><p>在终结程序之前，系统会再次调用发生异常的线程中的所有异常处理过程，这是线程异常处理过程所获得的清理未释放资源的最后机会，此后程序就终结了；</p>
-</li>
-</ol>
-<h4 id="具体描述"><a href="#具体描述" class="headerlink" title="具体描述"></a>具体描述</h4><p>内核态异常的分发过程：</p>
-<ol>
-<li><p>如果 PreviousMode 为 KernelMode(0)，那么对于第 1 轮处理机会，KiDispatchException 会试图先通知内核调试器来处理该异常；</p>
-</li>
-<li><p>内核变量 KiDebugRoutine 是用来标识内核调试引擎交互的接口函数；</p>
-<p>当内核调试引擎启用时，KiDebugRoutine 指向内核调试引擎 KdpTrap，这个函数会进一步把异常信息封装为数据包发送给内核调试器，当调试内核调试引擎没有启用时，KiDebugRoutine 指向 KdpStub 函数，简单处理后返回；</p>
-</li>
-<li><p>如果 KiDebugRoutine 返回 TRUE，也就是内核引擎处理了异常，那么 KiDispatchException 便停止继续分发，准备返回；</p>
-<p>如果 KiDebugRoutine 返回 FALSE，也就是没有处理该异常，那么 KiDispatchException 会调用 RtlDispatchException 函数，试图寻找已经注册的结构化异常处理器；</p>
-<p>会遍历异常登记链表，依次执行每个异常处理器；</p>
-<p>如果某个异常处理器处理了，RtlDispatchException 返回 TRUE，否则返回 FALSE；</p>
-</li>
-<li><p>RtlDispatchException 返回 FALSE，KiDispatchException 会试图给内核调试器第二次机会，如果 KiDebugRoutine 仍然返回 FALSE，那么 KiDispatchException 会认为这是无人处理的异常，会调用 KeBugCheckEx；</p>
-</li>
-</ol>
-<p>用户态异常的分发过程：</p>
-<ol>
-<li><p>如果是用户模式，即 PreviousMode 参数等于 UserMode(0)，对于第 1 次处理机会，KiDispatchException 会试图将异常分发给用户态的调试器，如果 DebugPort 不为空，将异常发送给调试子系统，调试子系统将异常发送给调试器，如果处理了异常分发结束；</p>
-</li>
-<li><p>如果调试器没有处理该异常，KiDispatchException 修改用户态栈，返回用户层之后执行 KiUserExceptionDispatcher，此函数会调用 RtlDispatchException 来寻找异常处理器，首先遍历 VEH，然后遍历 SEH；</p>
-<p>如果 RtlDispatchException 返回 FALSE，并且当前进程在被调试，那么 KiUserExceptionDispatcher 会调用 ZwRaiseException 并将 FirstChance 设置为 FALSE，进行第二轮分发。如果没有被调试，结束进程；</p>
-</li>
-<li><p>ZwRaiseException 会通过内核服务 NtRaiseException 把异常传递给 KiDispatchException 来进行分发；</p>
-<p>第二次，将异常传递给调试器，如果没有处理将异常分配给 ExceptionPort 异常端口监听者处理，如果返回 FALSE，结束进程；</p>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>逆向分析</category>
-        <category>脱壳技术</category>
-        <category>文章资料</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>异常处理</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>异常处理流程小记</title>
     <url>/posts/192684570/</url>
-    <content><![CDATA[<h4 id="异常处理流程图"><a href="#异常处理流程图" class="headerlink" title="异常处理流程图"></a>异常处理流程图</h4><p>总结一下异常处理的流程：</p>
+    <content><![CDATA[<h4 id="异常处理流程图"><a href="#异常处理流程图" class="headerlink" title="异常处理流程图"></a>异常处理流程图</h4><p>简单描述一下异常处理的流程：</p>
 <!-- htmlmin:ignore -->
 
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">graph TB</span><br><span class="line">  A[|&quot;系统发现产生了一个异常|&quot;] --&gt; B&#123;&quot;程序是否正在被调试&quot;&#125;</span><br><span class="line">  B -- |&quot;是，程序正在被调试&quot;| --&gt; C&#123;&quot;权限转给调试器，并判断调试器是否忽略了异常&quot;&#125;</span><br><span class="line">  C -- |&quot;是，忽略了&quot;| --&gt; D&#123;&quot;程序是否安装 SEH&quot;&#125;</span><br><span class="line">  D -- |&quot;是，安装了&quot;| --&gt; E&#123;&quot;SEH 是否解决异常&quot;&#125;</span><br><span class="line">  E -- |&quot;是，解决了&quot;| --&gt; F&#123;&quot;程序可以继续正常运行&quot;&#125;</span><br><span class="line">  B -- |&quot;否，程序没有被调试&quot;| --&gt; D</span><br><span class="line">  C -- |&quot;否，未忽略，但未能解决异常&quot;| --&gt; G&#123;&quot;系统默认异常处理流程&quot;&#125;</span><br><span class="line">  D -- |&quot;否，未安装&quot;| --&gt; G</span><br><span class="line">  E -- |&quot;否，未解决&quot;| --&gt; G</span><br></pre></td></tr></table></figure>
@@ -3814,6 +3590,72 @@
       </tags>
   </entry>
   <entry>
+    <title>硬编码寻找序列号（一）</title>
+    <url>/posts/2293324257/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-1">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
+</ul>
+<span id="more"></span>
+
+<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
+<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
+</li>
+<li><p>倒入<code>OD</code>开始分析：</p>
+<ul>
+<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
+</li>
+<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，咦，发现可疑函数：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy1j9yekwj30oc065t9q.jpg" alt="分析"></p>
+<p>就是它了，选中它并右键<code>在输入函数上切换断点</code>，然后去<code>断点窗口（B 窗口）</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
+</li>
+<li><p>然后运行程序，“随便输入”一些字符后点击验证，可以随便输入，但请记住它；</p>
+</li>
+<li><p>程序停在了设置断点的<code>API</code>的行首，在堆栈窗口可以看到<code>API</code>的各种参数，而参数<code>Buffer</code>里存放着函数返回的数据，选中<code>Buffer</code>右键<code>数据窗口中跟随</code>，可以看到，由于断点中断在了函数的第一行，所以这个地址里什么也没有：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy267st5oj30t00drq4u.jpg" alt="Buffer"></p>
+</li>
+<li><p>接着按下<code>Ctrl + F9</code>或点击菜单栏的调试选项并选择<code>执行到返回</code>，然后发现<code>Buffer</code>对应的地址里有数据了，并且是我们输入的字符串；</p>
+</li>
+<li><p>在上一步中，我们<code>执行到返回</code>，那就意味着接下来登场的将会是<code>RETN</code>了，按下<code>F7 或 F8</code>，返回到调用<code>API</code>的程序，发现接下来将要执行的代码很可疑：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy2kqa9a0j30sz0dt0uo.jpg" alt="程序"></p>
+<p>一个比较，一个跳转，并且文字显示和序列号有关；</p>
+</li>
+<li><p>分析一下这几行可疑的代码：</p>
+<ul>
+<li><p><code>MOV EDX,CrackMe.00403008</code>将<code>00403008</code>这个地址拷贝到<code>EDX</code>，执行一下这行代码：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy2xlpyn3j308805374d.jpg" alt="EDX"></p>
+<p>在<code>EDX</code>存放的地址中发现一串可疑字符串，选中<code>EDX</code>右键<code>数据窗口中跟随</code>，原来可疑字符串只是前面几位，而后面那几个字符是我们输入的字符；</p>
+</li>
+<li><p><code>MOV EBX,DWORD PTR DS:[403010]</code>将<code>00403010</code>这个地址中的数据的前四个字节拷贝到<code>EBX</code>，执行一下这行代码：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy3ehrs27j30as0ay3zf.jpg" alt="EBX"></p>
+<p>既然<code>EBX</code>中存放的是数据，而数据又看不懂，怎么知道是什么呢？<code>OD</code>很强大，选择那行代码并右键<code>数据窗口中跟随，然后选择内存地址</code>或者在数据窗口选中那行代码的数据并选择<code>数据窗口中跟随地址</code>就可以看到<code>EBX</code>中存放的内容了，原来是我们输入的“序列号”；</p>
+</li>
+<li><p><code>CMP EBX,DWORD PTR DS:[403008]</code>这行代码就没什么好说的了，减法比较是否相等，还使用了一个障眼法，<code>EDX</code>放地址，<code>EBX</code>放数据，在这里再取出<code>EDX</code>的数据进行比较；</p>
+</li>
+<li><p><code>JE SHORT CrackMe.00401087</code>这行也没啥说的，<code>JE</code>根据<code>ZF 标志位</code>进行跳转，而如果上一步的计算结果为<code>0</code>，则<code>ZF</code>为<code>1</code>，<code>JE</code>跳转成立，也就是说，如果<code>EDX</code>和<code>EBX</code>中的数据相同，那么序列号就是对的，<code>JE</code>跳转并向下执行，最后弹出<code>正确！</code>，反之则不跳转向下执行，弹出<code>序列号错误！</code>，看来第一步中发现的可疑字符串就是真正的序列号了；</p>
+</li>
+<li><p>如果想要输入啥都能通过验证，那么可以将<code>JE</code>改为<code>JMP</code>无条件跳转，保存修改到文件就获得了一个新的程序；</p>
+</li>
+<li><p>但我们的目的是找出真正的序列号，所以嘛，复制那串字符去试一下，果然，一切如我们所料！</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>逆向分析</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>硬编码</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>硬编码寻找序列号（三）</title>
     <url>/posts/4122547819/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -3932,72 +3774,6 @@
         <tag>硬编码</tag>
         <tag>软编码</tag>
         <tag>算法分析</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>硬编码寻找序列号（一）</title>
-    <url>/posts/2293324257/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-1">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
-</ul>
-<span id="more"></span>
-
-<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
-<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
-</li>
-<li><p>倒入<code>OD</code>开始分析：</p>
-<ul>
-<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
-</li>
-<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，咦，发现可疑函数：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy1j9yekwj30oc065t9q.jpg" alt="分析"></p>
-<p>就是它了，选中它并右键<code>在输入函数上切换断点</code>，然后去<code>断点窗口（B 窗口）</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
-</li>
-<li><p>然后运行程序，“随便输入”一些字符后点击验证，可以随便输入，但请记住它；</p>
-</li>
-<li><p>程序停在了设置断点的<code>API</code>的行首，在堆栈窗口可以看到<code>API</code>的各种参数，而参数<code>Buffer</code>里存放着函数返回的数据，选中<code>Buffer</code>右键<code>数据窗口中跟随</code>，可以看到，由于断点中断在了函数的第一行，所以这个地址里什么也没有：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy267st5oj30t00drq4u.jpg" alt="Buffer"></p>
-</li>
-<li><p>接着按下<code>Ctrl + F9</code>或点击菜单栏的调试选项并选择<code>执行到返回</code>，然后发现<code>Buffer</code>对应的地址里有数据了，并且是我们输入的字符串；</p>
-</li>
-<li><p>在上一步中，我们<code>执行到返回</code>，那就意味着接下来登场的将会是<code>RETN</code>了，按下<code>F7 或 F8</code>，返回到调用<code>API</code>的程序，发现接下来将要执行的代码很可疑：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy2kqa9a0j30sz0dt0uo.jpg" alt="程序"></p>
-<p>一个比较，一个跳转，并且文字显示和序列号有关；</p>
-</li>
-<li><p>分析一下这几行可疑的代码：</p>
-<ul>
-<li><p><code>MOV EDX,CrackMe.00403008</code>将<code>00403008</code>这个地址拷贝到<code>EDX</code>，执行一下这行代码：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy2xlpyn3j308805374d.jpg" alt="EDX"></p>
-<p>在<code>EDX</code>存放的地址中发现一串可疑字符串，选中<code>EDX</code>右键<code>数据窗口中跟随</code>，原来可疑字符串只是前面几位，而后面那几个字符是我们输入的字符；</p>
-</li>
-<li><p><code>MOV EBX,DWORD PTR DS:[403010]</code>将<code>00403010</code>这个地址中的数据的前四个字节拷贝到<code>EBX</code>，执行一下这行代码：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy3ehrs27j30as0ay3zf.jpg" alt="EBX"></p>
-<p>既然<code>EBX</code>中存放的是数据，而数据又看不懂，怎么知道是什么呢？<code>OD</code>很强大，选择那行代码并右键<code>数据窗口中跟随，然后选择内存地址</code>或者在数据窗口选中那行代码的数据并选择<code>数据窗口中跟随地址</code>就可以看到<code>EBX</code>中存放的内容了，原来是我们输入的“序列号”；</p>
-</li>
-<li><p><code>CMP EBX,DWORD PTR DS:[403008]</code>这行代码就没什么好说的了，减法比较是否相等，还使用了一个障眼法，<code>EDX</code>放地址，<code>EBX</code>放数据，在这里再取出<code>EDX</code>的数据进行比较；</p>
-</li>
-<li><p><code>JE SHORT CrackMe.00401087</code>这行也没啥说的，<code>JE</code>根据<code>ZF 标志位</code>进行跳转，而如果上一步的计算结果为<code>0</code>，则<code>ZF</code>为<code>1</code>，<code>JE</code>跳转成立，也就是说，如果<code>EDX</code>和<code>EBX</code>中的数据相同，那么序列号就是对的，<code>JE</code>跳转并向下执行，最后弹出<code>正确！</code>，反之则不跳转向下执行，弹出<code>序列号错误！</code>，看来第一步中发现的可疑字符串就是真正的序列号了；</p>
-</li>
-<li><p>如果想要输入啥都能通过验证，那么可以将<code>JE</code>改为<code>JMP</code>无条件跳转，保存修改到文件就获得了一个新的程序；</p>
-</li>
-<li><p>但我们的目的是找出真正的序列号，所以嘛，复制那串字符去试一下，果然，一切如我们所料！</p>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>逆向分析</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>硬编码</tag>
       </tags>
   </entry>
   <entry>
@@ -5574,6 +5350,241 @@
       </tags>
   </entry>
   <entry>
+    <title>异常处理小记</title>
+    <url>/posts/724103910/</url>
+    <content><![CDATA[<blockquote>
+<p>记录<a href="http://www.hzcourse.com/web/refbook/detail/4372/215">Windows PE 权威指南</a>以及<a href="https://bbs.pediy.com/forum-99.htm">加密解密</a>等书中对异常处理的原理及流程的部分描述；</p>
+</blockquote>
+<p>Windows 的异常处理是操作系统处理程序错误或异常的一系列流程和技术的总称；</p>
+<p>开发人员主要使用的两种异常处理技术是：</p>
+<ul>
+<li>SEH（Structured Exception Handling，结构化异常处理）：全局异常链表，不同的线程共用一个；</li>
+<li>VEH（Vectored Exception Handler，向量化异常处理）：局部异常链表，线程相关，位于当前线程的堆栈当中，不同线程不同堆栈；</li>
+</ul>
+<span id="more"></span>
+
+<h3 id="异常基本概念"><a href="#异常基本概念" class="headerlink" title="异常基本概念"></a>异常基本概念</h3><p>Intel 在从 386 开始的 IA-32 家族处理中引入了中断（Interrupt）和 异常（Exception）的概念；</p>
+<ol>
+<li>中断是由外部硬件设备或异步事件产生的；</li>
+<li>异常是由内部事件产生的，可分为故障（Fault）、陷阱（Trap）和终止（Abort） 3 种；</li>
+<li>故障异常和陷阱异常是可恢复的；</li>
+<li>故障异常通常是因为执行指令失败而引起的，如除 0 异常，以及 EIP 指向了不可执行的页面等；<br>此类异常有一个共同点，那就是发生异常时自动压入栈的是失败指令的地址，而不是下一条指令的地址，这样做的原因是：当异常遍历过程返回时，可以重新执行一遍这条指令；</li>
+<li>陷阱异常通常是因为执行了自陷指令（如 INT3）而引发的异常，这类异常的返回地址是自陷指令的下一条指令所在的地址；</li>
+<li>终止类异常是不可恢复的，发生此类异常，系统必须重启；<br>这类异常专指那些已经无法恢复的严重错误，如硬件故障引发的异常，或系统表中出现了错误值引发的异常；</li>
+</ol>
+<p>异常就是在应用程序正常执行过程中发生的不正常事件；</p>
+<p>由 CPU 引发的异常称为硬件异常，例如访问无效的内存地址；</p>
+<p>由操作系统或应用程序引发的异常称为软件异常；</p>
+<p>Intel CPU 常见的异常列表：</p>
+<table>
+<thead>
+<tr>
+<th align="center">中断类型号</th>
+<th align="center">类型</th>
+<th align="center">相关指令</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">00</td>
+<td align="center">触发运算出错，除数为 0 时中断</td>
+<td align="center">DIV、IDIV</td>
+</tr>
+<tr>
+<td align="center">01</td>
+<td align="center">调试异常（包括单步调试和硬件调试）</td>
+<td align="center">任何指令</td>
+</tr>
+<tr>
+<td align="center">03</td>
+<td align="center">断点中断</td>
+<td align="center">INT3 指令</td>
+</tr>
+<tr>
+<td align="center">04</td>
+<td align="center">溢出中断</td>
+<td align="center">INT0</td>
+</tr>
+<tr>
+<td align="center">05</td>
+<td align="center">读写内存冲突，即越界异常</td>
+<td align="center">BOUND</td>
+</tr>
+<tr>
+<td align="center">06</td>
+<td align="center">非法指令故障</td>
+<td align="center">非法指令编码或操作数</td>
+</tr>
+<tr>
+<td align="center">07</td>
+<td align="center">设备不可用</td>
+<td align="center">浮点指令或 WAIT</td>
+</tr>
+<tr>
+<td align="center">08</td>
+<td align="center">异常嵌套，双重故障，即在异常处理过程中又发生了异常</td>
+<td align="center">任何指令</td>
+</tr>
+<tr>
+<td align="center">0A</td>
+<td align="center">非法任务状态段，无效 TSS 中断</td>
+<td align="center">JMP、CALL、IRET、中断</td>
+</tr>
+<tr>
+<td align="center">0B</td>
+<td align="center">段不存在异常</td>
+<td align="center">装载段寄存器</td>
+</tr>
+<tr>
+<td align="center">0C</td>
+<td align="center">栈异常</td>
+<td align="center">装载 SS 寄存器或 SS 段寻址</td>
+</tr>
+<tr>
+<td align="center">0D</td>
+<td align="center">通用保护异常</td>
+<td align="center">任何特权指令，任何访问存储器的指令</td>
+</tr>
+<tr>
+<td align="center">0E</td>
+<td align="center">页异常</td>
+<td align="center">任何访问存储器的指令</td>
+</tr>
+<tr>
+<td align="center">0F</td>
+<td align="center">浮点运算异常</td>
+<td align="center"></td>
+</tr>
+</tbody></table>
+<p>除了 CPU 能够捕获一个事件并引发一个硬件异常外，在代码段中可以主动引发一个软件异常，只需调用 RaiseException() 函数；</p>
+<p>实际上，在高级语言的异常处理模型中的大部分抛出异常的操作，最终都是对 RaiseException() 函数的调用；</p>
+<p>RaiseException() 函数声明如下：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">VOID RaiseException(</span><br><span class="line">    DWORD dwExceptionCode,      //标识引发异常的代码</span><br><span class="line">    DWORD dwExceptionFlags,     //异常是否继续执行的标识</span><br><span class="line">    DWORD nNumberOfArguments，  //参数个数</span><br><span class="line">    CONST DWORD *lpArguments    //指向参数缓冲区的指针</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
+<p>程序捕获软件异常的方法与捕获硬件异常的方法完全相同；</p>
+<h3 id="异常处理的基本过程"><a href="#异常处理的基本过程" class="headerlink" title="异常处理的基本过程"></a>异常处理的基本过程</h3><p>Windows 正常启动后，将运行在保护模式下，当有中断或异常发生时，CPU 会通过中断描述符表（Interrupt Descriptor Table，IDT）来寻找处理函数；</p>
+<p>IDT 表是 CPU（硬件）和操作系统（软件）交接中断和异常的关口；</p>
+<h4 id="IDT"><a href="#IDT" class="headerlink" title="IDT"></a>IDT</h4><p>IDT 是一张位于物理内存中的线性表，共有 256 项；</p>
+<p>在 32 位模式下每个 IDT 项的长度是 8 字节，在 64 位模式下则为 16 字节；</p>
+<p>操作系统在启动阶段会初始化这个表，系统中的每个 CPU 都有一份 IDT 的拷贝；</p>
+<p>IDT 的位置和长度是由 CPU 的 IDTR 寄存器描述的；</p>
+<p>IDTR 寄存器共有 48 位，其中高 32 位是表的基址，低 16 位是表的长度；</p>
+<p>尽管可以使用 SIDT 和 LIDT 指令来读写该寄存器，但 LIDT 是特权指令，只能在 Ring0 特权级下运行；</p>
+<p>IDT 的每一项都是一个门结构，它是发生中断或异常时 CPU 转移控制权的必经之路：</p>
+<ul>
+<li>任务门（Task-gate）描述符，主要用于 CPU 的任务切换（TSS 功能）；</li>
+<li>中断门（Interrupt-gate）描述符，主要用于描述中断处理程序的入口；</li>
+<li>陷阱门（Trap-gate）描述符，主要用于描述异常处理程序的入口；</li>
+</ul>
+<h4 id="异常处理的准备工作"><a href="#异常处理的准备工作" class="headerlink" title="异常处理的准备工作"></a>异常处理的准备工作</h4><p>当有中断或异常发生时，CPU 会根据中断类型号（这里把异常也视为一种中断）转而执行对应的中断处理程序，对异常来说就是 KiTrapXX 函数；</p>
+<p>例如 KiTrap03：</p>
+<ul>
+<li>处理 INT3 异常的函数；</li>
+<li>在开始异常处理时，先构造 TRAP_FRAME 陷阱帧结构，用来保存系统调用、中断、异常发生时的寄存器现场，方便之后回到用户空间 / 回到中断处时，恢复寄存器的值，继续执行；</li>
+<li>KiTrap03 实际上调用了 CommonDispatchException；</li>
+</ul>
+<p>CommonDisPatchException：</p>
+<ul>
+<li>判断是用户异常还是内核异常，使用的是 CS 段寄存器的最后两位；</li>
+<li>构建一个异常记录的结构；</li>
+<li>实际上调用了 KiDispatchException 来处理异常；</li>
+</ul>
+<p>KiDispatchException：</p>
+<ul>
+<li>该函数用于分发异常，根据异常所产生的模式找到异常的函数；</li>
+<li>如果异常发生在内核模式，函数会直接调用一个异常处理函数直接处理异常；</li>
+<li>如果异常发生在用户模式，则函数会将异常记录、异常栈帧和陷阱栈帧拷贝到用户模式的线程的栈（这些信息在用户态可以被修改，被修改会重新设置到线程环境上），随后函数会进入到用户态，到了用户态之后会被专门的函数去处理异常；</li>
+</ul>
+<p>各个异常处理函数除了针对本异常的特定处理外，通常会将异常信息进行封装，以便进行后续处理；</p>
+<p>封装的内存主要有两部分，一部分是异常记录，包含本次异常的信息，该结构定义如下：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">typedef struct _EXCEPTION_RECORD&#123;</span><br><span class="line">    NTSTATUS ExceptionCode;                     //异常代码</span><br><span class="line">    ULONG ExceptionFlags;                       //异常的状态位标志</span><br><span class="line">    struct _EXCEPTION_RECORD *ExceptionRecord;  //指向另一个 EXCEPTION_RECORD（异常记录块） 的指针</span><br><span class="line">    PVOID ExceptionAddress;                     //异常发生的地址（本次异常的返回位置）</span><br><span class="line">    ULONG NumberParameters;                     // 数组 ExceptionInformation 中有效数据的个数</span><br><span class="line">    ULONG_PTR ExceptionInformation;             //附加信息</span><br><span class="line">&#125; EXCEPTION_RECORD</span><br></pre></td></tr></table></figure>
+
+<p>异常记录块用来记录一个异常所对应的相关信息，其中含有异常的代码、发生异常时的系统状态、异常之间的联系等，每一个异常发生时，系统都会传递一个这样的数据结构；</p>
+<p>另一部分被封装的内容称为陷阱帧，它精确描述了发生异常时线程的状态（Windows 的任务调度是基于线程的）；<br>TRAP_FRAME 陷阱帧结构与处理器高度相关，因此在不同的平台上有不同的定义；</p>
+<p>TRAP_FRAME 陷阱帧结构包含每个寄存器的状态，但该结构一般仅供系统内核自身或调试系统使用，当需要把控制权交给用户注册的异常处理程序时，会将 TRAP_FRAME 转换成一个名为 CONTEXT 的结构，它包含线程运行时处理器各主要寄存器的完整镜像，用于保存线程运行环境；</p>
+<p>包装完毕后，异常处理函数会进一步调用系统内核的 nt!KiDispatchException 函数来处理异常；</p>
+<p>该函数原型定义如下，其中第 1 参数和第 3 参数正是上面封装的两个结构体：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">VOID</span><br><span class="line">KiDispatchException(</span><br><span class="line">    IN PEXCEPTION_RECORD ExceptionRecord,       //异常结构信息，指向 ExceptionRecord 的指针</span><br><span class="line">    IN PKEXCEPTION_FRAME ExceptionFrame,        //对 NT386（x86） 系统总是为 NULL，未使用</span><br><span class="line">    IN PKTRAP_FRAME TrapFrame,                  //发生异常时的陷阱帧</span><br><span class="line">    IN KPROCESSOR_MODE PreviousMode,            //发生异常时的 CPU 模式是内核模式还是用户模式</span><br><span class="line">    IN BOOLEAN FirstChance                      //是否第 1 次处理该异常</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
+<h4 id="内核状态的异常处理过程"><a href="#内核状态的异常处理过程" class="headerlink" title="内核状态的异常处理过程"></a>内核状态的异常处理过程</h4><p>当 PreviousMode 为 KernelMode 时，表示是内核模式下产生的异常，此时 KiDispatchException 会按以下步骤分发异常：</p>
+<ol>
+<li><p>检测当前系统是否正在被内核调试器调试，如果内核调试器不存在，将跳过本步骤；</p>
+<p>如果内核调试器存在，系统就会把异常处理的控制权转交给内核调试器，并注明是第 1 次处理机会（FirstChance）；</p>
+<p>内核调试器取得控制权之后，会根据用户对异常处理的设置来确定是否要处理该异常；</p>
+<p>如果无法确定该异常是否要处理，就会发生中断，把控制权交给用户，由用户决定是否处理；</p>
+<p>如果调试器正确处理了该异常，那么发生异常的线程就会回到原来产生异常的位置继续执行；</p>
+</li>
+<li><p>如果不存在内核调试器，或者在第 1 次处理机会时调试器选择不处理该异常，系统就会调用 nt!RtlDispatchException 函数，根据线程注册的结构化异常处理（SEH）过程来处理该异常；</p>
+</li>
+<li><p>如果 nt!RtlDispatchException 函数没有处理该异常，系统会给调试器第 2 次处理机会（Second Chance），此时调试器可以再次取得对异常的处理权；</p>
+</li>
+<li><p>如果不存在内核调试器，或者第 2 次机会调试器仍不处理，系统就认为在这种情况下不能继续运行了，为了避免引起更加严重的、不可预知的错误，系统会直接调用 KeBugCheckEx 产生一个错误码为“KERNEL_MODE_EXCEPTION_NO_HANDLED”（其值为 0x0000008E）的 BSOD（俗称蓝屏错误）；</p>
+</li>
+</ol>
+<h4 id="用户态的异常处理过程"><a href="#用户态的异常处理过程" class="headerlink" title="用户态的异常处理过程"></a>用户态的异常处理过程</h4><p>当 PreviousMode 为 UserMode 时，表示是用户模式下产生的异常，此时 KiDispatchException 函数仍然会检测内核调试器是否存在；</p>
+<p>如果内核调试器存在，会优先把控制权交给内核调试器进行处理，所以，使用内核调试器调试用户态程序是完全可行的，并且不依赖进程的调试端口；</p>
+<p>在大多数情况下，内核调试器对用户态的异常不感兴趣，也就不会去处理它，此时，nt!KiDispatchException 函数仍然像处理内核态异常一样按两次处理机会进行分发；</p>
+<ol>
+<li><p>如果发生异常的程序正在被调试，那么将异常信息发送给正在调试它的用户态调试器，给调试器第 1 次处理机会，如果没有调试器，则跳过本步骤；</p>
+</li>
+<li><p>如果不存在用户态调试器或调试器未处理该异常，那么在栈上放置 EXCEPTION_RECORD 和 CONTEXT（ 用户态 TRAP_FRAME 陷阱帧结构） 两个结构，并将控制权返回用户态的 ntdll.dll 中的 KiUserExceptionDispatcher 函数，由它调用 ntdll!KiDispatchException 函数进行用户态的异常处理，这一部分涉及 SEH 和 VEH 两种异常处理机制；</p>
+<p>其中，SEH 部分包括应用程序调用 API 函数 SetUnhandleExceptionFilter 设置的顶级异常处理程序；</p>
+<p>但如果有调试器存在，顶级异常处理将被跳过，进入下一阶段的处理，否则将由顶级异常处理程序进行终结处理（通常是显示一个应用程序错误对话框并根据用户的选择决定是终止程序还是附加到调试器）；</p>
+<p>如果没有调试器能附加于其上或调试器还是处理不了异常，系统就调用 ExitProcess 函数来终结程序；</p>
+<p>KiUserExceptionDispatcher：</p>
+<ul>
+<li>函数第 1 个参数为异常类型，第 2 个参数为产生异常时的上下文记录；</li>
+<li>KiUserExceptionDispatcher 的核心是对 RtlDispatchException 的调用；<br>如果某个处理程序处理这个异常并继续执行，那么对 RtlDispatchException 的调用就不会返回；<br>如果它返回了，只有两种可能：调用了 NtContinue 以便让进程继续执行，或者产生了新的异常，如果是这样，那异常就不能再继续处理了，必须终止进程；</li>
+</ul>
+</li>
+<li><p>如果 ntdll!KiDispatchException 函数在调用用户态的异常处理过程中未能处理该异常，那么异常处理过程会再次返回 nt!KiDispatchException ，它将再次把异常信息发送给用户态的调试器，给调试器第 2 次处理机会；</p>
+<p>如果没有调试器存在，则不会进行第 2 次分发，而是直接结束进程；</p>
+</li>
+<li><p>如果第 2 次机会调试器仍不处理，nt!KiDispatchException 会再次尝试把异常分发给进程的异常端口进行处理；</p>
+<p>该端口通常由子系统进程 csrss.exe 进行监听，子系统监听到该错误后，通常会显示一个“应用程序错误”对话框，用户可以点击“确定”按钮或者最后将其附加到调试器上的“取消”按钮；</p>
+<p>如果没有调试器能附加于其上，或者调试器还是处理不了异常，系统就调用 ExitProcess 函数来终结程序；</p>
+</li>
+<li><p>在终结程序之前，系统会再次调用发生异常的线程中的所有异常处理过程，这是线程异常处理过程所获得的清理未释放资源的最后机会，此后程序就终结了；</p>
+</li>
+</ol>
+<h4 id="异常的分发过程"><a href="#异常的分发过程" class="headerlink" title="异常的分发过程"></a>异常的分发过程</h4><p>内核态异常的分发过程：</p>
+<ol>
+<li><p>如果 PreviousMode 为 KernelMode(0)，那么对于第 1 轮处理机会，KiDispatchException 会试图先通知内核调试器来处理该异常；</p>
+</li>
+<li><p>内核变量 KiDebugRoutine 是用来标识内核调试引擎交互的接口函数；</p>
+<p>当内核调试引擎启用时，KiDebugRoutine 指向内核调试引擎 KdpTrap，这个函数会进一步把异常信息封装为数据包发送给内核调试器，当调试内核调试引擎没有启用时，KiDebugRoutine 指向 KdpStub 函数，简单处理后返回；</p>
+</li>
+<li><p>如果 KiDebugRoutine 返回 TRUE，也就是内核引擎处理了异常，那么 KiDispatchException 便停止继续分发，准备返回；</p>
+<p>如果 KiDebugRoutine 返回 FALSE，也就是没有处理该异常，那么 KiDispatchException 会调用 RtlDispatchException 函数，试图寻找已经注册的结构化异常处理器；</p>
+<p>会遍历异常登记链表，依次执行每个异常处理器；</p>
+<p>如果某个异常处理器处理了，RtlDispatchException 返回 TRUE，否则返回 FALSE；</p>
+</li>
+<li><p>RtlDispatchException 返回 FALSE，KiDispatchException 会试图给内核调试器第二次机会，如果 KiDebugRoutine 仍然返回 FALSE，那么 KiDispatchException 会认为这是无人处理的异常，会调用 KeBugCheckEx；</p>
+</li>
+</ol>
+<p>用户态异常的分发过程：</p>
+<ol>
+<li><p>如果是用户模式，即 PreviousMode 参数等于 UserMode(0)，对于第 1 次处理机会，KiDispatchException 会试图将异常分发给用户态的调试器，如果 DebugPort 不为空，将异常发送给调试子系统，调试子系统将异常发送给调试器，如果处理了异常分发结束；</p>
+</li>
+<li><p>如果调试器没有处理该异常，KiDispatchException 修改用户态栈，返回用户层之后执行 KiUserExceptionDispatcher，此函数会调用 RtlDispatchException 来寻找异常处理器，首先遍历 VEH，然后遍历 SEH；</p>
+<p>如果 RtlDispatchException 返回 FALSE，并且当前进程在被调试，那么 KiUserExceptionDispatcher 会调用 ZwRaiseException 并将 FirstChance 设置为 FALSE，进行第二轮分发。如果没有被调试，结束进程；</p>
+</li>
+<li><p>ZwRaiseException 会通过内核服务 NtRaiseException 把异常传递给 KiDispatchException 来进行分发；</p>
+<p>第二次，将异常传递给调试器，如果没有处理将异常分配给 ExceptionPort 异常端口监听者处理，如果返回 FALSE，结束进程；</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>逆向分析</category>
+        <category>脱壳技术</category>
+        <category>文章资料</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>异常处理</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>手动重建 IAT</title>
     <url>/posts/3969158325/</url>
     <content><![CDATA[<blockquote>
@@ -6386,7 +6397,7 @@
 <p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnqcbjzm65j31360ai74r.jpg" alt="NOTEPAD.EXE 的 DOS 存根"></p>
 <h4 id="NT-头（PE-Header，PE-头）"><a href="#NT-头（PE-Header，PE-头）" class="headerlink" title="NT 头（PE Header，PE 头）"></a>NT 头（PE Header，PE 头）</h4><p>NT 头的名称为 IMAGE_NT_HEADERS；</p>
 <p>IMAGE_NT_HEADERS 结构体由 3 个成员组成，第一个成员为签名（Signature）结构体，其值为 50450000（“PE”00），另外两个成员分别为文件头（File Header）与可选头（Optional Header）结构体；</p>
-<p>IMAGE_NT_HEADERS 结构体由 4 个字节的签名标识符和 20 个字节的基本信息头（文件头）以及 216 个字节的扩展信息头（可选头）组成；</p>
+<p>通常，标准 PE 文件的 MAGE_NT_HEADERS 结构体由 4 个字节的签名标识符和 20 个字节的基本信息头（文件头）以及 216 个字节的扩展信息头（可选头）组成；</p>
 <p>IMAGE_NT_HEADERS 结构体：</p>
 <p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnqcqnwemej316p0u0go5.jpg" alt="IMAGE_NT_HEADERS 结构体"></p>
 <p>IMAGE_NT_HEADERS 结构体的大小为 F8，相当大；</p>
@@ -6447,7 +6458,7 @@
 </tr>
 </tbody></table>
 <ol>
-<li><p>Machine：每个 CPU 都拥有唯一的 Machine 码，兼容 32 位 Intel x86 芯片的 Machine 码为 14C，具体定义位于 winnt.h；</p>
+<li><p>Machine：单字，每个 CPU 都拥有唯一的 Machine 码，兼容 32 位 Intel x86 芯片的 Machine 码为 14C，具体定义位于 winnt.h；</p>
 <p>几种典型的机器类型标志：</p>
 <table>
 <thead>
@@ -6489,87 +6500,108 @@
 </tr>
 </tbody></table>
 </li>
-<li><p>NumberOfSections：用来指出文件中存在的节区（Section）数量，该值一定要大于 0，且当定义的节区数量与实际数量不同时，将发生运行错误；</p>
+<li><p>NumberOfSections：单字，用来指出文件中存在的节区（Section）数量，该值一定要大于 0，且当定义的节区数量与实际数量不同时，将发生运行错误；</p>
+<p>如果想在 PE 中增加或删除节，必须变更此处的值；</p>
 </li>
-<li><p>SizeOfOptionalHeader：IMAGE_NT_HEADERS 结构体的最后一个成员为 IMAGE_OPTIONAL_HEADER 结构体，SizeOfOptionalHeader 成员用来指出 IMAGE_OPTIONAL_HEADER 结构体的长度，表示数据的大小；</p>
+<li><p>SizeOfOptionalHeader：单字，IMAGE_NT_HEADERS 结构体的最后一个成员为 IMAGE_OPTIONAL_HEADER 结构体，SizeOfOptionalHeader 成员用来指出 IMAGE_OPTIONAL_HEADER 结构体的长度，表示数据的大小；</p>
 <p>Windows 的 PE 装载器需要查看 IMAGE_FILE_HEADER 的 SizeOfOptionalHeader 值，从而识别出 IMAGE_OPTIONAL_HEADER 结构体的大小；</p>
 <p>PE32+ 格式的文件中使用的是 IMAGE_OPTIONAL_HEADER64 结构体，而不是 IMAGE_OPTIONAL_HEADER32 结构体；</p>
 <p>IMAGE_OPTIONAL_HEADER64 与 IMAGE_OPTIONAL_HEADER32 两个结构体的尺寸不同，所以需要在 SizeOfOptionalHeader 成员中明确指出结构体的大小；</p>
 <p>IMAGE_OPTIONAL_HEADER 的大小依赖于当前 PE 文件是 32 位还是 64 位；</p>
 <p>对于 32 位 PE 文件，这个域通常是 00E0；<br>对于 64 位 PE 文件，这个域通常是 00F0；</p>
+<p>用户可以自定义 SizeOfOptionalHeader 的值，不过需要注意两点：</p>
+<ul>
+<li>更改完成后，需要自行将文件中 IMAGE_OPTIONAL_HEADER32 的大小扩充为指定的值（一般以 0 填充）；</li>
+<li>扩充完成后，要维持文件中的对齐特性（保证每个节区的起始位置不变）；</li>
+</ul>
 </li>
-<li><p>Characteristics：用于标识文件的属性，文件是否为可运行的形态、是否为 DLL 文件等信息，具体定义位于 winnt.h；</p>
+<li><p>Characteristics：单字，用于标识文件的属性，文件是否为可运行的形态、是否为 DLL 文件等信息，具体定义位于 winnt.h；</p>
 <p>属性位字段的含义：</p>
 <table>
 <thead>
 <tr>
 <th align="center">特征值</th>
+<th align="center">常量符号</th>
 <th align="center">含义</th>
 </tr>
 </thead>
 <tbody><tr>
 <td align="center">0001</td>
+<td align="center">IMAGE_FILE_RELOCS_STRIPPED</td>
 <td align="center">文件中不存在重定位信息</td>
 </tr>
 <tr>
 <td align="center">0002</td>
+<td align="center">IMAGE_FILE_EXECUTABLE_IMAGE</td>
 <td align="center">文件可执行，如果为 0，一般是链接时出问题了 ⚠️</td>
 </tr>
 <tr>
 <td align="center">0004</td>
+<td align="center">IMAGE_FILE_LINE_NUMS_STRIPPED</td>
 <td align="center">行号信息被移除</td>
 </tr>
 <tr>
 <td align="center">0008</td>
+<td align="center">IMAGE_FILE_LOCAL_SYMS_StRIPPED</td>
 <td align="center">符号信息被移除</td>
 </tr>
 <tr>
 <td align="center">0020</td>
+<td align="center">IMAGE_FILE_LARGE_ADDREss_AWARE</td>
 <td align="center">应用程序可以处理超过 2GB 的地址</td>
 </tr>
 <tr>
 <td align="center">0080</td>
+<td align="center">IMAGE_FILE_BYTES_REVERSED_LO</td>
 <td align="center">处理机的低位字节是相反的</td>
 </tr>
 <tr>
 <td align="center">0100</td>
+<td align="center">IMAGE_FILE_32BIT_MACHINE</td>
 <td align="center">目标平台为 32 位机器</td>
 </tr>
 <tr>
 <td align="center">0200</td>
+<td align="center">IMAGE_FILE_DEBUG_STRIPPED</td>
 <td align="center">.DBG 文件的调试信息被移除</td>
 </tr>
 <tr>
 <td align="center">0400</td>
+<td align="center">IMAGE_FILE_REMOVABLE_RUN_FROM_SWAP</td>
 <td align="center">如果映像文件位于可移动介质中，则先复制到交换文件中再运行</td>
 </tr>
 <tr>
 <td align="center">0800</td>
+<td align="center">IMAGE_FILE_NET_RUN_FROM_SWAP</td>
 <td align="center">如果映像文件位于网络中，则复制到交换文件后才运行</td>
 </tr>
 <tr>
 <td align="center">1000</td>
+<td align="center">IMAGE_FILE_SYSTEM</td>
 <td align="center">系统文件</td>
 </tr>
 <tr>
 <td align="center">2000</td>
+<td align="center">IMAGE_FILE_DLL</td>
 <td align="center">文件是 DLL ⚠️</td>
 </tr>
 <tr>
 <td align="center">4000</td>
+<td align="center">IMAGE_FILE_UP_SYSTEM_ONLY</td>
 <td align="center">文件只能运行在单处理器上</td>
 </tr>
 <tr>
 <td align="center">8000</td>
+<td align="center">IMAGE_FILE_BYTES_REVERSED_HI</td>
 <td align="center">处理机的高位字节是相反的</td>
 </tr>
 </tbody></table>
 </li>
-<li><p>TimeDateStamp：用来记录编译器创建此文件的时间；</p>
+<li><p>TimeDateStamp：双字，用来记录编译器创建此文件的时间；</p>
 </li>
-<li><p>PointerToSymbolTable：COFF 符号表的文件偏移位置，若没有符号表存在，将此值设置为 0；</p>
+<li><p>PointerToSymbolTable：双字，COFF 符号表的文件偏移位置，若没有符号表存在，将此值设置为 0；</p>
 </li>
-<li><p>NumberOfSymbols：如果有符号表，它表示其中的符号数目；</p>
+<li><p>NumberOfSymbols：双字，如果有符号表，它表示其中的符号数目；</p>
 </li>
 </ol>
 <h4 id="NT-头：可选头-IMAGE-OPTIONAL-HEADER"><a href="#NT-头：可选头-IMAGE-OPTIONAL-HEADER" class="headerlink" title="NT 头：可选头 IMAGE_OPTIONAL_HEADER"></a>NT 头：可选头 IMAGE_OPTIONAL_HEADER</h4><p>IMAGE_OPTIONAL_HEADER 是 PE 头结构体中最大的；</p>
@@ -6648,98 +6680,117 @@
 </tr>
 </tbody></table>
 <ol>
-<li><p>Magic：为 IMAGE_OPTIONAL_HEADER32 结构体时，Magic 码为 10B；为 IMAGE_OPTIONAL_HEADER64 结构体时，Magic 码为 20B，文件为 ROM 映像时，Magic 码为 107；</p>
+<li><p>Magic：单字，为 IMAGE_OPTIONAL_HEADER32 结构体时，Magic 码为 10B；为 IMAGE_OPTIONAL_HEADER64 结构体时，Magic 码为 20B，文件为 ROM 映像时，Magic 码为 107；</p>
 </li>
-<li><p>AddressOfEntryPoint：持有 EP 的 RVA 值，该值指出程序最先执行的代码的起始地址，非常重要；</p>
+<li><p>AddressOfEntryPoint：双字，持有 EP 的 RVA 值，该值指出程序最先执行的代码的起始地址，非常重要；</p>
 </li>
-<li><p>ImageBase：进程的虚拟内存范围是 00000000 ～ FFFFFFFF（32 位系统），PE 文件被加载到如此大的内存中时，ImageBase 指出文件的优先装载地址，而 ImageBase 就是文件在内存中的首选载入地址，如果 PE 文件是在这个地址载入的，那么加载器将跳过应用基址重定位的步骤；</p>
+<li><p>ImageBase：双字，进程的虚拟内存范围是 00000000 ～ FFFFFFFF（32 位系统），PE 文件被加载到如此大的内存中时，ImageBase 指出文件的优先装载地址，而 ImageBase 就是文件在内存中的首选载入地址， 如果 PE 文件是在这个地址载入的，那么加载器将跳过应用基址重定位的步骤；</p>
 <ul>
 <li><p>EXE、DLL 文件被装载到用户内存的 00000000 ～ 7FFFFFFF 中；</p>
 </li>
 <li><p>SYS 文件被装载到内核内存的 80000000 ～ FFFFFFFF 中；</p>
 </li>
-<li><p>一般而言，使用开发工具创建的 EXE 文件，其默认 ImageBase 值为 00400000，DLL 文件的 ImageBase 值为 10000000；（可以指定为其它值）</p>
+<li><p>一般而言，使用开发工具创建的 EXE 文件，其默认 ImageBase 值为 00400000，DLL 文件的 ImageBase 值为 10000000；（可以指定为其它值）<br>用户可以自定义 ImageBase 的值，但取值有限：</p>
+<ul>
+<li>取值不能超出边界，即取的值必须在进程地址空间中；</li>
+<li>该值必须是 64KB 的整数倍；</li>
+</ul>
 </li>
 <li><p>执行 PE 文件时，PE 装载器先创建进程，再将文件载入内存，然后把 EIP 寄存器的值设置为 <code>ImageBase + AddressOfEntryPoint</code>；</p>
 <p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnymrkwex8j31e90u0wj0.jpg" alt="ImageBase + AddressOfEntryPoint"></p>
 <p>如图所示，AddressOfEntryPoint 为 0000739D，ImageBase 为 01000000，则 EIP 的值（也就是 EP）为：0100739D；</p>
+<blockquote>
 <p>勘误：<code>#### NT 头：可选头 IMAGE_OPTIONAL_HEADER</code> 开始位置，图中的签名（IMAGE_NT_SIGNATURE）结构体标注错了，有发现的小伙伴吗？</p>
+</blockquote>
 </li>
 </ul>
 </li>
 <li><p>SetionAlignment / FileAlignment</p>
 <p>PE 体，也就是 PE 的 Body 部分划分为若干个节区，这些节区存储着不同类别的数据；</p>
-<p>SetionAlignment 指定了节区在内存中的最小单位，每个节区被载入的地址必定是此字段指定数值的整数倍；默认的对齐尺寸是目标 CPU 的页尺寸；</p>
-<p>FileAlignment 指定了节区在磁盘文件中的最小单位，组成块的原始数据必须保证从本字段的倍数地址开始；</p>
-<p>一个文件中，FileAlignment 与 SetionAlignment 的值可能相同，也可能不相同；</p>
-<p>磁盘文件或内存的节区大小必定为 FileAlignment 或 SetionAlignment 值的整数倍；</p>
-<blockquote>
-<p>如果内存对齐被定义为小于操作系统页的大小，则文件对齐和内存对齐的值必须一致；</p>
-</blockquote>
+<p>SetionAlignment 双字，指定了节区在内存中的最小单位，每个节区被载入的地址必定是此字段指定数值的整数倍；</p>
+<p>SetionAlignment 默认的对齐尺寸是目标 CPU 的页尺寸，对于 32 位操作系统来说，这个值是 4KB（16 进制表示为 1000），对于 64 位操作系统来说，这个值是 8KB（16 进制表示为 2000）；</p>
+<p>FileAlignment 双字，指定了节区在磁盘文件中的最小单位，组成块的原始数据必须保证从本字段的倍数地址开始；</p>
+<p>通常情况下，Windows 会选择使用 512 字节（最大为 4KB）的簇大小（一个物理扇区的大小）来格式化分区，用 16 进制表示为 200，这就是常见的代码段、数据段等起始地址是 200 的倍数的原因；</p>
+<p>SetionAlignment 必须大于或等于 FileAlignment，如果 SetionAlignment 被定义为小于操作系统页的大小，则 SetionAlignment 和 FileAlignment 的值必须相等；</p>
 </li>
-<li><p>SizeOfImage：加载 PE 文件到内存时，SizeOfImage 指定了 PE 映像在虚拟内存中所占空间的大小；</p>
+<li><p>SizeOfImage：双字，加载 PE 文件到内存时，SizeOfImage 指定了 PE 映像在虚拟内存中所占空间的大小；</p>
 <p>映像载入内存后的总尺寸，是指载入文件从 ImageBase 到最后一个块的大小，最后一个块根据其大小向上取整；</p>
-<p>一般而言，文件的大小与加载到内存中的大小是不同的（节区头中定义了各节装载的位置与占有内存的大小）；</p>
+<p>一般而言，文件的大小与加载到内存中的大小是不同的（节区头中定义了各节装载的位置与占有内存的大小），SizeOfImage 可以比实际的值大，但不能比它小，且 SizeOfImage 必须是 SetionAlignment 的整数倍；</p>
 </li>
-<li><p>SizeOfHeaders：用来指出整个 PE 头的大小，该值必需是 FileAlignment 的整数倍；</p>
-<p>MS-DOS 头部、PE 文件头、区块表的总尺寸，域值四舍五入至文件对齐值的倍数；</p>
-<p>第一节区所在位置与 SizeOfHeaders 距文件开始偏移的量相同；</p>
+<li><p>SizeOfHeaders：双字，用来指出整个 PE 头的大小，该值必需是 FileAlignment 的整数倍；</p>
+<p>MS-DOS 头部、PE 文件头、节表的总尺寸，是按照文件对齐粒度对齐后的大小（含补足的 0）；</p>
+<p>第 1 节区所在位置与 SizeOfHeaders 距文件开始偏移的量相同；</p>
 </li>
-<li><p>Subsystem：用来区分系统驱动文件（*.sys）与普通的可执行文件（*.exe，*.dll）；</p>
+<li><p>Subsystem：单字，用来区分系统驱动文件（*.sys）与普通的可执行文件（*.exe，*.dll）；</p>
 <p>一个标明可执行文件所期望的子系统（用户界面类型）的枚举值，这个值只对 EXE 重要；</p>
 <p>成员值如下：</p>
 <table>
 <thead>
 <tr>
 <th align="center">值</th>
-<th align="center">含义</th>
+<th align="center">常量符号</th>
 <th align="center">说明</th>
 </tr>
 </thead>
 <tbody><tr>
 <td align="center">0</td>
-<td align="center"></td>
-<td align="center">未知</td>
+<td align="center">IMAGE_SUBSYSTEM_UNKNOWN</td>
+<td align="center">未知的子系统</td>
 </tr>
 <tr>
 <td align="center">1</td>
-<td align="center">Driver 文件</td>
-<td align="center">不需要子系统，系统驱动（如：ntfs.sys）</td>
+<td align="center">IMAGE_SUBSYSTEM_NATIVE</td>
+<td align="center">设备驱动和 Native Windows 进程</td>
 </tr>
 <tr>
 <td align="center">2</td>
-<td align="center">GUI 文件</td>
-<td align="center">图形接口子系统，窗口应用程序（如：notepad.exe）</td>
+<td align="center">IMAGE_SUBSYSTEM_WINDOWS_GUI</td>
+<td align="center">图形接口子系统，Windows 图形用户界面</td>
 </tr>
 <tr>
 <td align="center">3</td>
-<td align="center">GUI 文件</td>
-<td align="center">字符子系统，控制台应用程序（如：cmd.exe）</td>
-</tr>
-<tr>
-<td align="center">5</td>
-<td align="center"></td>
-<td align="center">OS/2 字符子系统</td>
+<td align="center">IMAGE_SUBSYSTEM_WINDOWS_CUI</td>
+<td align="center">字符子系统，Windows 字符模式（控制台）</td>
 </tr>
 <tr>
 <td align="center">7</td>
-<td align="center"></td>
-<td align="center">POSIX 字符子系统</td>
-</tr>
-<tr>
-<td align="center">8</td>
-<td align="center"></td>
-<td align="center">保留</td>
+<td align="center">IMAGE_SUBSYSTEM_POSIX_CUI</td>
+<td align="center">POSIX 字符子系统 （控制台）</td>
 </tr>
 <tr>
 <td align="center">9</td>
-<td align="center"></td>
+<td align="center">IMAGE_SUBSYSTEM_WINDOWS_CE_GUI</td>
 <td align="center">Windows CE 图形界面</td>
+</tr>
+<tr>
+<td align="center">10</td>
+<td align="center">IMAGE_SUBSYSTEM_EFI_APPLICATION</td>
+<td align="center">可扩展固件接口（EFI）应用程序</td>
+</tr>
+<tr>
+<td align="center">11</td>
+<td align="center">IMAGE_SUBSYSTEM_EFI_BOOT_SERVICE_DRIVER</td>
+<td align="center">带引导服务的 EFI 驱动程序</td>
+</tr>
+<tr>
+<td align="center">12</td>
+<td align="center">IMAGE_SUBSYSTEM_EFI_RUNTIME_DRIVER</td>
+<td align="center">带运行时服务的 EFI 驱动程序</td>
+</tr>
+<tr>
+<td align="center">13</td>
+<td align="center">IMAGE_SUBSYSTEM_EFI_ROM</td>
+<td align="center">EFI ROM 映像</td>
+</tr>
+<tr>
+<td align="center">14</td>
+<td align="center">IMAGE_SUBSYSTEM_XBOX</td>
+<td align="center">XBOX</td>
 </tr>
 </tbody></table>
 </li>
-<li><p>NumberOfRvaAndSizes：用来指定 DataDirectory 数组的个数；</p>
-<p>数据目录表（DataDirectory）的项数，这个字段的值从 Windows NT 发布以来一直是 16；</p>
+<li><p>NumberOfRvaAndSizes：双字，用来指定 DataDirectory 数组的个数；</p>
+<p>数据目录表（DataDirectory）的项数，这个字段的值从 Windows NT 发布以来一直是 16（10），实际应用中可以取 2 ～ 16 的值；</p>
 <p>PE 装载器通过查看 NumberOfRvaAndSizes 的值来识别数组大小；</p>
 </li>
 <li><p>DataDirectory：是由 IMAGE_DATA_DIRECTORY 结构体组成的数组，数组的每项都有被定义的值，指向输出表、输入表、资源块等数据；</p>
@@ -6873,7 +6924,7 @@
 </ol>
 <h4 id="节区头-IMAGE-SECTION-HEADER-结构体数组"><a href="#节区头-IMAGE-SECTION-HEADER-结构体数组" class="headerlink" title="节区头 IMAGE_SECTION_HEADER 结构体数组"></a>节区头 IMAGE_SECTION_HEADER 结构体数组</h4><p>PE 文件中的 code（代码）、data（数据）、resource（资源）等按照属性分类存储在不同节区；</p>
 <p>节区头中定义了各节区属性；</p>
-<p>节区属性中有文件 / 内存的起始位置、大小、访问权限等；</p>
+<p>节区属性中有文件/内存的起始位置、大小、访问权限等；</p>
 <p>不同内存属性的访问权限：</p>
 <table>
 <thead>
@@ -6932,16 +6983,16 @@
 </tr>
 </tbody></table>
 <ol>
-<li><p>VirtualSize：指出实际被使用的区块的大小，是在进行对齐处理前区块的实际大小；</p>
+<li><p>VirtualSize：双字，指出实际被使用的区块的大小，是在进行对齐处理前区块的实际大小；</p>
 </li>
-<li><p>VirtualAddress：该块装载到内存中的 RVA，这个地址是按照内存页对齐的，它的数值总是 SectionAlignment 的整数倍；</p>
+<li><p>VirtualAddress：双字，该块装载到内存中的 RVA，这个地址是按照内存页对齐的，它的数值总是 SectionAlignment 的整数倍；</p>
 </li>
-<li><p>SizeOfRawData：该块在磁盘中所占的空间，在可执行文件中，该字段包含经 FileAlignment 调整的块的大小；</p>
+<li><p>SizeOfRawData：双字，该块在磁盘中所占的空间，在可执行文件中，该字段包含经 FileAlignment 调整的块的大小；</p>
 </li>
-<li><p>PointerToRawData：该块在磁盘文件中的偏移，程序经编译或汇编后生成原始数据，这个字段用于给出原始数据在文件中的偏移；</p>
+<li><p>PointerToRawData：双字，该块在磁盘文件中的偏移，程序经编译或汇编后生成原始数据，这个字段用于给出原始数据在文件中的偏移；</p>
 <p>如果程序装载自 PE 或 COFF 文件（而不是由操作系统载入的），这一字段将比 VirtualAddress 还重要，在这种情况下，必须完全使用线性映像的方法载入文件，所以需要在该偏移处找到块的数据，而不是 VirtualAddress 字段中的 RVA 地址；</p>
 </li>
-<li><p>Characteristics：块属性，该字段是一组指出块属性的标志，多个标志值求或即为 Characteristics 的值；</p>
+<li><p>Characteristics：双字，块属性，该字段是一组指出块属性的标志，多个标志值求或即为 Characteristics 的值；</p>
 <p>Characteristics 的值由下列值组合而成：</p>
 <table>
 <thead>
@@ -7035,7 +7086,7 @@
 <p>对磁盘上的 PE 文件来说，它无法得知这些输入函数在内存中的地址；</p>
 <p>只有当 PE 文件载入内存后，Windows 加载器才会将相关 DLL 载入，并将调用输入函数的指令和函数实际所处的地址联系起来；</p>
 <p>当应用程序调用一个 DLL 的代码和数据时，它正在被隐式链接到 DLL，这个过程完全由 Windows 加载器完成；</p>
-<h4 id="IMAGE-IMPORT-DESCRIPTOR"><a href="#IMAGE-IMPORT-DESCRIPTOR" class="headerlink" title="IMAGE_IMPORT_DESCRIPTOR"></a>IMAGE_IMPORT_DESCRIPTOR</h4><p>IMAGE_IMPORT_DESCRIPTOR 结构体中记录着 PE 文件要倒入哪些库文件；</p>
+<h4 id="IMAGE-IMPORT-DESCRIPTOR-导入表描述符"><a href="#IMAGE-IMPORT-DESCRIPTOR-导入表描述符" class="headerlink" title="IMAGE_IMPORT_DESCRIPTOR 导入表描述符"></a>IMAGE_IMPORT_DESCRIPTOR 导入表描述符</h4><p>IMAGE_IMPORT_DESCRIPTOR 结构体中记录着 PE 文件要倒入哪些库文件；</p>
 <p>可执行文件使用来自其它 DLL 的代码或数据的动作称为输入（import）；</p>
 <p>当 PE 文件被载入时，Windows 加载器的工作之一就是定位所有被输入的函数和数据，并让正在载入的文件可以使用这些地址，这个过程是通过 PE 文件的输入表（Import Table，简称“IT”，也称导入表）完成的；</p>
 <p>输入表中保存的是函数名和其驻留的 DLL 名等动态链接库所需的信息；</p>
@@ -7076,11 +7127,11 @@
 <p>IAT：输入地址表（Import Address Table）；</p>
 </blockquote>
 <ol>
-<li>OriginalFirstThunk（INT）：包含指向输入名称表（INT）的 RVA；<br>INT 是一个包含导入函数信息（Ordinal，Name）的结构体指针数组，只有获得了这些信息，才能在加载到进程内存的库中准确求得相应函数的起始地址；<br>INT 是一个 IMAGE_THUNK_DATA 结构的数组，数组中的每个 IMAGE_THUNK_DATA 结构都指向 IMAGE_IMPORT_BY_NAME 结构，数组尾部以 NULL 结束，即数组以一个内容为 0 的 IMAGE_THUNK_DATA 结构体结束；</li>
-<li>TimeDateStamp：一个 32 位的时间标志，可忽略；</li>
-<li>ForwarderChain：这是第 1 个被转向的 API 的索引，一般为 0，在程序中引用一个 DLL 中的 API，而这个 API 又在引用其它 DLL 的 API 时使用；</li>
-<li>Name：DLL 名字的指针，是一个以 “00” 结尾的 ASCII 字符的 RVA 地址，该字符包含输入 DLL 的名称；<br>Name 是一个字符串指针，它指向导入函数所属的库文件的名称；</li>
-<li>FirstThunk（IAT）：包含指向输入地址表（IAT）的 RVA；</li>
+<li>OriginalFirstThunk（INT）：双字，包含指向输入名称表（INT）的 RVA；<br>INT 是一个包含导入函数信息（Ordinal，Name）的结构体指针数组，只有获得了这些信息，才能在加载到进程内存的库中准确求得相应函数的起始地址；<br>INT 是一个 IMAGE_THUNK_DATA 结构的数组，数组中的每个 IMAGE_THUNK_DATA 结构都指向 IMAGE_IMPORT_BY_NAME 结构，数组尾部以 NULL 结束，即数组以一个内容为 0 的 IMAGE_THUNK_DATA 结构体结束；</li>
+<li>TimeDateStamp：双字，一个 32 位的时间标志，可忽略；</li>
+<li>ForwarderChain：双字，这是第 1 个被转向的 API 的索引，一般为 0，在程序中引用一个 DLL 中的 API，而这个 API 又在引用其它 DLL 的 API 时使用；</li>
+<li>Name：双字，DLL 名字的指针，是一个以 “00” 结尾的 ASCII 字符的 RVA 地址，该字符包含输入 DLL 的名称；<br>Name 是一个字符串指针，它指向导入函数所属的库文件的名称；</li>
+<li>FirstThunk（IAT）：双字，包含指向输入地址表（IAT）的 RVA；</li>
 </ol>
 <p>OriginalFirstThunk 与 FirstThunk 相似，它们分别指向两个本质上相同的数组 IMAGE_THUNK_DATA 结构；</p>
 <p>两个数组中都有 IMAGE_THUNK_DATA 结构类型的元素，它是一个指针大小的联合（union）；</p>
@@ -7089,10 +7140,10 @@
 <p>IMAGE_THUNK_DATA 结构实际上是一个双字，该结构在不同时刻有不同的含义，定义如下：</p>
 <figure class="highlight text"><table><tr><td class="code"><pre><span class="line">IMAGE_THUNK_DATA STRUCT</span><br><span class="line">    union ul</span><br><span class="line">        ForwarderString     DWORD   ?       ; 指向一个转向者字符串的 RVA</span><br><span class="line">        Function            DWORD   ?       ; 被输入的函数的内存地址</span><br><span class="line">        Ordinal             DWORD   ?       ; 被输入的 API 的序数值</span><br><span class="line">        AddressOfData       DWORD   ?       ; 指向 IMAGE_IMPORT_BY_NAME</span><br><span class="line">    ends</span><br><span class="line">IMAGE_THUNK_DATA ENDS</span><br></pre></td></tr></table></figure>
 
-<p>当 IMAGE_THUNK_DATA 值的最高位（双字的最高位）为 1 时，表示函数以序号方式输入，这时低 31 位（或这 64 位可执行文件的低 63 位）被看成一个函数序号；</p>
+<p>当 IMAGE_THUNK_DATA 值的最高位（双字的最高位）为 1 时，表示函数以序号方式输入，这时低 31 位（或者 64 位可执行文件的低 63 位）被看成一个函数序号；</p>
 <p>当 IMAGE_THUNK_DATA 值的最高位（双字的最高位）为 0 时，表示函数以字符串类型的函数名方式输入，这时双字的值是一个 RVA，指向一个 IMAGE_IMPORT_BY_NAME 结构；</p>
 <p>IMAGE_IMPORT_BY_NAME 结构仅有 1 个字大小，存储了一个输入函数的相关信息，定义如下：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">IMAGE_IMPORT_BY_NAME STRUCT</span><br><span class="line">    Hint     WORD   ?</span><br><span class="line">    Name     BYTE   ?</span><br><span class="line">IMAGE_IMPORT_BY_NAME ENDS</span><br></pre></td></tr></table></figure>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">IMAGE_IMPORT_BY_NAME STRUCT</span><br><span class="line">    Hint     WORD   ?      ; 函数编号</span><br><span class="line">    Name     BYTE   ?      ; 表示函数名称的字符串</span><br><span class="line">IMAGE_IMPORT_BY_NAME ENDS</span><br></pre></td></tr></table></figure>
 
 <ol>
 <li>Hint：本函数在其所驻留 DLL 的输入表中的序号，该域被 PE 装载器用来在 DLL 的输出表里快速查询函数；<br>该值不是必需的，一些链接器将它设为 0；</li>
