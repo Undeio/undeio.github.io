@@ -2988,6 +2988,12 @@
 </li>
 <li><p><code>FS 寄存器</code>从第 18 位开始，存放的是该寄存器从起始位置依次向后的地址，即第 18 位存放的是起始位置的地址；</p>
 </li>
+<li><p>任意时刻，CS:IP 指向 CPU 将要读取指令的地址，代码段的段地址存放在 CS 中，偏移地址存放在 IP 中；</p>
+</li>
+<li><p>任意时刻，SS:SP 指向栈顶元素，栈顶的段地址存放在 SS 中，偏移地址存放在 SP 中；</p>
+</li>
+<li><p>通常，在读写内存单元时，DS 用来存放要访问数据段的段地址；</p>
+</li>
 </ul>
 <h3 id="程序状态与控制寄存器"><a href="#程序状态与控制寄存器" class="headerlink" title="程序状态与控制寄存器"></a>程序状态与控制寄存器</h3><p>IA-32 中，标志寄存器的名称为 EFLAGS，其大小为 4 个字节（32 位），由原来的 16 位 FLAGS 寄存器扩展而来；<br>EFLAGS 寄存器的每位都有意义，每位的值为 1 或为 0，代表 ON/OFF 或 TRUE/FALSE；<br>其中有些位由系统直接设定，有些位则根据程序命令的执行结果设置；</p>
 <h4 id="标志位寄存器"><a href="#标志位寄存器" class="headerlink" title="标志位寄存器"></a>标志位寄存器</h4><ul>
@@ -3040,6 +3046,8 @@
 <li>用来控制串处理指令的处理方向；</li>
 <li>若 DF 为 1，则串处理中地址自动递减，否则自动自增；</li>
 <li>若 DF 为 1，每次操作后使 SI 和 DI 递减，DF 为 0 时则自增；</li>
+<li>CLD 指令可以将 DF 位置 0；</li>
+<li>STD 指令可以将 DF 位置 1；</li>
 </ul>
 </li>
 <li><p>IF 是<code>中断标志符</code>；</p>
@@ -3111,6 +3119,84 @@
       </tags>
   </entry>
   <entry>
+    <title>异常处理初探</title>
+    <url>/posts/996855490/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-16">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
+</ul>
+<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
+<li><p>内存访问异常总结下来就一句话：在没有权限的地方做了没权限的事儿；</p>
+</li>
+<li><p>将任意<code>CrackMe</code>倒入<code>OD</code>:</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonfurw1oj31ff0u0gwo.jpg" alt="倒入OD"></p>
+<ul>
+<li><p>当前处于代码段，只有只读权限，如果要写入内容会怎么样？</p>
+<p>修改第一行代码，把<code>EAX</code>的内容写入指定地址；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gloniemvqrj31ff0u0gxc.jpg" alt="修改代码"></p>
+<p>然后执行代码：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonkvl23pj31ff0u0wq7.jpg" alt="访问违规"></p>
+<p>可以看到，根本无法执行代码；</p>
+</li>
+<li><p>那每个代码段的权限如何查看呢？</p>
+<ol>
+<li><p>方法一：</p>
+<p>打开<code>内存窗口</code>，找到<code>PE 头文件</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonoefqwhj31ff0u048w.jpg" alt="内存窗口"></p>
+<p>然后双击<code>PE 头文件</code>所在行，打开<code>数据窗口</code>，找到 PE 头偏移量<code>Offset to PE signature</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonqf357jj31ff0u0k1l.jpg" alt="偏移量"></p>
+<p>既然偏移量是 100， 那地址就是<code>00400100</code>，往下翻找到这个地址：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonx75sh8j31ff0u0499.jpg" alt="找到地址"></p>
+<p>在这里，发现了代码段和数据段的地址信息，偏移量分别是 1000 和 2000，那地址就分别是<code>00401000</code>和<code>00402000</code>喽，如何确定呢？重载程序就知道了；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glop9kcs3qj31ff0u049x.jpg" alt="起始位置"></p>
+<p>至于它们的权限，继续往下翻：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gloo34nk41j31ff0u0n80.jpg" alt="权限"></p>
+<p>在这里可以清楚的看到，CODE 段只有只读权限，而 DATA 段有读写权限；</p>
+</li>
+<li><p>方法二：</p>
+<p>在<code>数据窗口</code>按下<code>Ctrl + G</code>，转到<code>00400000</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glooawpu9qj31ff0u0alk.jpg" alt="转到表达式"></p>
+<p>然后在<code>数据窗口</code>右键<code>指定 &gt; PE 头文件</code>，就可以定位到<code>PE 头文件</code>了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gloofb56bhj31ff0u0qe1.jpg" alt="定位"></p>
+<p>其他操作和方法一一致；</p>
+</li>
+</ol>
+</li>
+<li><p>测试一下修改代码段权限，写入内容：</p>
+<p>在<code>数据窗口</code>选择代码段权限行，右键选择<code>修改整数</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glooklxgtpj31ff0u0dq1.jpg" alt="修改整数"></p>
+<p>然后修改权限：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gloonxmrfcj31ff0u0qeh.jpg" alt="修改成功"></p>
+<p>修改后可以看到，CODE 段有写的权限了，然后将修改保存到新的可执行文件；</p>
+<p>接着，将保存的新文件倒入<code>OD</code>并修改第一行代码：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glop0ua22cj31ff0u0wqa.jpg" alt="打开新文件"></p>
+<p>运行程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glop2jpw4zj31ff0u013f.jpg" alt="运行程序"></p>
+<p>可以看到，<code>EAX</code>的内容成功写入到以指定地址为开始的位置；</p>
+</li>
+</ul>
+</li>
+<li><p>最后，来说说一个小的知识点<code>除零异常</code>；</p>
+<p>刚上学开始学习加减乘除的时候，老师就告诉我们 0 不能作为除数，而在程序设计中，当遇上正整数除以零程序会中止：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glov7g67kij31ff0u013c.jpg" alt="调试语句"></p>
+<p>在这里，由于<code>EAX</code>自身为 0，为了区分被除数和除数，让<code>EAX</code>加上一个随机的立即数以区分，这里以 123 为例，接着通过<code>xor</code>让准备作为除数的<code>ECX</code>置 0，最后用<code>EAX</code>除以<code>ECX</code>，接下来，看一下运算的结果：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glovdctagcj31ff0u049u.jpg" alt="除零异常"></p>
+<p>可以看到，执行<code>DIV ECX</code>后，也就是除以 0 后，这里产生了一个异常，这个异常就叫作除零异常；</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>逆向分析</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>异常处理</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>常见的汇编指令</title>
     <url>/posts/1025109479/</url>
     <content><![CDATA[<h3 id="常见指令"><a href="#常见指令" class="headerlink" title="常见指令"></a>常见指令</h3><h4 id="NOP"><a href="#NOP" class="headerlink" title="NOP"></a>NOP</h4><ul>
@@ -3153,6 +3239,12 @@
 <li>POPA 是 16 位操作；</li>
 <li><code>POPA</code> 相当于是<code>POP DI, POP SI, POP BP, POP SP, POP BX, POP DX, POP CX, POP AX</code>八条命令的合集；</li>
 </ul>
+<h4 id="PUSHF"><a href="#PUSHF" class="headerlink" title="PUSHF"></a>PUSHF</h4><ul>
+<li>将标志寄存器的值压栈；</li>
+</ul>
+<h4 id="POPF"><a href="#POPF" class="headerlink" title="POPF"></a>POPF</h4><ul>
+<li>从栈中弹出数据，送入标志寄存器；</li>
+</ul>
 <h4 id="MOV"><a href="#MOV" class="headerlink" title="MOV"></a>MOV</h4><ul>
 <li>MOV 本意为<code>move，移动</code>，但功能相当于复制/赋值；</li>
 <li><code>MOV EAX, ECX</code>：两个操作数的长度必须相同；</li>
@@ -3181,7 +3273,19 @@
 <li><code>XCHG EAX, ECX</code>：第一个参数可以是通用寄存器或内存地址，第二个参数必须是通用寄存器；</li>
 <li><code>XCHG [00401000], ECX</code>：第一个参数可以是通用寄存器或内存地址，第二个参数必须是通用寄存器；</li>
 </ul>
-<h4 id="SHR-二进制右移"><a href="#SHR-二进制右移" class="headerlink" title="SHR 二进制右移"></a>SHR 二进制右移</h4><h4 id="SHL-二进制左移"><a href="#SHL-二进制左移" class="headerlink" title="SHL 二进制左移"></a>SHL 二进制左移</h4><h4 id="CLD"><a href="#CLD" class="headerlink" title="CLD"></a>CLD</h4><ul>
+<h4 id="SHR-二进制右移"><a href="#SHR-二进制右移" class="headerlink" title="SHR 二进制右移"></a>SHR 二进制右移</h4><ol>
+<li>将一个寄存器或内存单元中的数据向右位移；</li>
+<li>将最后移出的一位写入 CF 中；</li>
+<li>最高位用 0 补充；</li>
+<li>如果移动位数大于 1 时，必须将要移动的位数放在 CL 中；</li>
+</ol>
+<h4 id="SHL-二进制左移"><a href="#SHL-二进制左移" class="headerlink" title="SHL 二进制左移"></a>SHL 二进制左移</h4><ol>
+<li>将一个寄存器或内存单元中的数据向左移位；</li>
+<li>将最后移出的一位写入 CF 中；</li>
+<li>最低位用 0 补充；</li>
+<li>如果移动位数大于 1 时，必须将要移动的位数放在 CL 中；</li>
+</ol>
+<h4 id="CLD"><a href="#CLD" class="headerlink" title="CLD"></a>CLD</h4><ul>
 <li>用来操作方向标志位 DF，CLD 使 DF 复位，即让 DF = 00；</li>
 </ul>
 <h4 id="STD"><a href="#STD" class="headerlink" title="STD"></a>STD</h4><ul>
@@ -3319,19 +3423,32 @@
 <h4 id="JNLE-JG"><a href="#JNLE-JG" class="headerlink" title="JNLE / JG"></a>JNLE / JG</h4><ul>
 <li>大于则跳转（有符号数）；</li>
 </ul>
-<h4 id="CALL-RETN"><a href="#CALL-RETN" class="headerlink" title="CALL / RETN"></a>CALL / RETN</h4><ul>
-<li>CALL 可以理解为 CALLBACK；</li>
-<li>CALL 会执行一个子程序，可以理解为执行了一个函数；</li>
-<li>RETN 在 CALL 所执行的子程序中时，会返回该 CALL 所在的主程序，并继续向下执行；</li>
-<li>RETN 与其他指令单独使用时，和 JMP 的功能相同；</li>
-</ul>
-<h3 id="循环指令"><a href="#循环指令" class="headerlink" title="循环指令"></a>循环指令</h3><h4 id="LOOP"><a href="#LOOP" class="headerlink" title="LOOP"></a>LOOP</h4><ul>
+<h3 id="转移指令"><a href="#转移指令" class="headerlink" title="转移指令"></a>转移指令</h3><p>转移指令就是可以控制 CPU 执行内存中某处代码的指令，也称为跳转指令；</p>
+<h4 id="LOOP"><a href="#LOOP" class="headerlink" title="LOOP"></a>LOOP</h4><figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="meta">assume</span> <span class="built_in">cs</span>:code</span><br><span class="line">code <span class="meta">segment</span></span><br><span class="line">      <span class="keyword">mov</span> <span class="built_in">ax</span>, <span class="number">0</span></span><br><span class="line">      <span class="keyword">mov</span> <span class="built_in">cx</span>, <span class="number">6</span></span><br><span class="line"></span><br><span class="line"><span class="symbol">  s:</span>  <span class="keyword">add</span> <span class="built_in">ax</span>, <span class="number">2</span></span><br><span class="line">      <span class="keyword">loop</span> s</span><br><span class="line"></span><br><span class="line">      <span class="keyword">mov</span> <span class="built_in">ax</span>, <span class="number">4c00h</span></span><br><span class="line">      <span class="keyword">int</span> <span class="number">21h</span></span><br><span class="line">code ends</span><br><span class="line">end</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<ul>
 <li><p>LOOP 相当于</p>
-<figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">XOR</span> <span class="built_in">ECX</span>, <span class="built_in">ECX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">ECX</span>, <span class="number">6</span></span><br><span class="line"><span class="keyword">DEC</span> <span class="built_in">ECX</span></span><br><span class="line"><span class="comment">; CMP ECX, 0</span></span><br><span class="line"><span class="keyword">TEST</span> <span class="built_in">ECX</span>, <span class="built_in">ECX</span></span><br><span class="line"><span class="keyword">JNZ</span> [<span class="keyword">DEC</span> <span class="built_in">ECX</span> 所在的地址]</span><br></pre></td></tr></table></figure></li>
+<figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="comment">; XOR CX, CX</span></span><br><span class="line"><span class="comment">; MOV CX, 6</span></span><br><span class="line"><span class="keyword">DEC</span> <span class="built_in">CX</span></span><br><span class="line"><span class="keyword">TEST</span> <span class="built_in">CX</span>, <span class="built_in">CX</span>   <span class="comment">; CMP CX, 0</span></span><br><span class="line"><span class="keyword">JNZ</span> [<span class="keyword">DEC</span> <span class="built_in">CX</span> 所在的地址]</span><br></pre></td></tr></table></figure></li>
 <li><p>与以上指令不同的是：LOOP 执行时第一次循环计数器不会自减；</p>
 </li>
-<li><p>约定俗成：使用 ECX 作为计数器；</p>
+<li><p>约定俗成：使用 CX 作为计数器；</p>
 </li>
+</ul>
+<h4 id="CALL-RETN"><a href="#CALL-RETN" class="headerlink" title="CALL / RETN"></a>CALL / RETN</h4><ul>
+<li><p>CALL 可以理解为 CALLBACK；</p>
+</li>
+<li><p>CALL 会执行一个子程序，可以理解为执行了一个函数；</p>
+</li>
+<li><p>CALL 指令会进行两步操作，首先将当前 IP 或 CS 和 IP 压栈，然后转移；</p>
+</li>
+<li><p>RET 在 CALL 所执行的子程序中时，会返回该 CALL 所在的主程序，并继续向下执行；</p>
+</li>
+<li><p>RET 与其他指令单独使用时，和 JMP 的功能相同；</p>
+</li>
+<li><p>RET 指令用栈中的数据，修改 IP 的内容，从而实现近转移；</p>
+<figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">POP</span> <span class="built_in">IP</span></span><br></pre></td></tr></table></figure></li>
+<li><p>RETF 指令用栈中的数据，修改 CS 和 IP 的内容，从而实现远转移；</p>
+<figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">POP</span> <span class="built_in">IP</span></span><br><span class="line"><span class="keyword">POP</span> <span class="built_in">CS</span></span><br></pre></td></tr></table></figure></li>
 </ul>
 <h3 id="寻址方式"><a href="#寻址方式" class="headerlink" title="寻址方式"></a>寻址方式</h3><ul>
 <li>直接寻址：指令后面直接写出此次运算使用的地址，称为直接寻址；</li>
@@ -3345,84 +3462,6 @@
       </categories>
       <tags>
         <tag>汇编指令</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>异常处理初探</title>
-    <url>/posts/996855490/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-16">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
-</ul>
-<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
-<li><p>内存访问异常总结下来就一句话：在没有权限的地方做了没权限的事儿；</p>
-</li>
-<li><p>将任意<code>CrackMe</code>倒入<code>OD</code>:</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonfurw1oj31ff0u0gwo.jpg" alt="倒入OD"></p>
-<ul>
-<li><p>当前处于代码段，只有只读权限，如果要写入内容会怎么样？</p>
-<p>修改第一行代码，把<code>EAX</code>的内容写入指定地址；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gloniemvqrj31ff0u0gxc.jpg" alt="修改代码"></p>
-<p>然后执行代码：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonkvl23pj31ff0u0wq7.jpg" alt="访问违规"></p>
-<p>可以看到，根本无法执行代码；</p>
-</li>
-<li><p>那每个代码段的权限如何查看呢？</p>
-<ol>
-<li><p>方法一：</p>
-<p>打开<code>内存窗口</code>，找到<code>PE 头文件</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonoefqwhj31ff0u048w.jpg" alt="内存窗口"></p>
-<p>然后双击<code>PE 头文件</code>所在行，打开<code>数据窗口</code>，找到 PE 头偏移量<code>Offset to PE signature</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonqf357jj31ff0u0k1l.jpg" alt="偏移量"></p>
-<p>既然偏移量是 100， 那地址就是<code>00400100</code>，往下翻找到这个地址：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glonx75sh8j31ff0u0499.jpg" alt="找到地址"></p>
-<p>在这里，发现了代码段和数据段的地址信息，偏移量分别是 1000 和 2000，那地址就分别是<code>00401000</code>和<code>00402000</code>喽，如何确定呢？重载程序就知道了；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glop9kcs3qj31ff0u049x.jpg" alt="起始位置"></p>
-<p>至于它们的权限，继续往下翻：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gloo34nk41j31ff0u0n80.jpg" alt="权限"></p>
-<p>在这里可以清楚的看到，CODE 段只有只读权限，而 DATA 段有读写权限；</p>
-</li>
-<li><p>方法二：</p>
-<p>在<code>数据窗口</code>按下<code>Ctrl + G</code>，转到<code>00400000</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glooawpu9qj31ff0u0alk.jpg" alt="转到表达式"></p>
-<p>然后在<code>数据窗口</code>右键<code>指定 &gt; PE 头文件</code>，就可以定位到<code>PE 头文件</code>了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gloofb56bhj31ff0u0qe1.jpg" alt="定位"></p>
-<p>其他操作和方法一一致；</p>
-</li>
-</ol>
-</li>
-<li><p>测试一下修改代码段权限，写入内容：</p>
-<p>在<code>数据窗口</code>选择代码段权限行，右键选择<code>修改整数</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glooklxgtpj31ff0u0dq1.jpg" alt="修改整数"></p>
-<p>然后修改权限：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gloonxmrfcj31ff0u0qeh.jpg" alt="修改成功"></p>
-<p>修改后可以看到，CODE 段有写的权限了，然后将修改保存到新的可执行文件；</p>
-<p>接着，将保存的新文件倒入<code>OD</code>并修改第一行代码：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glop0ua22cj31ff0u0wqa.jpg" alt="打开新文件"></p>
-<p>运行程序：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glop2jpw4zj31ff0u013f.jpg" alt="运行程序"></p>
-<p>可以看到，<code>EAX</code>的内容成功写入到以指定地址为开始的位置；</p>
-</li>
-</ul>
-</li>
-<li><p>最后，来说说一个小的知识点<code>除零异常</code>；</p>
-<p>刚上学开始学习加减乘除的时候，老师就告诉我们 0 不能作为除数，而在程序设计中，当遇上正整数除以零程序会中止：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glov7g67kij31ff0u013c.jpg" alt="调试语句"></p>
-<p>在这里，由于<code>EAX</code>自身为 0，为了区分被除数和除数，让<code>EAX</code>加上一个随机的立即数以区分，这里以 123 为例，接着通过<code>xor</code>让准备作为除数的<code>ECX</code>置 0，最后用<code>EAX</code>除以<code>ECX</code>，接下来，看一下运算的结果：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glovdctagcj31ff0u049u.jpg" alt="除零异常"></p>
-<p>可以看到，执行<code>DIV ECX</code>后，也就是除以 0 后，这里产生了一个异常，这个异常就叫作除零异常；</p>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>逆向分析</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>异常处理</tag>
       </tags>
   </entry>
   <entry>
@@ -4103,49 +4142,6 @@
       </tags>
   </entry>
   <entry>
-    <title>编译语言特点定位 OEP</title>
-    <url>/posts/4132012963/</url>
-    <content><![CDATA[<blockquote>
-<p>各类语言编译的文件入口点都有自己的特点；</p>
-<p>使用同一种编译器编译的程序，其入口代码都很类似，都有一段启动代码，编译器在编译程序时会自动与程序连接；</p>
-<p>在完成必需的初始化工作后，调用 WinMain 函数，该函数执行完毕，启动代码将再次获得控制权，进行初始化清除工作；</p>
-</blockquote>
-<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-7">UnPackMe</a>来自互联网，仅供学习使用；</li>
-<li>加壳工具为<a href="https://upx.github.io/">UPX</a>，感谢 🙏 开源；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
-</ul>
-<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
-<li><p>将 CM 导入 OD，此时未加壳，EP 即是 OEP：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnxboon3q2j31ek0u00we.jpg" alt="EP 即是 OEP"></p>
-<p>可以看到， 第 1 个调用的函数是<code>GetModuleHandleA</code>；</p>
-</li>
-<li><p>使用 UPX 加密 CM，然后导入 OD：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnxbruvqiuj31e40u0420.jpg" alt="使用 UPX 加密 CM"></p>
-<p>在 EP 处使用<code>Ctrl + G</code>跳转至 GetModuleHandleA 函数的行首，然后设置 F2 断点；</p>
-</li>
-<li><p>运行程序后，程序中断在断点位置，goto 到栈顶指针指向的位置，就到达了 OEP：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnxbwwuu6uj31e60u00xa.jpg" alt="到达了 OEP"></p>
-</li>
-<li><p>如果对常见语言的入口代码比较熟悉，就可以很容易的完成脱壳修复或定位 OEP 等工作，这就需要大量积累了；</p>
-</li>
-<li><p>由于采用默认的启动代码对软件进行加壳保护不是很有利，一些开发人员会对启动源代码进行修改，这时程序的入口点与默认的就完全不同了；</p>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>脱壳技术</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>OEP</tag>
-        <tag>UPX</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>脱壳小练习（一）</title>
     <url>/posts/2471182341/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -4212,65 +4208,6 @@
       </categories>
       <tags>
         <tag>IAT</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>脱壳小练习（二）</title>
-    <url>/posts/2304111146/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-5">OllyDbg</a>修改版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/UnPackMe-5">UnPackMe</a>来自互联网，仅供学习使用；</li>
-<li>Dump 工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-3">PETools</a>，来自互联网；</li>
-<li>IAT 重建工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-4">ImportREC</a>，来自互联网；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
-</ul>
-<h4 id="操作流程"><a href="#操作流程" class="headerlink" title="操作流程"></a>操作流程</h4><ol>
-<li><p>将 CM 导入 OD，在尝试了<code>内存访问法</code>和<code>栈平衡法</code>都不能到达 OEP 后，使用 SPOD（Special OD，个人称呼）配合<code>常用函数法</code>最终到达 OEP；</p>
-</li>
-<li><p>将 CM 导入 SPOD，goto 到 GetProcAddress 函数的行首，设置条件记录断点，记录调用 GetProcAddress 函数的地址及参数：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1ysq1mtyj31a90u0goz.jpg" alt="条件记录断点"></p>
-<p>清空 log，然后运行程序；</p>
-</li>
-<li><p>打开 log 窗口，对比各区段偏移后，发现外壳最后一次调用 GetProcAddress 函数的地址为 00478095：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1yw9u35dj31a50u0acu.jpg" alt="最后一次调用"></p>
-<p>重载程序，修改条件记录断点为条件断点：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1z1co1n6j31a40u0tbn.jpg" alt="条件断点"></p>
-<p>然后运行程序；</p>
-</li>
-<li><p>程序中断后，给代码段设置内存执行断点，取消其它断点，运行程序；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1z3ur4g5j31a10u0goy.jpg" alt="删除模块分析"></p>
-<p>删除模块分析后，确认程序到达 OEP；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1zat8x4kj319z0u0dl7.jpg" alt="IAT"></p>
-<p>跟随任意 CALL，确认有调用输入函数后，继续跟随即可定位 IAT，此处为间接调用；</p>
-</li>
-<li><p>查看 IAT 的起始地址和结束地址，计算 Size；</p>
-<p>OEP 的 RVA 为：40300；<br>IAT 的起始地址 RVA 为：430F0；<br>IAT 的结束地址 RVA 为：43674；<br>IAT 的 Size = 43674 - 430F0 = 584；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1zjm7x68j31a60u0tcs.jpg" alt="计算 RVA"></p>
-</li>
-<li><p>使用 PETools 将内存数据 Dump 并保存为可执行文件；</p>
-</li>
-<li><p>打开 ImportREC，填写相关选项，然后获取输入表：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1znp815mj30wk0osdh9.jpg" alt="ImportREC"></p>
-<p>检查没有无效信息，修复程序；</p>
-</li>
-<li><p>程序可以运行，将程序导入 OD，检查 IAT：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1zynliujj31a40u0422.jpg" alt="检查 IAT"></p>
-<p>检查任意函数的名称字符串：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go200xh5ztj31a10u079p.jpg" alt="函数的名称字符串"></p>
-<p>都没有问题，脱壳完成！</p>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>脱壳技术</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>OEP</tag>
-        <tag>IAT</tag>
-        <tag>FSG</tag>
       </tags>
   </entry>
   <entry>
@@ -4902,6 +4839,108 @@
       <tags>
         <tag>软编码</tag>
         <tag>算法分析</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>编译语言特点定位 OEP</title>
+    <url>/posts/4132012963/</url>
+    <content><![CDATA[<blockquote>
+<p>各类语言编译的文件入口点都有自己的特点；</p>
+<p>使用同一种编译器编译的程序，其入口代码都很类似，都有一段启动代码，编译器在编译程序时会自动与程序连接；</p>
+<p>在完成必需的初始化工作后，调用 WinMain 函数，该函数执行完毕，启动代码将再次获得控制权，进行初始化清除工作；</p>
+</blockquote>
+<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-7">UnPackMe</a>来自互联网，仅供学习使用；</li>
+<li>加壳工具为<a href="https://upx.github.io/">UPX</a>，感谢 🙏 开源；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
+</ul>
+<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
+<li><p>将 CM 导入 OD，此时未加壳，EP 即是 OEP：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnxboon3q2j31ek0u00we.jpg" alt="EP 即是 OEP"></p>
+<p>可以看到， 第 1 个调用的函数是<code>GetModuleHandleA</code>；</p>
+</li>
+<li><p>使用 UPX 加密 CM，然后导入 OD：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnxbruvqiuj31e40u0420.jpg" alt="使用 UPX 加密 CM"></p>
+<p>在 EP 处使用<code>Ctrl + G</code>跳转至 GetModuleHandleA 函数的行首，然后设置 F2 断点；</p>
+</li>
+<li><p>运行程序后，程序中断在断点位置，goto 到栈顶指针指向的位置，就到达了 OEP：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnxbwwuu6uj31e60u00xa.jpg" alt="到达了 OEP"></p>
+</li>
+<li><p>如果对常见语言的入口代码比较熟悉，就可以很容易的完成脱壳修复或定位 OEP 等工作，这就需要大量积累了；</p>
+</li>
+<li><p>由于采用默认的启动代码对软件进行加壳保护不是很有利，一些开发人员会对启动源代码进行修改，这时程序的入口点与默认的就完全不同了；</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>脱壳技术</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>OEP</tag>
+        <tag>UPX</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>脱壳小练习（二）</title>
+    <url>/posts/2304111146/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-5">OllyDbg</a>修改版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/UnPackMe-5">UnPackMe</a>来自互联网，仅供学习使用；</li>
+<li>Dump 工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-3">PETools</a>，来自互联网；</li>
+<li>IAT 重建工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-4">ImportREC</a>，来自互联网；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
+</ul>
+<h4 id="操作流程"><a href="#操作流程" class="headerlink" title="操作流程"></a>操作流程</h4><ol>
+<li><p>将 CM 导入 OD，在尝试了<code>内存访问法</code>和<code>栈平衡法</code>都不能到达 OEP 后，使用 SPOD（Special OD，个人称呼）配合<code>常用函数法</code>最终到达 OEP；</p>
+</li>
+<li><p>将 CM 导入 SPOD，goto 到 GetProcAddress 函数的行首，设置条件记录断点，记录调用 GetProcAddress 函数的地址及参数：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1ysq1mtyj31a90u0goz.jpg" alt="条件记录断点"></p>
+<p>清空 log，然后运行程序；</p>
+</li>
+<li><p>打开 log 窗口，对比各区段偏移后，发现外壳最后一次调用 GetProcAddress 函数的地址为 00478095：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1yw9u35dj31a50u0acu.jpg" alt="最后一次调用"></p>
+<p>重载程序，修改条件记录断点为条件断点：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1z1co1n6j31a40u0tbn.jpg" alt="条件断点"></p>
+<p>然后运行程序；</p>
+</li>
+<li><p>程序中断后，给代码段设置内存执行断点，取消其它断点，运行程序；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1z3ur4g5j31a10u0goy.jpg" alt="删除模块分析"></p>
+<p>删除模块分析后，确认程序到达 OEP；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1zat8x4kj319z0u0dl7.jpg" alt="IAT"></p>
+<p>跟随任意 CALL，确认有调用输入函数后，继续跟随即可定位 IAT，此处为间接调用；</p>
+</li>
+<li><p>查看 IAT 的起始地址和结束地址，计算 Size；</p>
+<p>OEP 的 RVA 为：40300；<br>IAT 的起始地址 RVA 为：430F0；<br>IAT 的结束地址 RVA 为：43674；<br>IAT 的 Size = 43674 - 430F0 = 584；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1zjm7x68j31a60u0tcs.jpg" alt="计算 RVA"></p>
+</li>
+<li><p>使用 PETools 将内存数据 Dump 并保存为可执行文件；</p>
+</li>
+<li><p>打开 ImportREC，填写相关选项，然后获取输入表：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1znp815mj30wk0osdh9.jpg" alt="ImportREC"></p>
+<p>检查没有无效信息，修复程序；</p>
+</li>
+<li><p>程序可以运行，将程序导入 OD，检查 IAT：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1zynliujj31a40u0422.jpg" alt="检查 IAT"></p>
+<p>检查任意函数的名称字符串：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go200xh5ztj31a10u079p.jpg" alt="函数的名称字符串"></p>
+<p>都没有问题，脱壳完成！</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>脱壳技术</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>OEP</tag>
+        <tag>IAT</tag>
+        <tag>FSG</tag>
       </tags>
   </entry>
   <entry>
