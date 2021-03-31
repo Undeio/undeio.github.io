@@ -401,6 +401,121 @@
       </tags>
   </entry>
   <entry>
+    <title>OllyDbg 反调试之 ProcessHeap &amp; NTGlobalFlag</title>
+    <url>/posts/3503361299/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code>插件<a href="https://github.com/Undeio/undeio.github.io/releases/tag/Plugin-2">HideDebugger</a>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-14">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
+</ul>
+<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
+<li><p>使用搜索引擎搜寻良久并未找到通俗易懂的说明，在<a href="https://ctf-wiki.github.io/ctf-wiki/">CTF Wiki</a>上发现了描述，但无奈自己功力尚浅，无法透彻理解，遂将链接奉上，感兴趣的同学可以去学习一下<a href="https://ctf-wiki.github.io/ctf-wiki/reverse/windows/anti-debug/ntglobalflag-zh/">NtGlobalFlag</a>，<a href="https://ctf-wiki.github.io/ctf-wiki/reverse/windows/anti-debug/heap-flags-zh/">Heap Flags</a>；</p>
+</li>
+<li><p>文中使用的<code>CrackMe</code>无特定要求，可以使用任意一款；</p>
+</li>
+<li><p>了解一下两个标志，以下描述引用自<a href="https://ctf-wiki.github.io/ctf-wiki/">CTF Wiki</a>：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">NtGlobalFlag</span><br><span class="line"></span><br><span class="line">描述</span><br><span class="line">    1. 在 32 位机器上, NtGlobalFlag字段位于PEB(进程环境块)0x68的偏移处, 64 位机器则是在偏移0xBC位置.</span><br><span class="line">    2. 该字段的默认值为 0.</span><br><span class="line">    3. 当调试器正在运行时, 该字段会被设置为一个特定的值.</span><br><span class="line">    4. 尽管该值并不能十分可信地表明某个调试器真的有在运行, 但该字段常出于该目的而被使用</span><br></pre></td></tr></table></figure>
+
+<p>呃，至于<code>ProcessHeap</code>，实在是总结不出具体的描述性语言，感兴趣的同学去<a href="https://ctf-wiki.github.io/ctf-wiki/">CTF Wiki</a>看吧；</p>
+</li>
+<li><p>接下来就用实例来说明一下这两个标志的用法：</p>
+<ul>
+<li><p>首先选择一个<code>CrackMe</code>倒入<code>OD</code>：</p>
+<p>之前学习<code>IsDebuggerPresent</code>的时候学习到：如果程序倒入<code>OD</code>之后没有运行，那么<code>EBX</code>寄存器指向的位置就是<code>IsDebuggerPresent</code>检测的位置，用代码表示就是：</p>
+<figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">FS</span>:[<span class="number">18</span>]       <span class="comment">; 将 FS:[18] 中的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">30</span>]   <span class="comment">; 将 EAX 中的地址加 0x30 之后的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOVZX</span> <span class="built_in">EAX</span>,<span class="built_in">BYTE</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">2</span>]   <span class="comment">; 将 EAX 中的地址，存储的第 2 个字节的数据拷贝到 EAX</span></span><br><span class="line"><span class="keyword">RETN</span>                            <span class="comment">; 返回</span></span><br></pre></td></tr></table></figure>
+
+<p>在这里简单计算一下，就当作复习之前的知识了，以这个<code>CrackMe</code>为例：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkafiohmmj31ff0u0gxv.jpg" alt="为例子"></p>
+<p>手动计算一下<code>IsDebuggerPresent</code>要检测的位置：</p>
+<ol>
+<li><p><code>MOV EAX,DWORD PTR FS:[18]</code>：<code>FS 寄存器</code>从第 18 位开始，存放的是该寄存器从起始位置依次向后的地址，即第 18 位存放的是起始位置的地址，也就是说，在这里，<code>FS:[18] == 7FFDF000</code>；</p>
+</li>
+<li><p><code>MOV EAX,DWORD PTR DS:[EAX+30]</code>：这个很好计算嘛，<code>[EAX+30] == 7FFDF030</code>，使用<code>Ctrl + G</code>跟随一下这个地址：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkarqpe18j31ff0u0n8e.jpg" alt="计算并跟随"></p>
+<p><code>7FFDF030</code>中存储的地址不正是<code>EBX</code>中的地址嘛；</p>
+</li>
+</ol>
+</li>
+<li><p>回顾完之前的内容，开始学习本次内容的第一个标志<code>NtGlobalFlag</code>：</p>
+<p>根据对<code>NtGlobalFlag</code>描述可知：在 32 位机器上, NtGlobalFlag 字段位于 PEB(进程环境块)0x68 的偏移处；</p>
+<p>首先，什么是 PEB?查询了许久之后又引出了 TEB，不太理解，但找到一些感觉描述很通俗的话：</p>
+<ul>
+<li><p>TEB：即 Thread Environment Block ，它记录相关线程的信息，每一个线程都有自己的 TEB，每个 TEB 都有自己的 TIB（Thread Information Block）,即线程信息块，每当创建一个线程，系统均会为每个线程分配 TEB，而且 TEB 永远放在 FS 寄存器指定的数据段的 0 偏移处；</p>
+</li>
+<li><p>PEB：即（Process Envirorment Block Structure），英文翻译过来就是进程环境信息块，在你进行打开这个程序或以调试方式打开这个程序，那么操作系统会对你这个进程的进程环境块的一些标志设置一系列的属性，如果你使用系统的调试方法，那么系统就会把相对应的标志位给设置上；</p>
+<ol>
+<li><p>TEB 结构体位于 FS 段选择符所指的段内存的起始地址处，也就是 0 偏移处；</p>
+</li>
+<li><p>PEB 成员位于距 TEB 结构体 Offset 30 的位置，也就是 0x30 偏移处；</p>
+</li>
+<li><p>那么就有两种获取 PEB 的方法：</p>
+<ul>
+<li>既然 TEB 位于 <code>FS 寄存器</code> 0 偏移处，在本文中就是<code>7FFDF000</code>，而 PEB 位于距 TEB 结构体 0x30 偏移处，那么是不是可以直接理解为：PEB 位于<code>FS 寄存器</code> 0x30 偏移处，即<code>FS:[30]</code>就是 PEB，在本文中就是<code>7FFDF030</code>；</li>
+<li>TEB 位于 <code>FS 寄存器</code> 0 偏移处，在本文中就是<code>7FFDF000</code>，如何获取<code>FS 寄存器</code> 0 偏移处即文中的<code>7FFDF000</code>呢？当然是<code>FS:[18]</code>了，既然拿到 TEB 本身，如何获取 PEB 呢？方法就和上面复习的一样了；</li>
+</ul>
+</li>
+</ol>
+</li>
+<li><p>既然找到了 PEB 的位置，而根据对<code>NtGlobalFlag</code>的定义得知，它位于 PEB 0x68 偏移处；</p>
+<p>本文中 PEB 为<code>7FFDF030</code>地址中的数据<code>7FFD8000</code>，也就是初始<code>EBX</code>指向的地址，再偏移 0x68 计算为<code>7FFD8068</code>，也就是说，如果<code>7FFD8068</code>地址的数据不为 0，则表示检测到正在调试程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkcwq4qc1j31ff0u0n7p.jpg" alt="NtGlobalFlag"></p>
+<p>整理一下代码的实现：</p>
+<figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">FS</span>:[<span class="number">18</span>]       <span class="comment">; 将 FS:[18] 中的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">30</span>]   <span class="comment">; 将 EAX 中的地址加 0x30 之后的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">68</span>]   <span class="comment">; 将 EAX 中的地址加 0x68 之后的数据拷贝到 EAX</span></span><br><span class="line"><span class="keyword">OR</span> <span class="built_in">EAX</span>,<span class="built_in">EAX</span>                      <span class="comment">; 是否为 0</span></span><br><span class="line"><span class="keyword">RETN</span>                            <span class="comment">; 返回</span></span><br></pre></td></tr></table></figure>
+
+<p>验证一下：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkdsmdg1kj31ff0u0tjp.jpg" alt="验证NtGlobalFlag"></p>
+</li>
+</ul>
+</li>
+<li><p>再来说说第二个标志<code>ProcessHeap</code>：</p>
+<p>对这个标志的了解少之又少，暂时没有查到直接关联的资料，只能大概总结一下：</p>
+<ol>
+<li><p>位于 PEB 偏移 0x18 处，本文中 PEB 是<code>7FFD8000</code>，偏移 0x18 之后是<code>7FFD8018</code>；</p>
+</li>
+<li><p>把偏移后的地址中的 DWORD 长度的数据作为地址，偏移 0x10，即对本文的<code>7FFD8018</code>中的数据<code>00140000</code>偏移 0x10；</p>
+</li>
+<li><p>如果这个位置的数据不为 0，即本文的<code>00140010</code>不为 0，则表示检测到正在调试程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkdjjn9lfj31ff0u0akf.jpg" alt="ProcessHeap"></p>
+<p>整理一下代码的实现：</p>
+<figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">FS</span>:[<span class="number">18</span>]       <span class="comment">; 将 FS:[18] 中的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">30</span>]   <span class="comment">; 将 EAX 中的地址加 0x30 之后的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">18</span>]   <span class="comment">; 将 EAX 中的地址加 0x18 之后的数据拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">10</span>]   <span class="comment">; 将 EAX 中的地址加 0x10 之后的数据拷贝到 EAX</span></span><br><span class="line"><span class="keyword">OR</span> <span class="built_in">EAX</span>,<span class="built_in">EAX</span>                      <span class="comment">; 是否为 0</span></span><br><span class="line"><span class="keyword">RETN</span>                            <span class="comment">; 返回</span></span><br></pre></td></tr></table></figure>
+
+<p>验证一下：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkdp9qncvj31ff0u0qdy.jpg" alt="验证ProcessHeap"></p>
+</li>
+</ol>
+</li>
+<li><p>两个标志分析完毕，接下来就要说说如何绕过了，不能每次都手动修改吧；</p>
+<p>这里需要借助两个<code>OD</code>插件<code>HideDebugger</code>和<code>HideOD</code>；</p>
+<p>设置如下图：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gll7skb4c3j31ff0u048h.jpg" alt="插件设置"></p>
+<p>细心的同学会发现，这里的设置和上节课一模一样，是的，设置相同，但是重点不同；</p>
+<p>虽然之前设置了某些选项，但只是照猫画虎，不知其意，相信学完这节内容，就会理解这样设置的意图；</p>
+</li>
+<li><p>验证一下插件是否生效：</p>
+<p>程序倒入<code>OD</code>不要运行，在<code>数据窗口</code>中跟随<code>EBX</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gll8umchjbj31ff0u07ez.jpg" alt="前两个绕过"></p>
+<p>可以在<code>数据窗口</code>直观的看到，<code>IsDebuggerPresent</code>和<code>NtGlobalFlag</code>检测的位置已经成功置 0，绕过检测，至于<code>ProcessHeap</code>，<code>Ctrl + G</code>跟随地址查看：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gll931b41xj31ff0u0qd9.jpg" alt="最后一个绕过"></p>
+</li>
+</ul>
+</li>
+<li><p>聊完两个标志，再来聊聊另外一个知识点：一个崩溃：</p>
+<p>一个崩溃不是说 Windows 的 API 又有特殊的用途或参数，或者说是开发人员思路清奇把 API 用出了花儿，而是<code>OD</code>的 bug：当被调试的程序通过 OutputDebugString 输出超长的一串调试字符串的时候，OllyDbg 无法处理导致崩溃；</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>逆向分析</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>反调试</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>OllyDbg 反调试之 ZwQueryInformationProcess</title>
     <url>/posts/3209676884/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -533,121 +648,6 @@
 <p>期待自己早日变得更加强大，加油 💪💪💪❗️</p>
 </li>
 </ul>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>逆向分析</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>反调试</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>OllyDbg 反调试之 ProcessHeap &amp; NTGlobalFlag</title>
-    <url>/posts/3503361299/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
-<li><code>OD</code>插件<a href="https://github.com/Undeio/undeio.github.io/releases/tag/Plugin-2">HideDebugger</a>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-14">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
-</ul>
-<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
-<li><p>使用搜索引擎搜寻良久并未找到通俗易懂的说明，在<a href="https://ctf-wiki.github.io/ctf-wiki/">CTF Wiki</a>上发现了描述，但无奈自己功力尚浅，无法透彻理解，遂将链接奉上，感兴趣的同学可以去学习一下<a href="https://ctf-wiki.github.io/ctf-wiki/reverse/windows/anti-debug/ntglobalflag-zh/">NtGlobalFlag</a>，<a href="https://ctf-wiki.github.io/ctf-wiki/reverse/windows/anti-debug/heap-flags-zh/">Heap Flags</a>；</p>
-</li>
-<li><p>文中使用的<code>CrackMe</code>无特定要求，可以使用任意一款；</p>
-</li>
-<li><p>了解一下两个标志，以下描述引用自<a href="https://ctf-wiki.github.io/ctf-wiki/">CTF Wiki</a>：</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">NtGlobalFlag</span><br><span class="line"></span><br><span class="line">描述</span><br><span class="line">    1. 在 32 位机器上, NtGlobalFlag字段位于PEB(进程环境块)0x68的偏移处, 64 位机器则是在偏移0xBC位置.</span><br><span class="line">    2. 该字段的默认值为 0.</span><br><span class="line">    3. 当调试器正在运行时, 该字段会被设置为一个特定的值.</span><br><span class="line">    4. 尽管该值并不能十分可信地表明某个调试器真的有在运行, 但该字段常出于该目的而被使用</span><br></pre></td></tr></table></figure>
-
-<p>呃，至于<code>ProcessHeap</code>，实在是总结不出具体的描述性语言，感兴趣的同学去<a href="https://ctf-wiki.github.io/ctf-wiki/">CTF Wiki</a>看吧；</p>
-</li>
-<li><p>接下来就用实例来说明一下这两个标志的用法：</p>
-<ul>
-<li><p>首先选择一个<code>CrackMe</code>倒入<code>OD</code>：</p>
-<p>之前学习<code>IsDebuggerPresent</code>的时候学习到：如果程序倒入<code>OD</code>之后没有运行，那么<code>EBX</code>寄存器指向的位置就是<code>IsDebuggerPresent</code>检测的位置，用代码表示就是：</p>
-<figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">FS</span>:[<span class="number">18</span>]       <span class="comment">; 将 FS:[18] 中的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">30</span>]   <span class="comment">; 将 EAX 中的地址加 0x30 之后的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOVZX</span> <span class="built_in">EAX</span>,<span class="built_in">BYTE</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">2</span>]   <span class="comment">; 将 EAX 中的地址，存储的第 2 个字节的数据拷贝到 EAX</span></span><br><span class="line"><span class="keyword">RETN</span>                            <span class="comment">; 返回</span></span><br></pre></td></tr></table></figure>
-
-<p>在这里简单计算一下，就当作复习之前的知识了，以这个<code>CrackMe</code>为例：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkafiohmmj31ff0u0gxv.jpg" alt="为例子"></p>
-<p>手动计算一下<code>IsDebuggerPresent</code>要检测的位置：</p>
-<ol>
-<li><p><code>MOV EAX,DWORD PTR FS:[18]</code>：<code>FS 寄存器</code>从第 18 位开始，存放的是该寄存器从起始位置依次向后的地址，即第 18 位存放的是起始位置的地址，也就是说，在这里，<code>FS:[18] == 7FFDF000</code>；</p>
-</li>
-<li><p><code>MOV EAX,DWORD PTR DS:[EAX+30]</code>：这个很好计算嘛，<code>[EAX+30] == 7FFDF030</code>，使用<code>Ctrl + G</code>跟随一下这个地址：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkarqpe18j31ff0u0n8e.jpg" alt="计算并跟随"></p>
-<p><code>7FFDF030</code>中存储的地址不正是<code>EBX</code>中的地址嘛；</p>
-</li>
-</ol>
-</li>
-<li><p>回顾完之前的内容，开始学习本次内容的第一个标志<code>NtGlobalFlag</code>：</p>
-<p>根据对<code>NtGlobalFlag</code>描述可知：在 32 位机器上, NtGlobalFlag 字段位于 PEB(进程环境块)0x68 的偏移处；</p>
-<p>首先，什么是 PEB?查询了许久之后又引出了 TEB，不太理解，但找到一些感觉描述很通俗的话：</p>
-<ul>
-<li><p>TEB：即 Thread Environment Block ，它记录相关线程的信息，每一个线程都有自己的 TEB，每个 TEB 都有自己的 TIB（Thread Information Block）,即线程信息块，每当创建一个线程，系统均会为每个线程分配 TEB，而且 TEB 永远放在 FS 寄存器指定的数据段的 0 偏移处；</p>
-</li>
-<li><p>PEB：即（Process Envirorment Block Structure），英文翻译过来就是进程环境信息块，在你进行打开这个程序或以调试方式打开这个程序，那么操作系统会对你这个进程的进程环境块的一些标志设置一系列的属性，如果你使用系统的调试方法，那么系统就会把相对应的标志位给设置上；</p>
-<ol>
-<li><p>TEB 结构体位于 FS 段选择符所指的段内存的起始地址处，也就是 0 偏移处；</p>
-</li>
-<li><p>PEB 成员位于距 TEB 结构体 Offset 30 的位置，也就是 0x30 偏移处；</p>
-</li>
-<li><p>那么就有两种获取 PEB 的方法：</p>
-<ul>
-<li>既然 TEB 位于 <code>FS 寄存器</code> 0 偏移处，在本文中就是<code>7FFDF000</code>，而 PEB 位于距 TEB 结构体 0x30 偏移处，那么是不是可以直接理解为：PEB 位于<code>FS 寄存器</code> 0x30 偏移处，即<code>FS:[30]</code>就是 PEB，在本文中就是<code>7FFDF030</code>；</li>
-<li>TEB 位于 <code>FS 寄存器</code> 0 偏移处，在本文中就是<code>7FFDF000</code>，如何获取<code>FS 寄存器</code> 0 偏移处即文中的<code>7FFDF000</code>呢？当然是<code>FS:[18]</code>了，既然拿到 TEB 本身，如何获取 PEB 呢？方法就和上面复习的一样了；</li>
-</ul>
-</li>
-</ol>
-</li>
-<li><p>既然找到了 PEB 的位置，而根据对<code>NtGlobalFlag</code>的定义得知，它位于 PEB 0x68 偏移处；</p>
-<p>本文中 PEB 为<code>7FFDF030</code>地址中的数据<code>7FFD8000</code>，也就是初始<code>EBX</code>指向的地址，再偏移 0x68 计算为<code>7FFD8068</code>，也就是说，如果<code>7FFD8068</code>地址的数据不为 0，则表示检测到正在调试程序：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkcwq4qc1j31ff0u0n7p.jpg" alt="NtGlobalFlag"></p>
-<p>整理一下代码的实现：</p>
-<figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">FS</span>:[<span class="number">18</span>]       <span class="comment">; 将 FS:[18] 中的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">30</span>]   <span class="comment">; 将 EAX 中的地址加 0x30 之后的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">68</span>]   <span class="comment">; 将 EAX 中的地址加 0x68 之后的数据拷贝到 EAX</span></span><br><span class="line"><span class="keyword">OR</span> <span class="built_in">EAX</span>,<span class="built_in">EAX</span>                      <span class="comment">; 是否为 0</span></span><br><span class="line"><span class="keyword">RETN</span>                            <span class="comment">; 返回</span></span><br></pre></td></tr></table></figure>
-
-<p>验证一下：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkdsmdg1kj31ff0u0tjp.jpg" alt="验证NtGlobalFlag"></p>
-</li>
-</ul>
-</li>
-<li><p>再来说说第二个标志<code>ProcessHeap</code>：</p>
-<p>对这个标志的了解少之又少，暂时没有查到直接关联的资料，只能大概总结一下：</p>
-<ol>
-<li><p>位于 PEB 偏移 0x18 处，本文中 PEB 是<code>7FFD8000</code>，偏移 0x18 之后是<code>7FFD8018</code>；</p>
-</li>
-<li><p>把偏移后的地址中的 DWORD 长度的数据作为地址，偏移 0x10，即对本文的<code>7FFD8018</code>中的数据<code>00140000</code>偏移 0x10；</p>
-</li>
-<li><p>如果这个位置的数据不为 0，即本文的<code>00140010</code>不为 0，则表示检测到正在调试程序：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkdjjn9lfj31ff0u0akf.jpg" alt="ProcessHeap"></p>
-<p>整理一下代码的实现：</p>
-<figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">FS</span>:[<span class="number">18</span>]       <span class="comment">; 将 FS:[18] 中的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">30</span>]   <span class="comment">; 将 EAX 中的地址加 0x30 之后的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">18</span>]   <span class="comment">; 将 EAX 中的地址加 0x18 之后的数据拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">10</span>]   <span class="comment">; 将 EAX 中的地址加 0x10 之后的数据拷贝到 EAX</span></span><br><span class="line"><span class="keyword">OR</span> <span class="built_in">EAX</span>,<span class="built_in">EAX</span>                      <span class="comment">; 是否为 0</span></span><br><span class="line"><span class="keyword">RETN</span>                            <span class="comment">; 返回</span></span><br></pre></td></tr></table></figure>
-
-<p>验证一下：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkdp9qncvj31ff0u0qdy.jpg" alt="验证ProcessHeap"></p>
-</li>
-</ol>
-</li>
-<li><p>两个标志分析完毕，接下来就要说说如何绕过了，不能每次都手动修改吧；</p>
-<p>这里需要借助两个<code>OD</code>插件<code>HideDebugger</code>和<code>HideOD</code>；</p>
-<p>设置如下图：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gll7skb4c3j31ff0u048h.jpg" alt="插件设置"></p>
-<p>细心的同学会发现，这里的设置和上节课一模一样，是的，设置相同，但是重点不同；</p>
-<p>虽然之前设置了某些选项，但只是照猫画虎，不知其意，相信学完这节内容，就会理解这样设置的意图；</p>
-</li>
-<li><p>验证一下插件是否生效：</p>
-<p>程序倒入<code>OD</code>不要运行，在<code>数据窗口</code>中跟随<code>EBX</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gll8umchjbj31ff0u07ez.jpg" alt="前两个绕过"></p>
-<p>可以在<code>数据窗口</code>直观的看到，<code>IsDebuggerPresent</code>和<code>NtGlobalFlag</code>检测的位置已经成功置 0，绕过检测，至于<code>ProcessHeap</code>，<code>Ctrl + G</code>跟随地址查看：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gll931b41xj31ff0u0qd9.jpg" alt="最后一个绕过"></p>
-</li>
-</ul>
-</li>
-<li><p>聊完两个标志，再来聊聊另外一个知识点：一个崩溃：</p>
-<p>一个崩溃不是说 Windows 的 API 又有特殊的用途或参数，或者说是开发人员思路清奇把 API 用出了花儿，而是<code>OD</code>的 bug：当被调试的程序通过 OutputDebugString 输出超长的一串调试字符串的时候，OllyDbg 无法处理导致崩溃；</p>
 </li>
 </ol>
 ]]></content>
@@ -1665,123 +1665,6 @@
       </tags>
   </entry>
   <entry>
-    <title>VB 调试之分析 N-Code（一）</title>
-    <url>/posts/1203909517/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-5">OllyDbg</a>修改版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-17">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
-</ul>
-<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
-<li><p>首先运行软件，了解一下程序：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwwx2zk5ij30cg0j474t.jpg" alt="运行程序"></p>
-<p>O, No!</p>
-<ul>
-<li><p>首先是一个<code>NAG 窗口</code>:</p>
-<blockquote>
-<p><code>NAG 窗口</code>：软件未注册或软件的试用版经常会弹出一些提示窗口要求注册，这些窗口被称为 nag 窗口，也叫烦人的窗口；</p>
-</blockquote>
-</li>
-<li><p>然后才是软件窗口，要求输入注册码；</p>
-</li>
-<li><p>输入随机字符点击 OK，一个奇怪的弹窗，应该是 No? Thanks?</p>
-</li>
-</ul>
-</li>
-<li><p>将<code>CrackMe</code>倒入<code>OD</code>，开始分析：</p>
-<ul>
-<li><p>首先，第一件事儿是去掉<code>烦人的窗口</code>：</p>
-<p>既然是弹窗，那么它肯定调用了<code>MessageBox</code>这个 API，不过，VB 有专有的 API <code>rtcMsgBox</code>：调用一个消息框，类似于 Windows 里的 MessageBox/A/EXA，此之前一定有个 PUSH 命令将要在消息框中显示的数据压入椎栈；</p>
-<ol>
-<li><p>既然已经知道了它调用的 API，那还等什么，给<code>rtcMsgBox</code>设置断点：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwf5ajmbfj319x0u0ado.jpg" alt="设置断点"></p>
-<p>按下<code>Ctrl + G</code>输入<code>rtcMsgBox</code>，然后点击确定，程序会跳转到<code>rtcMsgBox</code>函数的行首，然后双击该行设置断点，并做好备注；</p>
-</li>
-<li><p>设置好断点后，<code>F9</code>运行程序，程序会中断在断点位置，然后在<code>堆栈窗口</code>跟踪调用位置：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwfej14e2j31a10u0787.jpg" alt="反汇编窗口中跟随"></p>
-</li>
-<li><p>来到<code>反汇编窗口</code>，这个时候函数<code>rtcMsgBox</code>已经调用完成，既然找到了调用位置，那怎么能去掉<code>烦人的窗口</code>呢？</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwrwzbi2mj31a40u0q74.jpg" alt="返回位置"></p>
-<p>设置好断点，重载并运行程序后，程序中断在预先设置好的断点位置，而下面一行的<code>CALL</code>就是调用<code>rtcMsgBox</code>的位置，如果把这个调用<code>NOP</code>了，是不是就没有<code>NAG 窗口</code>了，听起来蛮靠谱，试一试：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmws2k2c0gj31a00u0adj.jpg" alt="NOP"></p>
-</li>
-<li><p><code>NOP</code>了调用<code>rtcMsgBox</code>的<code>CALL</code>后，继续运行程序，但并没有按照预期显示程序主窗口，而是程序结束了，这是怎么回事儿呢？</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmws7fd2l7j319y0u0jus.jpg" alt="程序终止了"></p>
-<p>按下<code>-</code>减号键，返回上层位置，把修改的内容保存下来试试：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwszp7i1mj31c90u0ag0.jpg" alt="保存到文件"></p>
-<p>双击运行保存的程序，没有任何反应，em ～～ 看来程序被玩坏了，此路不通；</p>
-</li>
-<li><p>重载并运行程序，重新来到<code>反汇编窗口</code>，既然把直接调用函数<code>NOP</code>了不行，那就只能继续运行程序，看看它的上一级调用：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwtwz0lpqj319u0u0gq0.jpg" alt="上级调用"></p>
-<p>来到上级调用的返回位置，上一行的<code>CALl</code>就是刚才整段代码的调用位置，如果把这个<code>CALl</code>干掉，那么弹窗也就没有了，试一试，但愿程序不被玩儿坏；</p>
-<p>在这个<code>CALl</code>的参数的上一行设置断点，重载并运行程序；</p>
-</li>
-<li><p>程序中断在预定位置，选择下面<code>CALl</code>和它的参数用<code>NOP</code>填充：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwu4tmu4yj319x0u0789.jpg" alt="用NOP填充"></p>
-</li>
-<li><p>继续运行程序，啊哈，期待已久的程序主窗口终于出现了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwu6csc67j319y0u0adb.jpg" alt="程序主窗口"></p>
-<p>主程序出现，说明这个方法可行；</p>
-</li>
-<li><p>为了后面找码方便，把修改后的程序另存为一个新的程序：终于要和<code>烦人的窗口</code>说拜拜了，至于保存的方法，上面已经说明，不再赘述；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwue6f08gj30fa0hyglz.jpg" alt="NoNAG"></p>
-<p>运行修改的程序，嗯，没有<code>NAG 窗口</code>，直接出现程序主窗体，一切 OK；</p>
-</li>
-</ol>
-</li>
-<li><p>搞定<code>NAG 窗口</code>后，是时候寻找一下注册码了：</p>
-<ol>
-<li><p>把修改后的程序倒入<code>OD</code>，然后运行程序，主窗体出现：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwujt8bmmj31a10u0whn.jpg" alt="运行修改程序"></p>
-</li>
-<li><p>输入随机注册码，但不要点 OK，但不要点 OK，但不要点 OK，重要的事情说三遍：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwunevjelj31a90u0419.jpg" alt="内存访问断点"></p>
-<p>接着到<code>内存窗口</code>，在<code>CODE 段</code>设置<code>内存访问断点</code>，然后到程序中点击 OK；</p>
-</li>
-<li><p>点击 OK 后，程序中断：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwuq1qlscj31a70u0dj1.jpg" alt="程序中断"></p>
-<p>这里的代码看不大懂，不过没关系，也没有找到需要的信息；</p>
-</li>
-<li><p>继续运行程序，直到看到了随机输入的注册码和字符串比较函数：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwuupo64mj319x0u0wi4.jpg" alt="字符串比较"></p>
-<p>随机输入的字符作为字符串比较函数的参数，那另一个参数毋庸置疑，肯定是真实的注册码；</p>
-</li>
-<li><p>不过遗憾的是，由于这个软件是西欧字符软件，好多字符无法正确显示，找到了真实的注册码也无法输入，复制也不行，因为系统字符集中没有某些字符：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwv3kqadtj319w0u0jxi.jpg" alt="字符集"></p>
-</li>
-<li><p>既然无法输入真实注册码，那就只能让任意字符成为注册码了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwvbq3c94j319r0u0wif.jpg" alt="比较不成立"></p>
-<p>首先，字符串比较函数的返回结果非 0，说明两个参数不相等，继续向下分析；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmww36rsqtj319z0u0jwe.jpg" alt="向下分析"></p>
-<p>把比较的结果从 EAX 拷贝到 EDI 中，然后进行了一系列的操作，然而，如果 EDI 为 0，则这些操作没有任何意义，至于中间夹杂的其他操作可以忽略了，因为没有涉及到 EDI：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmww36rsqtj319z0u0jwe.jpg" alt="操作 EDI"></p>
-<p>这里有一个 JE 跳转，上一行代码是<code>TEST DI, DI</code>，如果 EDI 自身为 0，则<code>TEST DI, DI</code>影响 ZF 标志位，ZF 置 1，反之为 0，而恰恰 JE 根据 ZF 标志位跳转，可以看到，程序运行到了这里，ZF 依然为 0，则间接说明了输入的注册码不正确；</p>
-<p>既然这个跳转根据比较的结果进行跳转，那就可以确定它是关键跳，如果将 JE 修改为 JMP，是否就能满足<code>让任意字符成为注册码</code>？值得一试：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwwqklr2hj319v0u0jv1.jpg" alt="修改为 JMP"></p>
-<p>修改 JE 为 JMP 后，取消内存访问断点，然后<code>F9</code>运行程序，It’s OK，终于看到了成功弹窗，不过由于字符集的原因，部分字符无法显示；</p>
-</li>
-<li><p>保存修改到文件，然后输入任意字符：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwwuohw0dj30ca0i4mxh.jpg" alt="成功"></p>
-<p>成功的弹窗是 Yes? Thanks?</p>
-</li>
-</ol>
-</li>
-</ul>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>逆向分析</category>
-        <category>Windows</category>
-        <category>VB 汇总</category>
-      </categories>
-      <tags>
-        <tag>VB 调试</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>VB 调试之分析 N-Code（二）</title>
     <url>/posts/3794155287/</url>
     <content><![CDATA[<blockquote>
@@ -2213,6 +2096,123 @@
       </tags>
   </entry>
   <entry>
+    <title>VB 调试之分析 N-Code（一）</title>
+    <url>/posts/1203909517/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-5">OllyDbg</a>修改版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-17">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
+</ul>
+<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
+<li><p>首先运行软件，了解一下程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwwx2zk5ij30cg0j474t.jpg" alt="运行程序"></p>
+<p>O, No!</p>
+<ul>
+<li><p>首先是一个<code>NAG 窗口</code>:</p>
+<blockquote>
+<p><code>NAG 窗口</code>：软件未注册或软件的试用版经常会弹出一些提示窗口要求注册，这些窗口被称为 nag 窗口，也叫烦人的窗口；</p>
+</blockquote>
+</li>
+<li><p>然后才是软件窗口，要求输入注册码；</p>
+</li>
+<li><p>输入随机字符点击 OK，一个奇怪的弹窗，应该是 No? Thanks?</p>
+</li>
+</ul>
+</li>
+<li><p>将<code>CrackMe</code>倒入<code>OD</code>，开始分析：</p>
+<ul>
+<li><p>首先，第一件事儿是去掉<code>烦人的窗口</code>：</p>
+<p>既然是弹窗，那么它肯定调用了<code>MessageBox</code>这个 API，不过，VB 有专有的 API <code>rtcMsgBox</code>：调用一个消息框，类似于 Windows 里的 MessageBox/A/EXA，此之前一定有个 PUSH 命令将要在消息框中显示的数据压入椎栈；</p>
+<ol>
+<li><p>既然已经知道了它调用的 API，那还等什么，给<code>rtcMsgBox</code>设置断点：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwf5ajmbfj319x0u0ado.jpg" alt="设置断点"></p>
+<p>按下<code>Ctrl + G</code>输入<code>rtcMsgBox</code>，然后点击确定，程序会跳转到<code>rtcMsgBox</code>函数的行首，然后双击该行设置断点，并做好备注；</p>
+</li>
+<li><p>设置好断点后，<code>F9</code>运行程序，程序会中断在断点位置，然后在<code>堆栈窗口</code>跟踪调用位置：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwfej14e2j31a10u0787.jpg" alt="反汇编窗口中跟随"></p>
+</li>
+<li><p>来到<code>反汇编窗口</code>，这个时候函数<code>rtcMsgBox</code>已经调用完成，既然找到了调用位置，那怎么能去掉<code>烦人的窗口</code>呢？</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwrwzbi2mj31a40u0q74.jpg" alt="返回位置"></p>
+<p>设置好断点，重载并运行程序后，程序中断在预先设置好的断点位置，而下面一行的<code>CALL</code>就是调用<code>rtcMsgBox</code>的位置，如果把这个调用<code>NOP</code>了，是不是就没有<code>NAG 窗口</code>了，听起来蛮靠谱，试一试：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmws2k2c0gj31a00u0adj.jpg" alt="NOP"></p>
+</li>
+<li><p><code>NOP</code>了调用<code>rtcMsgBox</code>的<code>CALL</code>后，继续运行程序，但并没有按照预期显示程序主窗口，而是程序结束了，这是怎么回事儿呢？</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmws7fd2l7j319y0u0jus.jpg" alt="程序终止了"></p>
+<p>按下<code>-</code>减号键，返回上层位置，把修改的内容保存下来试试：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwszp7i1mj31c90u0ag0.jpg" alt="保存到文件"></p>
+<p>双击运行保存的程序，没有任何反应，em ～～ 看来程序被玩坏了，此路不通；</p>
+</li>
+<li><p>重载并运行程序，重新来到<code>反汇编窗口</code>，既然把直接调用函数<code>NOP</code>了不行，那就只能继续运行程序，看看它的上一级调用：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwtwz0lpqj319u0u0gq0.jpg" alt="上级调用"></p>
+<p>来到上级调用的返回位置，上一行的<code>CALl</code>就是刚才整段代码的调用位置，如果把这个<code>CALl</code>干掉，那么弹窗也就没有了，试一试，但愿程序不被玩儿坏；</p>
+<p>在这个<code>CALl</code>的参数的上一行设置断点，重载并运行程序；</p>
+</li>
+<li><p>程序中断在预定位置，选择下面<code>CALl</code>和它的参数用<code>NOP</code>填充：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwu4tmu4yj319x0u0789.jpg" alt="用NOP填充"></p>
+</li>
+<li><p>继续运行程序，啊哈，期待已久的程序主窗口终于出现了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwu6csc67j319y0u0adb.jpg" alt="程序主窗口"></p>
+<p>主程序出现，说明这个方法可行；</p>
+</li>
+<li><p>为了后面找码方便，把修改后的程序另存为一个新的程序：终于要和<code>烦人的窗口</code>说拜拜了，至于保存的方法，上面已经说明，不再赘述；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwue6f08gj30fa0hyglz.jpg" alt="NoNAG"></p>
+<p>运行修改的程序，嗯，没有<code>NAG 窗口</code>，直接出现程序主窗体，一切 OK；</p>
+</li>
+</ol>
+</li>
+<li><p>搞定<code>NAG 窗口</code>后，是时候寻找一下注册码了：</p>
+<ol>
+<li><p>把修改后的程序倒入<code>OD</code>，然后运行程序，主窗体出现：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwujt8bmmj31a10u0whn.jpg" alt="运行修改程序"></p>
+</li>
+<li><p>输入随机注册码，但不要点 OK，但不要点 OK，但不要点 OK，重要的事情说三遍：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwunevjelj31a90u0419.jpg" alt="内存访问断点"></p>
+<p>接着到<code>内存窗口</code>，在<code>CODE 段</code>设置<code>内存访问断点</code>，然后到程序中点击 OK；</p>
+</li>
+<li><p>点击 OK 后，程序中断：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwuq1qlscj31a70u0dj1.jpg" alt="程序中断"></p>
+<p>这里的代码看不大懂，不过没关系，也没有找到需要的信息；</p>
+</li>
+<li><p>继续运行程序，直到看到了随机输入的注册码和字符串比较函数：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwuupo64mj319x0u0wi4.jpg" alt="字符串比较"></p>
+<p>随机输入的字符作为字符串比较函数的参数，那另一个参数毋庸置疑，肯定是真实的注册码；</p>
+</li>
+<li><p>不过遗憾的是，由于这个软件是西欧字符软件，好多字符无法正确显示，找到了真实的注册码也无法输入，复制也不行，因为系统字符集中没有某些字符：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwv3kqadtj319w0u0jxi.jpg" alt="字符集"></p>
+</li>
+<li><p>既然无法输入真实注册码，那就只能让任意字符成为注册码了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwvbq3c94j319r0u0wif.jpg" alt="比较不成立"></p>
+<p>首先，字符串比较函数的返回结果非 0，说明两个参数不相等，继续向下分析；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmww36rsqtj319z0u0jwe.jpg" alt="向下分析"></p>
+<p>把比较的结果从 EAX 拷贝到 EDI 中，然后进行了一系列的操作，然而，如果 EDI 为 0，则这些操作没有任何意义，至于中间夹杂的其他操作可以忽略了，因为没有涉及到 EDI：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmww36rsqtj319z0u0jwe.jpg" alt="操作 EDI"></p>
+<p>这里有一个 JE 跳转，上一行代码是<code>TEST DI, DI</code>，如果 EDI 自身为 0，则<code>TEST DI, DI</code>影响 ZF 标志位，ZF 置 1，反之为 0，而恰恰 JE 根据 ZF 标志位跳转，可以看到，程序运行到了这里，ZF 依然为 0，则间接说明了输入的注册码不正确；</p>
+<p>既然这个跳转根据比较的结果进行跳转，那就可以确定它是关键跳，如果将 JE 修改为 JMP，是否就能满足<code>让任意字符成为注册码</code>？值得一试：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwwqklr2hj319v0u0jv1.jpg" alt="修改为 JMP"></p>
+<p>修改 JE 为 JMP 后，取消内存访问断点，然后<code>F9</code>运行程序，It’s OK，终于看到了成功弹窗，不过由于字符集的原因，部分字符无法显示；</p>
+</li>
+<li><p>保存修改到文件，然后输入任意字符：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwwuohw0dj30ca0i4mxh.jpg" alt="成功"></p>
+<p>成功的弹窗是 Yes? Thanks?</p>
+</li>
+</ol>
+</li>
+</ul>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>逆向分析</category>
+        <category>Windows</category>
+        <category>VB 汇总</category>
+      </categories>
+      <tags>
+        <tag>VB 调试</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>修复 IAT 之初探</title>
     <url>/posts/452711586/</url>
     <content><![CDATA[<blockquote>
@@ -2269,6 +2269,73 @@
       <tags>
         <tag>UPX</tag>
         <tag>IAT</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>修复 IAT 之剔除无用数据</title>
+    <url>/posts/1928138386/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/UnPackMe-3">UnPackMe</a>来自互联网，仅供学习使用；</li>
+<li>Dump 工具为 OD 插件 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Plugin-1">OllyDump</a>，来自互联网；</li>
+<li>IAT 重建工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-4">ImportREC</a>，来自互联网；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
+</ul>
+<h4 id="操作流程"><a href="#操作流程" class="headerlink" title="操作流程"></a>操作流程</h4><p>Import REConstructor（简称 ImportREC）是目前最好用的输入表重建工具，它可以从杂乱的 IAT 中重建一个输入表；</p>
+<p>要运行 ImportREC，必须满足以下条件：</p>
+<ul>
+<li>目标文件已完全被 Dump 并保存为另外一个文件；</li>
+<li>目标文件必须正在运行；</li>
+<li>事先找到目标程序真正的 OEP 或知晓 IAT 的偏移量和大小；</li>
+</ul>
+<ol>
+<li><p>将 CM 导入 OD，使用栈平衡法找到 OEP，并停留在 OEP（目标文件必须正在运行）；</p>
+</li>
+<li><p>使用 OllyDump 将内存数据 Dump 出来并保存至可执行文件（目标文件已完全被 Dump 并保存为另外一个文件）：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0n79lxu4j31dt0u0jvk.jpg" alt="OllyDump"></p>
+<p>在插件菜单选择 OllyDump 或右键菜单选择转存调试的进程都可以，然后确认 Dump 选项：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0n2xcja2j31e00u0djx.jpg" alt="Dump"></p>
+<p>插件 Dump 数据方面没有问题，但重建 IAT 功能不够强大，因此，取消勾选重建输入表选项；</p>
+</li>
+<li><p>在 OD 中定位到 IAT，查看起始 RVA 以及结束 RVA，计算 Size：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0nfnw56mj310w0o8ta0.jpg" alt="Size"></p>
+<p>在输入表中，一个 DLl 对应于一份 IAT，多个 IAT 之间一般以一个 DWORD 的 0 隔开；</p>
+<p>此处 CM 的 IAT 之间被添加了无效信息；</p>
+</li>
+<li><p>用 ImportREC 打开 CM 进程，填写 OEP（RVA）以及 IAT 的起始地址（RVA）和大小，然后点击获取：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0no2nckij30we0oojsj.jpg" alt="ImportREC"></p>
+<p>获取输入表后，可以看到有一组<code>valid：NO</code>的数据，这就是两个 IAT 之间的无效信息：</p>
+<p>确认是无效信息后，在无效信息上右键菜单执行“Cut thunk(s)”命令：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0nzzqto3j31e10u0aeq.jpg" alt="Cut thunk(s)"></p>
+<p>剔除无效信息后，数据还是不正确：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0o4b5w5kj31dy0u078u.jpg" alt="数据还是不正确"></p>
+<p>因为 CM 中调用了 3 个 DLL，分别是 user32.dll、kernel32.dll 以及 ntdll.dll；</p>
+<p>而 ImportREC 只找到了两个，看来这玩意儿也不好使啊；</p>
+<p>NoNoNo，它找到了三个，但因为 ntdll 中的 API 混合在 kernel32 的 API 中，所以被替换了，看 log 窗口的提示信息；</p>
+<p>此时如果直接修复 dump.exe，在当前环境（xp）下是可以运行的，但可能会在其它 OS 中遇到兼容性问题；</p>
+<p>所以还需要修复 API：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0olk6qhmj31lk0qu0v8.jpg" alt="修复"></p>
+<p>在获取的信息中，双击对应的 API，在弹出的函数编辑框中修改对应的 DLL 名称和 API 名称；</p>
+<ul>
+<li>查看 RVA 来获取对应的函数比较直观，如：00001200 和 00001210；</li>
+<li>双击函数行打开函数编辑框；</li>
+<li>在编辑框中首先选择 DLL 名称，然后可以在下面的输入框中搜索指定的函数名，接着选择函数，点击 OK 确认修改；</li>
+<li>修改完成后，依然显示的是未修改的状态，但修复程序后，显示已修改；</li>
+</ul>
+<p>修改完成后，点击<code>Fix Dump</code>，选择需要修复的程序，完成修复：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0p1ijxbfj31e20u0ada.jpg" alt="完成修复"></p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>脱壳技术</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>IAT</tag>
+        <tag>ASPack</tag>
       </tags>
   </entry>
   <entry>
@@ -2389,73 +2456,6 @@
       <tags>
         <tag>IAT</tag>
         <tag>tElock</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>修复 IAT 之剔除无用数据</title>
-    <url>/posts/1928138386/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/UnPackMe-3">UnPackMe</a>来自互联网，仅供学习使用；</li>
-<li>Dump 工具为 OD 插件 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Plugin-1">OllyDump</a>，来自互联网；</li>
-<li>IAT 重建工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-4">ImportREC</a>，来自互联网；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
-</ul>
-<h4 id="操作流程"><a href="#操作流程" class="headerlink" title="操作流程"></a>操作流程</h4><p>Import REConstructor（简称 ImportREC）是目前最好用的输入表重建工具，它可以从杂乱的 IAT 中重建一个输入表；</p>
-<p>要运行 ImportREC，必须满足以下条件：</p>
-<ul>
-<li>目标文件已完全被 Dump 并保存为另外一个文件；</li>
-<li>目标文件必须正在运行；</li>
-<li>事先找到目标程序真正的 OEP 或知晓 IAT 的偏移量和大小；</li>
-</ul>
-<ol>
-<li><p>将 CM 导入 OD，使用栈平衡法找到 OEP，并停留在 OEP（目标文件必须正在运行）；</p>
-</li>
-<li><p>使用 OllyDump 将内存数据 Dump 出来并保存至可执行文件（目标文件已完全被 Dump 并保存为另外一个文件）：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0n79lxu4j31dt0u0jvk.jpg" alt="OllyDump"></p>
-<p>在插件菜单选择 OllyDump 或右键菜单选择转存调试的进程都可以，然后确认 Dump 选项：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0n2xcja2j31e00u0djx.jpg" alt="Dump"></p>
-<p>插件 Dump 数据方面没有问题，但重建 IAT 功能不够强大，因此，取消勾选重建输入表选项；</p>
-</li>
-<li><p>在 OD 中定位到 IAT，查看起始 RVA 以及结束 RVA，计算 Size：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0nfnw56mj310w0o8ta0.jpg" alt="Size"></p>
-<p>在输入表中，一个 DLl 对应于一份 IAT，多个 IAT 之间一般以一个 DWORD 的 0 隔开；</p>
-<p>此处 CM 的 IAT 之间被添加了无效信息；</p>
-</li>
-<li><p>用 ImportREC 打开 CM 进程，填写 OEP（RVA）以及 IAT 的起始地址（RVA）和大小，然后点击获取：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0no2nckij30we0oojsj.jpg" alt="ImportREC"></p>
-<p>获取输入表后，可以看到有一组<code>valid：NO</code>的数据，这就是两个 IAT 之间的无效信息：</p>
-<p>确认是无效信息后，在无效信息上右键菜单执行“Cut thunk(s)”命令：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0nzzqto3j31e10u0aeq.jpg" alt="Cut thunk(s)"></p>
-<p>剔除无效信息后，数据还是不正确：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0o4b5w5kj31dy0u078u.jpg" alt="数据还是不正确"></p>
-<p>因为 CM 中调用了 3 个 DLL，分别是 user32.dll、kernel32.dll 以及 ntdll.dll；</p>
-<p>而 ImportREC 只找到了两个，看来这玩意儿也不好使啊；</p>
-<p>NoNoNo，它找到了三个，但因为 ntdll 中的 API 混合在 kernel32 的 API 中，所以被替换了，看 log 窗口的提示信息；</p>
-<p>此时如果直接修复 dump.exe，在当前环境（xp）下是可以运行的，但可能会在其它 OS 中遇到兼容性问题；</p>
-<p>所以还需要修复 API：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0olk6qhmj31lk0qu0v8.jpg" alt="修复"></p>
-<p>在获取的信息中，双击对应的 API，在弹出的函数编辑框中修改对应的 DLL 名称和 API 名称；</p>
-<ul>
-<li>查看 RVA 来获取对应的函数比较直观，如：00001200 和 00001210；</li>
-<li>双击函数行打开函数编辑框；</li>
-<li>在编辑框中首先选择 DLL 名称，然后可以在下面的输入框中搜索指定的函数名，接着选择函数，点击 OK 确认修改；</li>
-<li>修改完成后，依然显示的是未修改的状态，但修复程序后，显示已修改；</li>
-</ul>
-<p>修改完成后，点击<code>Fix Dump</code>，选择需要修复的程序，完成修复：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go0p1ijxbfj31e20u0ada.jpg" alt="完成修复"></p>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>脱壳技术</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>IAT</tag>
-        <tag>ASPack</tag>
       </tags>
   </entry>
   <entry>
@@ -3710,6 +3710,95 @@ E --&gt; |&quot;否，未解决&quot;| G
       </tags>
   </entry>
   <entry>
+    <title>硬编码寻找序列号（二）</title>
+    <url>/posts/3097998650/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-2">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
+</ul>
+<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
+<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
+</li>
+<li><p>倒入<code>OD</code>开始分析：</p>
+<ul>
+<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
+</li>
+<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，咦，发现可疑函数：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy5o1g2gpj30g90bwjsq.jpg" alt="函数"></p>
+<p>很好的开始，在<code>GetDlgItemTextA</code>函数上设置断点，然后去<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
+</li>
+<li><p>然后<code>F9</code>运行程序，“随便输入” 一些字符后点击验证，可以随便输入，但请记住它；</p>
+</li>
+<li><p>程序断在了设置断点的 API 的行首，在堆栈窗口可以看到 API 的各种参数，而参数 Buffer 里存放着函数返回的数据，选中 Buffer 右键<code>数据窗口中跟随</code>，可以看到，由于断点中断在了函数的第一行，所以这个地址里什么也没有：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy5y9rif4j30sr0fsq51.jpg" alt="运行"></p>
+</li>
+<li><p>接着按下 Ctrl + F9 或点击菜单栏的调试选项并选择<code>执行到返回</code>，然后发现 Buffer 对应的地址里有数据了，并且是我们输入的字符串；</p>
+</li>
+<li><p>在上一步中，我们<code>执行到返回</code>，那就意味着接下来登场的将会是<code>RETN</code>了，按下 F8，返回到调用 API 的程序，哇，密密麻麻全是汇编语句，往下翻了翻，也没发现什么关键字、有用的信息，接着<code>F9</code>运行，直接弹出了错误信息：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy69uwm08j303z03z0sn.jpg" alt="弹窗"></p>
+</li>
+<li><p>看来此路不通啊，但是“程序给我们关上了一扇门，同时又开了一扇窗”，没错，就是它，弹窗，在最开始的函数列表中也有它的身影<code>MessageBoxA</code>，那就从它入手试试；</p>
+</li>
+<li><p>禁用<code>GetDlgItemTextA</code>并设置<code>MessageBoxA</code>断点，重新运行程序，输入并运行程序后，拦截到了即将要弹出的信息，信息显示在堆栈窗口：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy6hpjnooj30ug0i0wgm.jpg" alt="错误"></p>
+<p>如果程序继续运行，将弹出<code>错误！</code>弹窗；</p>
+</li>
+<li><p>堆栈窗口的顶部显示的是调用信息，包括调用地址、返回地址等</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy6m2r60qj30cw05q0t2.jpg" alt="堆栈"></p>
+</li>
+<li><p>堆栈顶端，也就是当前<code>ESP</code>指向的堆栈中则是调用地址，也就是说这个地址调用了<code>MessageBoxA</code>这个<code>API</code>，根据程序的流程：程序经过比较之后，发现序列号不对，所以调用<code>MessageBoxA</code>并弹出错误窗口。<br>按照这个逻辑，如果跟随调用地址，是不是就能找到程序进行比较的代码？那还等什么，右键堆栈顶端的地址（堆栈中被标注黑色背景的地址就是堆栈顶端）选择<code>反汇编窗口中跟随</code>，就来到了调用<code>MessageBoxA</code>的程序，查看上面的代码，发现了一些端倪：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy7fm1cz5j30ue0j8jur.jpg" alt="调用"></p>
+<p>上面有一个<code>JNZ</code>跳转进来，从而调用了<code>MessageBoxA</code>，所以弹出了错误弹窗，而<code>JNZ</code>的下面还有一个<code>MessageBoxA</code>，那可以猜测，如果不跳转继续向下执行，很有可能弹出的就是注册成功的弹窗，<code>JNZ</code>根据<code>ZF 标志位</code>进行跳转，如果修改<code>ZF 标志位</code>为<code>1</code>，就可以验证一下猜测是否正确，如何修改呢，继续往上翻代码，嘿嘿，发现一个有用的东西<code>GetDlgItemTextA</code>，在调用地址双击数据窗口设置<code>CC断点</code>，重载程序</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy84b4uhoj30uc0j7acn.jpg" alt="重载"></p>
+</li>
+<li><p>输入并运行程序后，在最后设置断点的地方停了下来，那下面就是要执行的代码了，分析一下看能不能找到隐藏的序列号：</p>
+<ul>
+<li><p>才分析了几行代码，有一种上了恶当的感觉，感觉它在转移某些内容，就暂且将它转移的内容称为“可疑字符串”：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy8q1uc0zj30p50740ts.jpg" alt="序列号"></p>
+</li>
+<li><p>不管了，继续分析，依然没有收获：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy90t76crj30om05zjrs.jpg" alt="没有收获"></p>
+</li>
+<li><p>直到分析了一个轮回，终于有了收获，程序会用我们输入的序列号的每一个字节的机器码减 14 后，和指定的机器码进行比较：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy9zbazz5j30p10ac75f.jpg" alt="循环"></p>
+</li>
+<li><p>而我们利用<code>MessageBoxA</code>断点，分析的<code>JNZ</code>的跳转条件是：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giyb22if59j30p10hewgy.jpg" alt="JNZ"></p>
+</li>
+<li><p>如何让条件成立呢？恰恰在我们没有分析到的代码，因为我们输入的序列号是错误的，所以正确的代码根本不会执行，更谈不上分析了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giybg7od2pj30p20acjsn.jpg" alt="正确"></p>
+<p>在这里，如果是正确的序列号，那么每次比较完成后，<code>EBP - 10</code>和<code>EBP - 34</code>作为两个计数器，它们会正确的同时自增，在最后的比较长度时也就会相等了；</p>
+</li>
+</ul>
+</li>
+<li><p>所以，正确的序列号是什么呢？</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giybxcwm3ej30p00abjtb.jpg" alt="序列号"></p>
+<ul>
+<li>在比较的位置设置断点，获取每次比较时给定的字符的机器码，然后加上 14，最后转为 ASCII 码，就是正确的序列号；</li>
+<li>获取到的给定字符的机器码：<code>1D 1E 1F 44 61 51 3C 5B 36 55 51</code>；</li>
+<li>字符的机器码加 14 之后的值：<code>31 32 33 58 75 65 50 6F 4A 69 65</code>；</li>
+<li>转换为 ASCII 码后的值：123XuePoJie；</li>
+</ul>
+</li>
+<li><p>最后，完整的分析图：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giyciwo9jqj30y80u0tf0.jpg" alt="完整图"></p>
+</li>
+</ul>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>逆向分析</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>硬编码</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>硬编码寻找序列号（三）</title>
     <url>/posts/4122547819/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -3828,95 +3917,6 @@ E --&gt; |&quot;否，未解决&quot;| G
         <tag>硬编码</tag>
         <tag>软编码</tag>
         <tag>算法分析</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>硬编码寻找序列号（二）</title>
-    <url>/posts/3097998650/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-2">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
-</ul>
-<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
-<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
-</li>
-<li><p>倒入<code>OD</code>开始分析：</p>
-<ul>
-<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
-</li>
-<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，咦，发现可疑函数：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy5o1g2gpj30g90bwjsq.jpg" alt="函数"></p>
-<p>很好的开始，在<code>GetDlgItemTextA</code>函数上设置断点，然后去<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
-</li>
-<li><p>然后<code>F9</code>运行程序，“随便输入” 一些字符后点击验证，可以随便输入，但请记住它；</p>
-</li>
-<li><p>程序断在了设置断点的 API 的行首，在堆栈窗口可以看到 API 的各种参数，而参数 Buffer 里存放着函数返回的数据，选中 Buffer 右键<code>数据窗口中跟随</code>，可以看到，由于断点中断在了函数的第一行，所以这个地址里什么也没有：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy5y9rif4j30sr0fsq51.jpg" alt="运行"></p>
-</li>
-<li><p>接着按下 Ctrl + F9 或点击菜单栏的调试选项并选择<code>执行到返回</code>，然后发现 Buffer 对应的地址里有数据了，并且是我们输入的字符串；</p>
-</li>
-<li><p>在上一步中，我们<code>执行到返回</code>，那就意味着接下来登场的将会是<code>RETN</code>了，按下 F8，返回到调用 API 的程序，哇，密密麻麻全是汇编语句，往下翻了翻，也没发现什么关键字、有用的信息，接着<code>F9</code>运行，直接弹出了错误信息：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy69uwm08j303z03z0sn.jpg" alt="弹窗"></p>
-</li>
-<li><p>看来此路不通啊，但是“程序给我们关上了一扇门，同时又开了一扇窗”，没错，就是它，弹窗，在最开始的函数列表中也有它的身影<code>MessageBoxA</code>，那就从它入手试试；</p>
-</li>
-<li><p>禁用<code>GetDlgItemTextA</code>并设置<code>MessageBoxA</code>断点，重新运行程序，输入并运行程序后，拦截到了即将要弹出的信息，信息显示在堆栈窗口：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy6hpjnooj30ug0i0wgm.jpg" alt="错误"></p>
-<p>如果程序继续运行，将弹出<code>错误！</code>弹窗；</p>
-</li>
-<li><p>堆栈窗口的顶部显示的是调用信息，包括调用地址、返回地址等</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy6m2r60qj30cw05q0t2.jpg" alt="堆栈"></p>
-</li>
-<li><p>堆栈顶端，也就是当前<code>ESP</code>指向的堆栈中则是调用地址，也就是说这个地址调用了<code>MessageBoxA</code>这个<code>API</code>，根据程序的流程：程序经过比较之后，发现序列号不对，所以调用<code>MessageBoxA</code>并弹出错误窗口。<br>按照这个逻辑，如果跟随调用地址，是不是就能找到程序进行比较的代码？那还等什么，右键堆栈顶端的地址（堆栈中被标注黑色背景的地址就是堆栈顶端）选择<code>反汇编窗口中跟随</code>，就来到了调用<code>MessageBoxA</code>的程序，查看上面的代码，发现了一些端倪：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy7fm1cz5j30ue0j8jur.jpg" alt="调用"></p>
-<p>上面有一个<code>JNZ</code>跳转进来，从而调用了<code>MessageBoxA</code>，所以弹出了错误弹窗，而<code>JNZ</code>的下面还有一个<code>MessageBoxA</code>，那可以猜测，如果不跳转继续向下执行，很有可能弹出的就是注册成功的弹窗，<code>JNZ</code>根据<code>ZF 标志位</code>进行跳转，如果修改<code>ZF 标志位</code>为<code>1</code>，就可以验证一下猜测是否正确，如何修改呢，继续往上翻代码，嘿嘿，发现一个有用的东西<code>GetDlgItemTextA</code>，在调用地址双击数据窗口设置<code>CC断点</code>，重载程序</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy84b4uhoj30uc0j7acn.jpg" alt="重载"></p>
-</li>
-<li><p>输入并运行程序后，在最后设置断点的地方停了下来，那下面就是要执行的代码了，分析一下看能不能找到隐藏的序列号：</p>
-<ul>
-<li><p>才分析了几行代码，有一种上了恶当的感觉，感觉它在转移某些内容，就暂且将它转移的内容称为“可疑字符串”：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy8q1uc0zj30p50740ts.jpg" alt="序列号"></p>
-</li>
-<li><p>不管了，继续分析，依然没有收获：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy90t76crj30om05zjrs.jpg" alt="没有收获"></p>
-</li>
-<li><p>直到分析了一个轮回，终于有了收获，程序会用我们输入的序列号的每一个字节的机器码减 14 后，和指定的机器码进行比较：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy9zbazz5j30p10ac75f.jpg" alt="循环"></p>
-</li>
-<li><p>而我们利用<code>MessageBoxA</code>断点，分析的<code>JNZ</code>的跳转条件是：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giyb22if59j30p10hewgy.jpg" alt="JNZ"></p>
-</li>
-<li><p>如何让条件成立呢？恰恰在我们没有分析到的代码，因为我们输入的序列号是错误的，所以正确的代码根本不会执行，更谈不上分析了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giybg7od2pj30p20acjsn.jpg" alt="正确"></p>
-<p>在这里，如果是正确的序列号，那么每次比较完成后，<code>EBP - 10</code>和<code>EBP - 34</code>作为两个计数器，它们会正确的同时自增，在最后的比较长度时也就会相等了；</p>
-</li>
-</ul>
-</li>
-<li><p>所以，正确的序列号是什么呢？</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giybxcwm3ej30p00abjtb.jpg" alt="序列号"></p>
-<ul>
-<li>在比较的位置设置断点，获取每次比较时给定的字符的机器码，然后加上 14，最后转为 ASCII 码，就是正确的序列号；</li>
-<li>获取到的给定字符的机器码：<code>1D 1E 1F 44 61 51 3C 5B 36 55 51</code>；</li>
-<li>字符的机器码加 14 之后的值：<code>31 32 33 58 75 65 50 6F 4A 69 65</code>；</li>
-<li>转换为 ASCII 码后的值：123XuePoJie；</li>
-</ul>
-</li>
-<li><p>最后，完整的分析图：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giyciwo9jqj30y80u0tf0.jpg" alt="完整图"></p>
-</li>
-</ul>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>逆向分析</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>硬编码</tag>
       </tags>
   </entry>
   <entry>
@@ -5163,7 +5163,7 @@ E --&gt; |&quot;否，未解决&quot;| G
 <li>在 3 * 3 的棋盘中，双方轮流放子，当某一方的三个子连成一线（行，列，对角）时，该方获胜；</li>
 <li>如果棋盘已放满但并未出现三个子连成一线的情况，则打成平手；<span id="more"></span></li>
 </ol>
-<h4 id="游戏前的准备工作"><a href="#游戏前的准备工作" class="headerlink" title="游戏前的准备工作"></a>游戏前的准备工作</h4><h5 id="0-逻辑分析"><a href="#0-逻辑分析" class="headerlink" title="0. 逻辑分析"></a>0. 逻辑分析</h5><ol>
+<h4 id="游戏实现的思路"><a href="#游戏实现的思路" class="headerlink" title="游戏实现的思路"></a>游戏实现的思路</h4><h5 id="0-逻辑分析"><a href="#0-逻辑分析" class="headerlink" title="0. 逻辑分析"></a>0. 逻辑分析</h5><ol>
 <li>首先提供一个选择菜单，有进入游戏和退出游戏选项；</li>
 <li>显示棋盘，且每落子一次，都需要棋盘当前状态显示出来；</li>
 <li>游戏开始，双方轮流落子，落子后判断输赢；</li>
@@ -5191,7 +5191,7 @@ E --&gt; |&quot;否，未解决&quot;| G
 <p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gp2w0yqoczj30ba0hsmy6.jpg" alt="测试空棋盘"></p>
 <p>空棋盘正常显示，其它逻辑也无误；</p>
 <p>棋盘准备好了，接下来就该主角儿登场了；</p>
-<h5 id="6-玩家落子-电脑落子"><a href="#6-玩家落子-电脑落子" class="headerlink" title="6. 玩家落子 / 电脑落子"></a>6. 玩家落子 / 电脑落子</h5><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">play_game</span><span class="params">(<span class="keyword">char</span> arr[ROW][COL], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">//电脑落子随机数种子</span></span><br><span class="line">    srand(time(<span class="literal">NULL</span>));</span><br><span class="line"></span><br><span class="line">    init_board(arr, ROW, COL);</span><br><span class="line">    display_board(arr, ROW, COL);</span><br><span class="line"></span><br><span class="line">     <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 用户标识为 &#x27;X&#x27;</span></span><br><span class="line"><span class="comment">     * 电脑标识为 &#x27;O&#x27;</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="keyword">while</span> (<span class="number">1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">//玩家落子</span></span><br><span class="line">        player_move(arr, ROW, COL);</span><br><span class="line">        <span class="comment">//电脑落子</span></span><br><span class="line">        computer_move(arr, ROW, COL);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h5 id="6-玩家落子-电脑落子"><a href="#6-玩家落子-电脑落子" class="headerlink" title="6. 玩家落子 / 电脑落子"></a>6. 玩家落子 / 电脑落子</h5><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">play_game</span><span class="params">(<span class="keyword">char</span> arr[ROW][COL], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">//电脑落子随机数种子，放在 main 函数中会不会更好</span></span><br><span class="line">    srand((<span class="keyword">unsigned</span> <span class="keyword">int</span>)time(<span class="literal">NULL</span>));</span><br><span class="line"></span><br><span class="line">    init_board(arr, ROW, COL);</span><br><span class="line">    display_board(arr, ROW, COL);</span><br><span class="line"></span><br><span class="line">     <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 用户标识为 &#x27;X&#x27;</span></span><br><span class="line"><span class="comment">     * 电脑标识为 &#x27;O&#x27;</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="keyword">while</span> (<span class="number">1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">//玩家落子</span></span><br><span class="line">        player_move(arr, ROW, COL);</span><br><span class="line">        <span class="comment">//电脑落子</span></span><br><span class="line">        computer_move(arr, ROW, COL);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>首先是用户输入，接收用户输入后判断，规则如下：</p>
 <ol>
@@ -5224,11 +5224,11 @@ E --&gt; |&quot;否，未解决&quot;| G
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">is_board_full</span><span class="params">(<span class="keyword">char</span> arr[ROW][COL], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 返回 1 棋盘未满</span></span><br><span class="line"><span class="comment">     * 返回 0 棋盘已满</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">int</span> rst = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; row; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; col; j++)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> (arr[i][j] == <span class="string">&#x27; &#x27;</span>)</span><br><span class="line">                rst = <span class="number">1</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> rst;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <h5 id="8-定胜负"><a href="#8-定胜负" class="headerlink" title="8. 定胜负"></a>8. 定胜负</h5><p>有了棋盘状态，现在可以定胜负了：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">play_game</span><span class="params">(<span class="keyword">char</span> arr[ROW][COL], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">//棋盘状态</span></span><br><span class="line">    <span class="keyword">char</span> rst = <span class="number">0</span>;</span><br><span class="line">    <span class="comment">//电脑落子随机数种子</span></span><br><span class="line">    srand(time(<span class="literal">NULL</span>));</span><br><span class="line"></span><br><span class="line">    init_board(arr, ROW, COL);</span><br><span class="line">    display_board(arr, ROW, COL);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * &#x27;X&#x27; 为玩家输入</span></span><br><span class="line"><span class="comment">     * &#x27;O&#x27; 为电脑输入</span></span><br><span class="line"><span class="comment">     * &#x27;Q&#x27; 为平局</span></span><br><span class="line"><span class="comment">     * &#x27;C&#x27; 为继续</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="keyword">while</span> (<span class="number">1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        player_move(arr, ROW, COL);</span><br><span class="line">        rst = is_win(arr, ROW, COL);</span><br><span class="line">        <span class="comment">//用户落子后，棋盘未满则继续</span></span><br><span class="line">        <span class="keyword">if</span> (rst != <span class="string">&#x27;C&#x27;</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        computer_move(arr, ROW, COL);</span><br><span class="line">        rst = is_win(arr, ROW, COL);</span><br><span class="line">        <span class="comment">//电脑落子后，棋盘未满则继续</span></span><br><span class="line">        <span class="keyword">if</span> (rst != <span class="string">&#x27;C&#x27;</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//执行到此处表示上面的循环终止了；</span></span><br><span class="line">    <span class="comment">//意味着返回的字符不是 &#x27;C&#x27;；</span></span><br><span class="line">    <span class="comment">//则说明找到相同的字符或棋盘满了</span></span><br><span class="line">    <span class="keyword">if</span> (rst == <span class="string">&#x27;X&#x27;</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;玩家赢！\n&quot;</span>);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (rst == <span class="string">&#x27;O&#x27;</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;电脑赢！\n&quot;</span>);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;平局！\n&quot;</span>);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">play_game</span><span class="params">(<span class="keyword">char</span> arr[ROW][COL], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">//棋盘状态</span></span><br><span class="line">    <span class="keyword">char</span> rst = <span class="number">0</span>;</span><br><span class="line">    <span class="comment">//电脑落子随机数种子</span></span><br><span class="line">    srand((<span class="keyword">unsigned</span> <span class="keyword">int</span>)time(<span class="literal">NULL</span>));</span><br><span class="line"></span><br><span class="line">    init_board(arr, ROW, COL);</span><br><span class="line">    display_board(arr, ROW, COL);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * &#x27;X&#x27; 为玩家输入</span></span><br><span class="line"><span class="comment">     * &#x27;O&#x27; 为电脑输入</span></span><br><span class="line"><span class="comment">     * &#x27;Q&#x27; 为平局</span></span><br><span class="line"><span class="comment">     * &#x27;C&#x27; 为继续</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="keyword">while</span> (<span class="number">1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        player_move(arr, ROW, COL);</span><br><span class="line">        rst = is_win(arr, ROW, COL);</span><br><span class="line">        <span class="comment">//用户落子后，棋盘未满则继续</span></span><br><span class="line">        <span class="keyword">if</span> (rst != <span class="string">&#x27;C&#x27;</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        computer_move(arr, ROW, COL);</span><br><span class="line">        rst = is_win(arr, ROW, COL);</span><br><span class="line">        <span class="comment">//电脑落子后，棋盘未满则继续</span></span><br><span class="line">        <span class="keyword">if</span> (rst != <span class="string">&#x27;C&#x27;</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//执行到此处表示上面的循环终止了；</span></span><br><span class="line">    <span class="comment">//意味着返回的字符不是 &#x27;C&#x27;；</span></span><br><span class="line">    <span class="comment">//则说明找到相同的字符或棋盘满了</span></span><br><span class="line">    <span class="keyword">if</span> (rst == <span class="string">&#x27;X&#x27;</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;玩家赢！\n&quot;</span>);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (rst == <span class="string">&#x27;O&#x27;</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;电脑赢！\n&quot;</span>);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;平局！\n&quot;</span>);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>测试一下：</p>
 <p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gp2ygmx21aj30g805yaa9.jpg" alt="最终测试"></p>
-<h5 id="9-完整代码"><a href="#9-完整代码" class="headerlink" title="9. 完整代码"></a>9. 完整代码</h5><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;time.h&gt;</span></span></span><br><span class="line"><span class="comment">// #include &lt;unistd.h&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//定义棋盘的行和列</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> ROW 3</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> COL 3</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//显示菜单</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">display_menu</span><span class="params">()</span></span>;</span><br><span class="line"><span class="comment">//初始化棋盘内容</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">init_board</span><span class="params">(<span class="keyword">char</span> arr[ROW][COL], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span>;</span><br><span class="line"><span class="comment">//生成并显示棋盘</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">display_board</span><span class="params">(<span class="keyword">char</span> arr[ROW][COL], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span>;</span><br><span class="line"><span class="comment">//游戏开始</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">play_game</span><span class="params">(<span class="keyword">char</span> arr[ROW][COL], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span>;</span><br><span class="line"><span class="comment">//玩家落子</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">player_move</span><span class="params">(<span class="keyword">char</span> arr[ROW][COL], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span>;</span><br><span class="line"><span class="comment">//电脑落子</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">computer_move</span><span class="params">(<span class="keyword">char</span> arr[ROW][COL], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span>;</span><br><span class="line"><span class="comment">//返回棋盘状态</span></span><br><span class="line"><span class="function"><span class="keyword">char</span> <span class="title">is_win</span><span class="params">(<span class="keyword">char</span> arr[ROW][COL], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span>;</span><br><span class="line"><span class="comment">//判断棋盘是否放满</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">is_board_full</span><span class="params">(<span class="keyword">char</span> arr[ROW][COL], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">//井字棋游戏</span></span><br><span class="line">    <span class="keyword">char</span> arr[ROW][COL] = &#123;<span class="number">0</span>&#125;;</span><br><span class="line">    <span class="keyword">int</span> input = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">do</span></span><br><span class="line">    &#123;</span><br><span class="line">        display_menu();</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;请输入选择:&gt;&quot;</span>);</span><br><span class="line">        <span class="built_in">scanf</span>(<span class="string">&quot;%d&quot;</span>, &amp;input);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">switch</span> (input)</span><br><span class="line">        &#123;</span><br><span class="line">        <span class="keyword">case</span> <span class="number">1</span>:</span><br><span class="line">            play_game(arr, ROW, COL);</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="number">0</span>:</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">&quot;退出游戏！\n&quot;</span>);</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">&quot;输入有误，请重新输入！\n&quot;</span>);</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125; <span class="keyword">while</span> (input);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">display_menu</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;*************************\n&quot;</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;******** 1. play ********\n&quot;</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;******** 0. exit ********\n&quot;</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;*************************\n&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">init_board</span><span class="params">(<span class="keyword">char</span> arr[ROW][COL], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; row; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; col; j++)</span><br><span class="line">        &#123;</span><br><span class="line">            arr[i][j] = <span class="string">&#x27; &#x27;</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">display_board</span><span class="params">(<span class="keyword">char</span> arr[ROW][COL], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; row; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">//打印坐标</span></span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; col; j++)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">&quot; %c &quot;</span>, arr[i][j]);</span><br><span class="line">            <span class="keyword">if</span> (j &lt; col - <span class="number">1</span>)</span><br><span class="line">                <span class="built_in">printf</span>(<span class="string">&quot;|&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">//打印分隔符</span></span><br><span class="line">        <span class="keyword">if</span> (i &lt; row - <span class="number">1</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; col; j++)</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="built_in">printf</span>(<span class="string">&quot;---&quot;</span>);</span><br><span class="line">                <span class="keyword">if</span> (j &lt; col - <span class="number">1</span>)</span><br><span class="line">                    <span class="built_in">printf</span>(<span class="string">&quot;|&quot;</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">play_game</span><span class="params">(<span class="keyword">char</span> arr[ROW][COL], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">//棋盘状态</span></span><br><span class="line">    <span class="keyword">char</span> rst = <span class="number">0</span>;</span><br><span class="line">    <span class="comment">//电脑落子随机数种子</span></span><br><span class="line">    srand(time(<span class="literal">NULL</span>));</span><br><span class="line"></span><br><span class="line">    init_board(arr, ROW, COL);</span><br><span class="line">    display_board(arr, ROW, COL);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * &#x27;X&#x27; 为玩家输入</span></span><br><span class="line"><span class="comment">     * &#x27;O&#x27; 为电脑输入</span></span><br><span class="line"><span class="comment">     * &#x27;Q&#x27; 为平局</span></span><br><span class="line"><span class="comment">     * &#x27;C&#x27; 为继续</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="keyword">while</span> (<span class="number">1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        player_move(arr, ROW, COL);</span><br><span class="line">        rst = is_win(arr, ROW, COL);</span><br><span class="line">        <span class="keyword">if</span> (rst != <span class="string">&#x27;C&#x27;</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        computer_move(arr, ROW, COL);</span><br><span class="line">        rst = is_win(arr, ROW, COL);</span><br><span class="line">        <span class="keyword">if</span> (rst != <span class="string">&#x27;C&#x27;</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (rst == <span class="string">&#x27;X&#x27;</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;玩家赢！\n&quot;</span>);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (rst == <span class="string">&#x27;O&#x27;</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;电脑赢！\n&quot;</span>);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (rst == <span class="string">&#x27;Q&#x27;</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;平局！\n&quot;</span>);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">player_move</span><span class="params">(<span class="keyword">char</span> arr[ROW][COL], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">while</span> (<span class="number">1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">int</span> x = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">int</span> y = <span class="number">0</span>;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;请输入要落子的坐标:&gt;&quot;</span>);</span><br><span class="line">        <span class="built_in">scanf</span>(<span class="string">&quot;%d%d&quot;</span>, &amp;x, &amp;y);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (x &lt;= <span class="number">0</span> || x &gt; row || y &lt;= <span class="number">0</span> || y &gt; col)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">&quot;坐标非法，请重新输入！\n&quot;</span>);</span><br><span class="line">            display_board(arr, ROW, COL);</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span> (arr[x - <span class="number">1</span>][y - <span class="number">1</span>] != <span class="string">&#x27; &#x27;</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">&quot;坐标已被占用，请重新输入！\n&quot;</span>);</span><br><span class="line">            display_board(arr, ROW, COL);</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">        &#123;</span><br><span class="line">            arr[x - <span class="number">1</span>][y - <span class="number">1</span>] = <span class="string">&#x27;X&#x27;</span>;</span><br><span class="line">            display_board(arr, ROW, COL);</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">computer_move</span><span class="params">(<span class="keyword">char</span> arr[ROW][COL], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> x = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">int</span> y = <span class="number">0</span>;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;电脑落子...\n&quot;</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (<span class="number">1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        x = rand() % row;</span><br><span class="line">        y = rand() % col;</span><br><span class="line">        <span class="keyword">if</span> (arr[x][y] == <span class="string">&#x27; &#x27;</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            arr[x][y] = <span class="string">&#x27;O&#x27;</span>;</span><br><span class="line">            sleep(<span class="number">1</span>);</span><br><span class="line">            display_board(arr, ROW, COL);</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">char</span> <span class="title">is_win</span><span class="params">(<span class="keyword">char</span> arr[ROW][COL], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * &#x27;X&#x27; 为玩家输入</span></span><br><span class="line"><span class="comment">     * &#x27;O&#x27; 为电脑输入</span></span><br><span class="line"><span class="comment">     * &#x27;Q&#x27; 为平局</span></span><br><span class="line"><span class="comment">     * &#x27;C&#x27; 为继续</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="keyword">char</span> rst = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//如果同一行的所有单元字符全部相同，返回任意单元的字符</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; row; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span> (arr[i][<span class="number">0</span>] == arr[i][<span class="number">1</span>] &amp;&amp; arr[i][<span class="number">1</span>] == arr[i][<span class="number">2</span>] &amp;&amp; arr[i][<span class="number">0</span>] != <span class="string">&#x27; &#x27;</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            rst = arr[i][<span class="number">0</span>];</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//如果同一列的所有单元字符全部相同，返回任意单元的字符</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; col; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span> (arr[<span class="number">0</span>][i] == arr[<span class="number">1</span>][i] &amp;&amp; arr[<span class="number">1</span>][i] == arr[<span class="number">2</span>][i] &amp;&amp; arr[<span class="number">0</span>][i] != <span class="string">&#x27; &#x27;</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            rst = arr[<span class="number">0</span>][i];</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//左上至右下的对角线</span></span><br><span class="line">    <span class="keyword">if</span> (arr[<span class="number">0</span>][<span class="number">0</span>] == arr[<span class="number">1</span>][<span class="number">1</span>] &amp;&amp; arr[<span class="number">1</span>][<span class="number">1</span>] == arr[<span class="number">2</span>][<span class="number">2</span>] &amp;&amp; arr[<span class="number">2</span>][<span class="number">2</span>] != <span class="string">&#x27; &#x27;</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        rst = arr[<span class="number">1</span>][<span class="number">1</span>];</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//右上至左下的对角线</span></span><br><span class="line">    <span class="keyword">if</span> (arr[<span class="number">0</span>][<span class="number">2</span>] == arr[<span class="number">1</span>][<span class="number">1</span>] &amp;&amp; arr[<span class="number">1</span>][<span class="number">1</span>] == arr[<span class="number">2</span>][<span class="number">0</span>] &amp;&amp; arr[<span class="number">2</span>][<span class="number">0</span>] != <span class="string">&#x27; &#x27;</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        rst = arr[<span class="number">1</span>][<span class="number">1</span>];</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//棋盘未满且没有序列字符相同，返回继续</span></span><br><span class="line">    <span class="keyword">if</span> (is_board_full(arr, row, col) == <span class="number">1</span> &amp;&amp; rst == <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        rst = <span class="string">&#x27;C&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//棋盘已满且没有序列字符相同，返回平局</span></span><br><span class="line">    <span class="keyword">if</span> (is_board_full(arr, row, col) == <span class="number">0</span> &amp;&amp; rst == <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        rst = <span class="string">&#x27;Q&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> rst;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">is_board_full</span><span class="params">(<span class="keyword">char</span> arr[ROW][COL], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 返回 1 棋盘未满</span></span><br><span class="line"><span class="comment">     * 返回 0 棋盘已满</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">int</span> rst = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; row; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; col; j++)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> (arr[i][j] == <span class="string">&#x27; &#x27;</span>)</span><br><span class="line">                rst = <span class="number">1</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> rst;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h5 id="9-完整代码"><a href="#9-完整代码" class="headerlink" title="9. 完整代码"></a>9. 完整代码</h5><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;time.h&gt;</span></span></span><br><span class="line"><span class="comment">// #include &lt;unistd.h&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//定义棋盘的行和列</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> ROW 3</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> COL 3</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//显示菜单</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">display_menu</span><span class="params">()</span></span>;</span><br><span class="line"><span class="comment">//初始化棋盘内容</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">init_board</span><span class="params">(<span class="keyword">char</span> arr[ROW][COL], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span>;</span><br><span class="line"><span class="comment">//生成并显示棋盘</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">display_board</span><span class="params">(<span class="keyword">char</span> arr[ROW][COL], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span>;</span><br><span class="line"><span class="comment">//游戏开始</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">play_game</span><span class="params">(<span class="keyword">char</span> arr[ROW][COL], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span>;</span><br><span class="line"><span class="comment">//玩家落子</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">player_move</span><span class="params">(<span class="keyword">char</span> arr[ROW][COL], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span>;</span><br><span class="line"><span class="comment">//电脑落子</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">computer_move</span><span class="params">(<span class="keyword">char</span> arr[ROW][COL], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span>;</span><br><span class="line"><span class="comment">//返回棋盘状态</span></span><br><span class="line"><span class="function"><span class="keyword">char</span> <span class="title">is_win</span><span class="params">(<span class="keyword">char</span> arr[ROW][COL], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span>;</span><br><span class="line"><span class="comment">//判断棋盘是否放满</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">is_board_full</span><span class="params">(<span class="keyword">char</span> arr[ROW][COL], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">//井字棋游戏</span></span><br><span class="line">    <span class="keyword">char</span> arr[ROW][COL] = &#123;<span class="number">0</span>&#125;;</span><br><span class="line">    <span class="keyword">int</span> input = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">do</span></span><br><span class="line">    &#123;</span><br><span class="line">        display_menu();</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;请输入选择:&gt;&quot;</span>);</span><br><span class="line">        <span class="built_in">scanf</span>(<span class="string">&quot;%d&quot;</span>, &amp;input);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">switch</span> (input)</span><br><span class="line">        &#123;</span><br><span class="line">        <span class="keyword">case</span> <span class="number">1</span>:</span><br><span class="line">            play_game(arr, ROW, COL);</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="number">0</span>:</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">&quot;退出游戏！\n&quot;</span>);</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">&quot;输入有误，请重新输入！\n&quot;</span>);</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125; <span class="keyword">while</span> (input);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">display_menu</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;*************************\n&quot;</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;******** 1. play ********\n&quot;</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;******** 0. exit ********\n&quot;</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;*************************\n&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">init_board</span><span class="params">(<span class="keyword">char</span> arr[ROW][COL], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; row; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; col; j++)</span><br><span class="line">        &#123;</span><br><span class="line">            arr[i][j] = <span class="string">&#x27; &#x27;</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">display_board</span><span class="params">(<span class="keyword">char</span> arr[ROW][COL], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; row; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">//打印坐标</span></span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; col; j++)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">&quot; %c &quot;</span>, arr[i][j]);</span><br><span class="line">            <span class="keyword">if</span> (j &lt; col - <span class="number">1</span>)</span><br><span class="line">                <span class="built_in">printf</span>(<span class="string">&quot;|&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">//打印分隔符</span></span><br><span class="line">        <span class="keyword">if</span> (i &lt; row - <span class="number">1</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; col; j++)</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="built_in">printf</span>(<span class="string">&quot;---&quot;</span>);</span><br><span class="line">                <span class="keyword">if</span> (j &lt; col - <span class="number">1</span>)</span><br><span class="line">                    <span class="built_in">printf</span>(<span class="string">&quot;|&quot;</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">play_game</span><span class="params">(<span class="keyword">char</span> arr[ROW][COL], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">//棋盘状态</span></span><br><span class="line">    <span class="keyword">char</span> rst = <span class="number">0</span>;</span><br><span class="line">    <span class="comment">//电脑落子随机数种子</span></span><br><span class="line">    srand((<span class="keyword">unsigned</span> <span class="keyword">int</span>)time(<span class="literal">NULL</span>));</span><br><span class="line"></span><br><span class="line">    init_board(arr, ROW, COL);</span><br><span class="line">    display_board(arr, ROW, COL);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * &#x27;X&#x27; 为玩家输入</span></span><br><span class="line"><span class="comment">     * &#x27;O&#x27; 为电脑输入</span></span><br><span class="line"><span class="comment">     * &#x27;Q&#x27; 为平局</span></span><br><span class="line"><span class="comment">     * &#x27;C&#x27; 为继续</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="keyword">while</span> (<span class="number">1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        player_move(arr, ROW, COL);</span><br><span class="line">        rst = is_win(arr, ROW, COL);</span><br><span class="line">        <span class="keyword">if</span> (rst != <span class="string">&#x27;C&#x27;</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        computer_move(arr, ROW, COL);</span><br><span class="line">        rst = is_win(arr, ROW, COL);</span><br><span class="line">        <span class="keyword">if</span> (rst != <span class="string">&#x27;C&#x27;</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (rst == <span class="string">&#x27;X&#x27;</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;玩家赢！\n&quot;</span>);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (rst == <span class="string">&#x27;O&#x27;</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;电脑赢！\n&quot;</span>);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (rst == <span class="string">&#x27;Q&#x27;</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;平局！\n&quot;</span>);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">player_move</span><span class="params">(<span class="keyword">char</span> arr[ROW][COL], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">while</span> (<span class="number">1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">int</span> x = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">int</span> y = <span class="number">0</span>;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;请输入要落子的坐标:&gt;&quot;</span>);</span><br><span class="line">        <span class="built_in">scanf</span>(<span class="string">&quot;%d%d&quot;</span>, &amp;x, &amp;y);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (x &lt;= <span class="number">0</span> || x &gt; row || y &lt;= <span class="number">0</span> || y &gt; col)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">&quot;坐标非法，请重新输入！\n&quot;</span>);</span><br><span class="line">            display_board(arr, ROW, COL);</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span> (arr[x - <span class="number">1</span>][y - <span class="number">1</span>] != <span class="string">&#x27; &#x27;</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">&quot;坐标已被占用，请重新输入！\n&quot;</span>);</span><br><span class="line">            display_board(arr, ROW, COL);</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">        &#123;</span><br><span class="line">            arr[x - <span class="number">1</span>][y - <span class="number">1</span>] = <span class="string">&#x27;X&#x27;</span>;</span><br><span class="line">            display_board(arr, ROW, COL);</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">computer_move</span><span class="params">(<span class="keyword">char</span> arr[ROW][COL], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> x = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">int</span> y = <span class="number">0</span>;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;电脑落子...\n&quot;</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (<span class="number">1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        x = rand() % row;</span><br><span class="line">        y = rand() % col;</span><br><span class="line">        <span class="keyword">if</span> (arr[x][y] == <span class="string">&#x27; &#x27;</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            arr[x][y] = <span class="string">&#x27;O&#x27;</span>;</span><br><span class="line">            sleep(<span class="number">1</span>);</span><br><span class="line">            display_board(arr, ROW, COL);</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">char</span> <span class="title">is_win</span><span class="params">(<span class="keyword">char</span> arr[ROW][COL], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * &#x27;X&#x27; 为玩家输入</span></span><br><span class="line"><span class="comment">     * &#x27;O&#x27; 为电脑输入</span></span><br><span class="line"><span class="comment">     * &#x27;Q&#x27; 为平局</span></span><br><span class="line"><span class="comment">     * &#x27;C&#x27; 为继续</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="keyword">char</span> rst = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//如果同一行的所有单元字符全部相同，返回任意单元的字符</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; row; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span> (arr[i][<span class="number">0</span>] == arr[i][<span class="number">1</span>] &amp;&amp; arr[i][<span class="number">1</span>] == arr[i][<span class="number">2</span>] &amp;&amp; arr[i][<span class="number">0</span>] != <span class="string">&#x27; &#x27;</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            rst = arr[i][<span class="number">0</span>];</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//如果同一列的所有单元字符全部相同，返回任意单元的字符</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; col; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span> (arr[<span class="number">0</span>][i] == arr[<span class="number">1</span>][i] &amp;&amp; arr[<span class="number">1</span>][i] == arr[<span class="number">2</span>][i] &amp;&amp; arr[<span class="number">0</span>][i] != <span class="string">&#x27; &#x27;</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            rst = arr[<span class="number">0</span>][i];</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//左上至右下的对角线</span></span><br><span class="line">    <span class="keyword">if</span> (arr[<span class="number">0</span>][<span class="number">0</span>] == arr[<span class="number">1</span>][<span class="number">1</span>] &amp;&amp; arr[<span class="number">1</span>][<span class="number">1</span>] == arr[<span class="number">2</span>][<span class="number">2</span>] &amp;&amp; arr[<span class="number">2</span>][<span class="number">2</span>] != <span class="string">&#x27; &#x27;</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        rst = arr[<span class="number">1</span>][<span class="number">1</span>];</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//右上至左下的对角线</span></span><br><span class="line">    <span class="keyword">if</span> (arr[<span class="number">0</span>][<span class="number">2</span>] == arr[<span class="number">1</span>][<span class="number">1</span>] &amp;&amp; arr[<span class="number">1</span>][<span class="number">1</span>] == arr[<span class="number">2</span>][<span class="number">0</span>] &amp;&amp; arr[<span class="number">2</span>][<span class="number">0</span>] != <span class="string">&#x27; &#x27;</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        rst = arr[<span class="number">1</span>][<span class="number">1</span>];</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//棋盘未满且没有序列字符相同，返回继续</span></span><br><span class="line">    <span class="keyword">if</span> (is_board_full(arr, row, col) == <span class="number">1</span> &amp;&amp; rst == <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        rst = <span class="string">&#x27;C&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//棋盘已满且没有序列字符相同，返回平局</span></span><br><span class="line">    <span class="keyword">if</span> (is_board_full(arr, row, col) == <span class="number">0</span> &amp;&amp; rst == <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        rst = <span class="string">&#x27;Q&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> rst;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">is_board_full</span><span class="params">(<span class="keyword">char</span> arr[ROW][COL], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 返回 1 棋盘未满</span></span><br><span class="line"><span class="comment">     * 返回 0 棋盘已满</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">int</span> rst = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; row; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; col; j++)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> (arr[i][j] == <span class="string">&#x27; &#x27;</span>)</span><br><span class="line">                rst = <span class="number">1</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> rst;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
 
 <p>至此，一个简单的井字棋游戏就完成了，内容简陋，可以优化的地方还有很多，各位可自行扩展，玩的开心！😄😄😄</p>
 ]]></content>
@@ -5236,7 +5236,7 @@ E --&gt; |&quot;否，未解决&quot;| G
         <category>C 语言</category>
       </categories>
       <tags>
-        <tag>井字棋</tag>
+        <tag>井字棋游戏</tag>
       </tags>
   </entry>
   <entry>
@@ -6429,6 +6429,93 @@ E --&gt; |&quot;否，未解决&quot;| G
       <tags>
         <tag>IAT</tag>
         <tag>ASPack</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>扫雷游戏</title>
+    <url>/posts/2610596285/</url>
+    <content><![CDATA[<p>从上微机课开始，在没有网而且啥也不会的情况下，扫雷成了打发时间的唯一乐趣，玩过没写过，今天来试试；</p>
+<h4 id="需要实现的功能"><a href="#需要实现的功能" class="headerlink" title="需要实现的功能"></a>需要实现的功能</h4><ol>
+<li>显示周围区域 💣 雷的个数；</li>
+<li>周围没有雷则自动展开；</li>
+<li>剩下的全部为雷则自动胜出；</li>
+</ol>
+<span id="more"></span>
+
+<h4 id="游戏实现的思路"><a href="#游戏实现的思路" class="headerlink" title="游戏实现的思路"></a>游戏实现的思路</h4><h5 id="0-逻辑分析"><a href="#0-逻辑分析" class="headerlink" title="0. 逻辑分析"></a>0. 逻辑分析</h5><ol>
+<li>布置雷，由于既需要存放布置雷的数据，又要展示隐藏雷后的数据给玩家，所以需要两个 char 数组，分别存放相应的数据；</li>
+<li>排查雷，玩家输入坐标，如果是雷，结束游戏，如果不是雷，则显示周围雷的个数，如果周围区域都没有雷，则自动展开空白区域；</li>
+<li>判定是否自动胜出；</li>
+</ol>
+<h5 id="1-main-函数"><a href="#1-main-函数" class="headerlink" title="1. main 函数"></a>1. main 函数</h5><p>在 main 函数中写出程序的整体框架，然后再具体实现：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt; //输入输出</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdlib.h&gt;//随机数</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;time.h&gt;//随机数种子需要的时间</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">//要显示行和列</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> ROW 9</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> COL 9</span></span><br><span class="line"><span class="comment">//实际的行和列</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> ROWS ROW + 2</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> COLS COL + 2</span></span><br><span class="line"><span class="comment">//雷的个数</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> MINES 10</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//显示菜单</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">display_menu</span><span class="params">()</span></span>;</span><br><span class="line"><span class="comment">//游戏开始</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">play_game</span><span class="params">(<span class="keyword">char</span> mine[ROWS][COLS], <span class="keyword">char</span> show[ROWS][COLS])</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">//存放布置雷的数据</span></span><br><span class="line">    <span class="keyword">char</span> mine[ROWS][COLS] = &#123;<span class="number">0</span>&#125;;</span><br><span class="line">    <span class="comment">//存放游戏数据</span></span><br><span class="line">    <span class="keyword">char</span> show[ROWS][COLS] = &#123;<span class="number">0</span>&#125;;</span><br><span class="line">    <span class="comment">//用户输入</span></span><br><span class="line">    <span class="keyword">int</span> input = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//菜单至少会显示一次，do while 正合适</span></span><br><span class="line">    <span class="keyword">do</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">//显示菜单</span></span><br><span class="line">        display_menu();</span><br><span class="line">        <span class="comment">//提示用户输入</span></span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;请选择:&gt;&quot;</span>);</span><br><span class="line">        <span class="comment">//获取用户输入</span></span><br><span class="line">        <span class="built_in">scanf</span>(<span class="string">&quot;%d&quot;</span>, &amp;input);</span><br><span class="line"></span><br><span class="line">        <span class="comment">//根据用户输入确定程序走向</span></span><br><span class="line">        <span class="keyword">switch</span> (input)</span><br><span class="line">        &#123;</span><br><span class="line">        <span class="keyword">case</span> <span class="number">1</span>: <span class="comment">//输入 1 表示开始游戏</span></span><br><span class="line">            play_game(mine, show);</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="number">0</span>: <span class="comment">//输入 0 表示结束游戏</span></span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">&quot;退出游戏！\n&quot;</span>);</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">default</span>: <span class="comment">//非 0 非 1 不正确，重新输入</span></span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">&quot;输入有误，请重新输入！\n&quot;</span>);</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">while</span> (input); <span class="comment">// 0 退出，非 0 为真，刚刚好</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>这里为什么要定义 ROW 和 ROWS 以及 COL 和 COLS 呢？以图为例：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gp3de8lg0gj30j00gqt9b.jpg" alt="ROWS"></p>
+<p>如图，在后面需要统计以玩家输入的坐标为中心的九宫格（绿色区域）中雷的数量时，如果按照真实展示的网格（红色区域）来计算的话，数组下标会越界，所以在行和列的周围各增加一行或一列，初始化时全部填充为默认内容，这样就不会产生下标越界的问题了；</p>
+<h5 id="2-菜单"><a href="#2-菜单" class="headerlink" title="2. 菜单"></a>2. 菜单</h5><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">display_menu</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;*************************\n&quot;</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;******** 1. play ********\n&quot;</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;******** 0. exit ********\n&quot;</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;*************************\n&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>菜单简陋，聊胜于无；</p>
+<h5 id="3-开始游戏"><a href="#3-开始游戏" class="headerlink" title="3. 开始游戏"></a>3. 开始游戏</h5><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">play_game</span><span class="params">(<span class="keyword">char</span> mine[ROWS][COLS], <span class="keyword">char</span> show[ROWS][COLS])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">//随机布置雷的种子</span></span><br><span class="line">    srand((<span class="keyword">unsigned</span> <span class="keyword">int</span>)time(<span class="literal">NULL</span>));</span><br><span class="line"></span><br><span class="line">    <span class="comment">//初始化布置雷的数组 - 存储雷盘</span></span><br><span class="line">    init_board(mine, ROWS, COLS, <span class="string">&#x27;0&#x27;</span>);</span><br><span class="line">    <span class="comment">//初始化要显示的数组 - 展示雷盘</span></span><br><span class="line">    init_board(show, ROWS, COLS, <span class="string">&#x27;*&#x27;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">//将两个数组打印到屏幕上</span></span><br><span class="line">    display_board(mine, ROW, COL);</span><br><span class="line">    display_board(show, ROW, COL);</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>首先初始化布置雷的数组：将数组的元素全部填充为字符<code>0</code>（不是数字 0），后面布置的雷则会填充字符<code>1</code>（不是数字 1）；</p>
+<p>然后初始化展示给玩家的数组：将数组的元素全部填充为字符<code>*</code>；</p>
+<p>这两步的意义是：当玩家输入坐标后，用坐标去存储雷盘中匹配信息，如果是雷，则退出游戏，如果不是雷，则根据返回信息，在展示雷盘中显示周围雷的个数，如果指定范围没有雷，则自动展开空白区域；</p>
+<p>最后，为了方便调试，将两个数组的信息都输出到屏幕上；</p>
+<h5 id="4-初始化存储雷盘和展示雷盘"><a href="#4-初始化存储雷盘和展示雷盘" class="headerlink" title="4. 初始化存储雷盘和展示雷盘"></a>4. 初始化存储雷盘和展示雷盘</h5><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">init_board</span><span class="params">(<span class="keyword">char</span> arr[ROWS][COLS], <span class="keyword">int</span> rows, <span class="keyword">int</span> cols, <span class="keyword">char</span> filler)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; rows; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; cols; j++)</span><br><span class="line">        &#123;</span><br><span class="line">            arr[i][j] = filler;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面的代码没啥好说的，遍历数组，然后用给定的字符填充；</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">display_board</span><span class="params">(<span class="keyword">char</span> arr[ROWS][COLS], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">//打印列序号，从零开始是为了对齐</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt;= col; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;%d &quot;</span>, i);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">1</span>; i &lt;= row; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">//打印行序号</span></span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;%d &quot;</span>, i);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">1</span>; j &lt;= col; j++)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">&quot;%c &quot;</span>, arr[i][j]);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>为了输入坐标时更直观，这里打印行序号和列序号；</p>
+<p>至此，就可以测试一下了，输出初始化后的雷盘：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gp39qidldej30as0ng75c.jpg" alt="输出初始化后的雷盘"></p>
+<p>工整的显示，完美，同时也说明了打印列序号为何要从 0 开始；</p>
+<h5 id="5-布置雷"><a href="#5-布置雷" class="headerlink" title="5. 布置雷"></a>5. 布置雷</h5><p>雷盘有了，接下来就是布置雷了；</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">set_mine</span><span class="params">(<span class="keyword">char</span> arr[ROWS][COLS], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">//读取雷的数量</span></span><br><span class="line">    <span class="keyword">int</span> mines = MINES;</span><br><span class="line">    <span class="comment">//如果雷不为 0 则继续布置</span></span><br><span class="line">    <span class="keyword">while</span> (mines)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">//求余 row 的范围为 0 ～ (row - 1)，加 1 之后范围为 1 ～ row，col 一样；</span></span><br><span class="line">        <span class="keyword">int</span> x = rand() % row + <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">int</span> y = rand() % col + <span class="number">1</span>;</span><br><span class="line">        <span class="comment">//坐标合法则将 &#x27;0&#x27; 替换为 &#x27;1&#x27;，表示是布置的雷</span></span><br><span class="line">        <span class="keyword">if</span> (arr[x][y] == <span class="string">&#x27;0&#x27;</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            arr[x][y] = <span class="string">&#x27;1&#x27;</span>;</span><br><span class="line">            <span class="comment">//每布置成功一次，雷的数量自减 1</span></span><br><span class="line">            mines--;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>布置雷很简单，生成随机数后，只要坐标合法，就将存储雷盘对应的坐标位置由字符<code>0</code>替换为字符<code>1</code>即可；</p>
+<p>布置完成了，测试一下：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gp3a2ml23fj30am0nkdgu.jpg" alt="布置完成测试一下"></p>
+<p>数一数，刚好 10 个雷，与预定义的雷数量一致；</p>
+<h5 id="6-开始玩游戏"><a href="#6-开始玩游戏" class="headerlink" title="6. 开始玩游戏"></a>6. 开始玩游戏</h5><p>获胜的规则很简单：雷盘中没有空白区域则获胜；</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">find_mine</span><span class="params">(<span class="keyword">char</span> mine[ROWS][COLS], <span class="keyword">char</span> show[ROWS][COLS], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">//获取用户输入的坐标</span></span><br><span class="line">    <span class="keyword">int</span> x = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">int</span> y = <span class="number">0</span>;</span><br><span class="line">    <span class="comment">//统计没有雷的坐标</span></span><br><span class="line">    <span class="keyword">int</span> win = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (<span class="number">1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;请输入坐标:&gt;&quot;</span>);</span><br><span class="line">        <span class="built_in">scanf</span>(<span class="string">&quot;%d%d&quot;</span>, &amp;x, &amp;y);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">//判断输入越界</span></span><br><span class="line">        <span class="keyword">if</span> (x &lt;= <span class="number">0</span> || x &gt; row || y &lt;= <span class="number">0</span> || y &gt; col)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">&quot;输入有误，请重新输入！\n&quot;</span>);</span><br><span class="line">            display_board(show, row, col);</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">//判断是否是雷</span></span><br><span class="line">            <span class="keyword">if</span> (mine[x][y] == <span class="string">&#x27;1&#x27;</span>)</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="built_in">printf</span>(<span class="string">&quot;踩到雷了，游戏结束！\n&quot;</span>);</span><br><span class="line">                <span class="comment">//提示的同时，输出存储雷盘，显示布置雷的位置，让玩家输得心服口服</span></span><br><span class="line">                display_board(mine, row, col);</span><br><span class="line">                <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">            &#123;</span><br><span class="line">                <span class="comment">//获取以当前坐标为中心的 3 * 3 雷盘中雷的数量</span></span><br><span class="line">                <span class="keyword">int</span> count = get_mine_count(mine, x, y);</span><br><span class="line">                <span class="comment">//如果周围的 8 个坐标中都没有雷</span></span><br><span class="line">                <span class="keyword">if</span> (count == <span class="number">0</span>)</span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="comment">//展开空白区域</span></span><br><span class="line">                    show_blank_space(mine, show, x, y, &amp;win);</span><br><span class="line">                    <span class="comment">//然后显示雷盘</span></span><br><span class="line">                    display_board(show, row, col);</span><br><span class="line">                    <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">else</span></span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="comment">/**</span></span><br><span class="line"><span class="comment">                     *字符 &#x27;0&#x27; 的 ASCII 值为 48，字符 &#x27;1&#x27; 的 ASCII 值为 49，以此类推，</span></span><br><span class="line"><span class="comment">                     *用字符 &#x27;0&#x27; 加上指定数字，就是当前数字对应的字符值</span></span><br><span class="line"><span class="comment">                     *例如 &#x27;0&#x27; + 1 = &#x27;1&#x27;</span></span><br><span class="line"><span class="comment">                    */</span></span><br><span class="line">                    <span class="comment">//如果周围 8 个区域中有雷，则在玩家输入的坐标中显示周围雷的数量</span></span><br><span class="line">                    show[x][y] = <span class="string">&#x27;0&#x27;</span> + count;</span><br><span class="line">                    <span class="comment">//统计不含雷的区域</span></span><br><span class="line">                    win++;</span><br><span class="line">                    display_board(show, row, col);</span><br><span class="line">                    <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="comment">//每输入一次坐标，判断一次</span></span><br><span class="line">                <span class="comment">//如果不含雷坐标的数量 = 所有坐标 - 雷的数量，则说明已经没有空白区域，玩家自动胜出</span></span><br><span class="line">                <span class="keyword">if</span> (win == ROW * COL - MINES)</span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="built_in">printf</span>(<span class="string">&quot;排雷成功！\n&quot;</span>);</span><br><span class="line">                    <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">                    display_board(mine, row, col);</span><br><span class="line">                    <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li><p>首先，获取用户输入，然后判断输入是否越界，越界则重新输入；</p>
+</li>
+<li><p>判断用户输入的坐标是否是雷，是雷则结束游戏；</p>
+</li>
+<li><p>如果用户输入的坐标不是雷，则进行如下操作：</p>
+<p>以当前坐标为中心，计算周围 3 * 3 的九宫格中雷的数量，规则如下：</p>
+<ul>
+<li>如果此范围中有雷，则将雷的数量写入展示雷盘对应的坐标中，游戏继续；</li>
+<li>如果此范围中没有雷，则以当前九宫格的每个元素为中心，再次统计周围 3 * 3 的范围中雷的数量；</li>
+<li>直到坐标周围有雷则结束展开空白区域；</li>
+</ul>
+</li>
+</ol>
+<h5 id="7-获取坐标周围雷的数量"><a href="#7-获取坐标周围雷的数量" class="headerlink" title="7. 获取坐标周围雷的数量"></a>7. 获取坐标周围雷的数量</h5><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">get_mine_count</span><span class="params">(<span class="keyword">char</span> mine[ROWS][COLS], <span class="keyword">int</span> x, <span class="keyword">int</span> y)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> count = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = x - <span class="number">1</span>; i &lt;= x + <span class="number">1</span>; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span> (i == <span class="number">0</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            i = <span class="number">1</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = y - <span class="number">1</span>; j &lt;= y + <span class="number">1</span>; j++)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> (j == <span class="number">0</span>)</span><br><span class="line">            &#123;</span><br><span class="line">                j = <span class="number">1</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            count = count + mine[i][j] - <span class="string">&#x27;0&#x27;</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> count;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>字符<code>0</code>的 ASCII 值为 48，字符<code>1</code>的 ASCII 值为 49，以此类推，用任意数字字符的值减去字符<code>0</code>就是这个字符的整型值，例如：’1’ - ‘0’ = 1；</p>
+<h5 id="8-自动展开空白区域"><a href="#8-自动展开空白区域" class="headerlink" title="8. 自动展开空白区域"></a>8. 自动展开空白区域</h5><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">show_blank_space</span><span class="params">(<span class="keyword">char</span> mine[ROWS][COLS], <span class="keyword">char</span> show[ROWS][COLS], <span class="keyword">int</span> x, <span class="keyword">int</span> y, <span class="keyword">int</span> *p)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//下标从 -1 ～ 1，则有三种状态，x - 1, x + 0, x + 1</span></span><br><span class="line">    <span class="comment">//两个循环则有 9 种状态</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">-1</span>; i &lt; <span class="number">2</span>; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">-1</span>; j &lt; <span class="number">2</span>; j++)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">//由于同时为 0 表示的是 自身，没有意义，所以跳过</span></span><br><span class="line">            <span class="keyword">if</span> (i != <span class="number">0</span> || j != <span class="number">0</span>)</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="comment">//判断坐标是否合法 1 ～ ROW 或 1 ～ COL</span></span><br><span class="line">                <span class="keyword">if</span> (x + i &gt;= <span class="number">1</span> &amp;&amp; x + i &lt;= ROW &amp;&amp; y + j &gt;= <span class="number">1</span> &amp;&amp; y + j &lt;= COL)</span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="comment">//当前坐标没有被自动展开，并且当前坐标不是雷的情况下，才进行统计，否则没有意义</span></span><br><span class="line">                    <span class="keyword">if</span> (show[x + i][y + j] == <span class="string">&#x27;*&#x27;</span> &amp;&amp; mine[x + i][y + j] != <span class="string">&#x27;1&#x27;</span>)</span><br><span class="line">                    &#123;</span><br><span class="line">                        <span class="comment">//判断以坐标为中心的九宫格是否有雷</span></span><br><span class="line">                        <span class="keyword">int</span> count = get_mine_count(mine, x + i, y + j);</span><br><span class="line">                        <span class="comment">//没有雷</span></span><br><span class="line">                        <span class="keyword">if</span> (count == <span class="number">0</span>)</span><br><span class="line">                        &#123;</span><br><span class="line">                            <span class="comment">//展开坐标</span></span><br><span class="line">                            show[x + i][y + j] = <span class="string">&#x27; &#x27;</span>;</span><br><span class="line">                            <span class="comment">//统计没有雷的坐标数量</span></span><br><span class="line">                            (*p)++;</span><br><span class="line">                            show_blank_space(mine, show, x + i, y + j, p);</span><br><span class="line">                        &#125;</span><br><span class="line">                        <span class="comment">//有雷</span></span><br><span class="line">                        <span class="keyword">else</span></span><br><span class="line">                        &#123;</span><br><span class="line">                            <span class="comment">//显示雷的数量</span></span><br><span class="line">                            show[x + i][y + j] = count + <span class="string">&#x27;0&#x27;</span>;</span><br><span class="line">                            (*p)++;</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h5 id="9-判断是否获胜"><a href="#9-判断是否获胜" class="headerlink" title="9. 判断是否获胜"></a>9. 判断是否获胜</h5><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> (win == ROW * COL - MINES)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;排雷成功！\n&quot;</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">    display_board(mine, row, col);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">    <span class="keyword">break</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>刚开始，写了一个计算胜出的函数，无非就是遍历数组的每个元素，判断是不是初始化时填充的字符（这里初始化时填充的是<code>*</code>），如果存储雷盘中有初始化时填充的字符，则游戏继续，否则玩家胜出；</p>
+<p>但这种方法性能太低了，每输入一次就需要遍历整个数组，所以这里使用了指针，每次输入且输入有效时，统计不是雷的坐标，然后用坐标总数减去雷的数量与统计的数量进行比较，如果数量相同，则说明剩下的都是雷了，玩家自动胜出；</p>
+<h5 id="10-试玩-测试"><a href="#10-试玩-测试" class="headerlink" title="10. 试玩 - 测试"></a>10. 试玩 - 测试</h5><p>为了方便测试后面的逻辑，将雷的数量设置为 80，也就是说只有一个不是雷：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gp3cvs1hh3j30lm0ke76l.jpg" alt="80个雷"></p>
+<p>自动胜出的逻辑正常，现在就差自动展开了；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gp3cw0mn0ij30l40kagnl.jpg" alt="自动展开"></p>
+<p>自动展开正常；</p>
+<h5 id="11-完整代码"><a href="#11-完整代码" class="headerlink" title="11. 完整代码"></a>11. 完整代码</h5><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;time.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> ROW 9</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> COL 9</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> ROWS ROW + 2</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> COLS COL + 2</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> MINES 10</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//显示菜单</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">display_menu</span><span class="params">()</span></span>;</span><br><span class="line"><span class="comment">//开始游戏</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">play_game</span><span class="params">(<span class="keyword">char</span> mine[ROWS][COLS], <span class="keyword">char</span> show[ROWS][COLS])</span></span>;</span><br><span class="line"><span class="comment">//初始化两个数组</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">init_board</span><span class="params">(<span class="keyword">char</span> arr[ROWS][COLS], <span class="keyword">int</span> rows, <span class="keyword">int</span> cols, <span class="keyword">char</span> filler)</span></span>;</span><br><span class="line"><span class="comment">//显示雷盘</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">display_board</span><span class="params">(<span class="keyword">char</span> arr[ROWS][COLS], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span>;</span><br><span class="line"><span class="comment">//布置雷</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">set_mine</span><span class="params">(<span class="keyword">char</span> arr[ROWS][COLS], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span>;</span><br><span class="line"><span class="comment">//获取玩家输入并判断</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">find_mine</span><span class="params">(<span class="keyword">char</span> mine[ROWS][COLS], <span class="keyword">char</span> show[ROWS][COLS], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span>;</span><br><span class="line"><span class="comment">//获取某个坐标周围雷的个数</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">get_mine_count</span><span class="params">(<span class="keyword">char</span> mine[ROWS][COLS], <span class="keyword">int</span> x, <span class="keyword">int</span> y)</span></span>;</span><br><span class="line"><span class="comment">//展开坐标周围空白区域</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">show_blank_space</span><span class="params">(<span class="keyword">char</span> mine[ROWS][COLS], <span class="keyword">char</span> show[ROWS][COLS], <span class="keyword">int</span> x, <span class="keyword">int</span> y, <span class="keyword">int</span> *p)</span></span>;</span><br><span class="line"><span class="comment">//排雷成功</span></span><br><span class="line"><span class="comment">// int is_win(char show[ROWS][COLS], int row, int col);</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">//埋雷</span></span><br><span class="line">    <span class="keyword">char</span> mine[ROWS][COLS] = &#123;<span class="number">0</span>&#125;;</span><br><span class="line">    <span class="comment">//显示雷</span></span><br><span class="line">    <span class="keyword">char</span> show[ROWS][COLS] = &#123;<span class="number">0</span>&#125;;</span><br><span class="line">    <span class="keyword">int</span> input = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">do</span></span><br><span class="line">    &#123;</span><br><span class="line">        display_menu();</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;请选择:&gt;&quot;</span>);</span><br><span class="line">        <span class="built_in">scanf</span>(<span class="string">&quot;%d&quot;</span>, &amp;input);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">        <span class="keyword">switch</span> (input)</span><br><span class="line">        &#123;</span><br><span class="line">        <span class="keyword">case</span> <span class="number">1</span>:</span><br><span class="line">            play_game(mine, show);</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="number">0</span>:</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">&quot;退出游戏！\n&quot;</span>);</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">&quot;输入有误，请重新输入！\n&quot;</span>);</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">while</span> (input);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">display_menu</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;*************************\n&quot;</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;******** 1. play ********\n&quot;</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;******** 0. exit ********\n&quot;</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;*************************\n&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">play_game</span><span class="params">(<span class="keyword">char</span> mine[ROWS][COLS], <span class="keyword">char</span> show[ROWS][COLS])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">    srand((<span class="keyword">unsigned</span> <span class="keyword">int</span>)time(<span class="literal">NULL</span>));</span><br><span class="line">    init_board(mine, ROWS, COLS, <span class="string">&#x27;0&#x27;</span>);</span><br><span class="line">    init_board(show, ROWS, COLS, <span class="string">&#x27;*&#x27;</span>);</span><br><span class="line">    set_mine(mine, ROW, COL);</span><br><span class="line">    display_board(show, ROW, COL);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">    find_mine(mine, show, ROW, COL);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">init_board</span><span class="params">(<span class="keyword">char</span> arr[ROWS][COLS], <span class="keyword">int</span> rows, <span class="keyword">int</span> cols, <span class="keyword">char</span> filler)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; rows; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; cols; j++)</span><br><span class="line">        &#123;</span><br><span class="line">            arr[i][j] = filler;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">display_board</span><span class="params">(<span class="keyword">char</span> arr[ROWS][COLS], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt;= col; i++)</span><br><span class="line">    &#123;</span><br><span class="line"></span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;%d &quot;</span>, i);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">1</span>; i &lt;= row; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;%d &quot;</span>, i);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">1</span>; j &lt;= col; j++)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">&quot;%c &quot;</span>, arr[i][j]);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">set_mine</span><span class="params">(<span class="keyword">char</span> arr[ROWS][COLS], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> mines = MINES;</span><br><span class="line">    <span class="keyword">while</span> (mines)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">int</span> x = rand() % row + <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">int</span> y = rand() % col + <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">if</span> (arr[x][y] == <span class="string">&#x27;0&#x27;</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            arr[x][y] = <span class="string">&#x27;1&#x27;</span>;</span><br><span class="line">            mines--;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">find_mine</span><span class="params">(<span class="keyword">char</span> mine[ROWS][COLS], <span class="keyword">char</span> show[ROWS][COLS], <span class="keyword">int</span> row, <span class="keyword">int</span> col)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> x = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">int</span> y = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">int</span> win = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">while</span> (<span class="number">1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;请输入坐标:&gt;&quot;</span>);</span><br><span class="line">        <span class="built_in">scanf</span>(<span class="string">&quot;%d%d&quot;</span>, &amp;x, &amp;y);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">        <span class="keyword">if</span> (x &lt;= <span class="number">0</span> || x &gt; row || y &lt;= <span class="number">0</span> || y &gt; col)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">&quot;输入有误，请重新输入！\n&quot;</span>);</span><br><span class="line">            display_board(show, row, col);</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> (mine[x][y] == <span class="string">&#x27;1&#x27;</span>)</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="built_in">printf</span>(<span class="string">&quot;踩雷到了，游戏结束！\n&quot;</span>);</span><br><span class="line">                display_board(mine, row, col);</span><br><span class="line">                <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">int</span> count = get_mine_count(mine, x, y);</span><br><span class="line">                <span class="keyword">if</span> (count == <span class="number">0</span>)</span><br><span class="line">                &#123;</span><br><span class="line">                    show_blank_space(mine, show, x, y, &amp;win);</span><br><span class="line">                    display_board(show, row, col);</span><br><span class="line">                    <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">else</span></span><br><span class="line">                &#123;</span><br><span class="line">                    show[x][y] = <span class="string">&#x27;0&#x27;</span> + count;</span><br><span class="line">                    win++;</span><br><span class="line">                    display_board(show, row, col);</span><br><span class="line">                    <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (win == ROW * COL - MINES)</span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="built_in">printf</span>(<span class="string">&quot;排雷成功！\n&quot;</span>);</span><br><span class="line">                    <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">                    display_board(mine, row, col);</span><br><span class="line">                    <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">get_mine_count</span><span class="params">(<span class="keyword">char</span> mine[ROWS][COLS], <span class="keyword">int</span> x, <span class="keyword">int</span> y)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> count = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = x - <span class="number">1</span>; i &lt;= x + <span class="number">1</span>; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span> (i == <span class="number">0</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            i = <span class="number">1</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = y - <span class="number">1</span>; j &lt;= y + <span class="number">1</span>; j++)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> (j == <span class="number">0</span>)</span><br><span class="line">            &#123;</span><br><span class="line">                j = <span class="number">1</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            count = count + mine[i][j] - <span class="string">&#x27;0&#x27;</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> count;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">show_blank_space</span><span class="params">(<span class="keyword">char</span> mine[ROWS][COLS], <span class="keyword">char</span> show[ROWS][COLS], <span class="keyword">int</span> x, <span class="keyword">int</span> y, <span class="keyword">int</span> *p)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">-1</span>; i &lt; <span class="number">2</span>; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">-1</span>; j &lt; <span class="number">2</span>; j++)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> (i != <span class="number">0</span> || j != <span class="number">0</span>) <span class="comment">//同时为 0 表示自身，则跳过</span></span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">if</span> (x + i &gt;= <span class="number">1</span> &amp;&amp; x + i &lt;= ROW &amp;&amp; y + j &gt;= <span class="number">1</span> &amp;&amp; y + j &lt;= COL)</span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="keyword">if</span> (show[x + i][y + j] == <span class="string">&#x27;*&#x27;</span> &amp;&amp; mine[x + i][y + j] != <span class="string">&#x27;1&#x27;</span>)</span><br><span class="line">                    &#123;</span><br><span class="line">                        <span class="keyword">int</span> count = get_mine_count(mine, x + i, y + j);</span><br><span class="line">                        <span class="keyword">if</span> (count == <span class="number">0</span>)</span><br><span class="line">                        &#123;</span><br><span class="line">                            show[x + i][y + j] = <span class="string">&#x27; &#x27;</span>;</span><br><span class="line">                            (*p)++;</span><br><span class="line">                            show_blank_space(mine, show, x + i, y + j, p);</span><br><span class="line">                        &#125;</span><br><span class="line">                        <span class="keyword">else</span></span><br><span class="line">                        &#123;</span><br><span class="line">                            show[x + i][y + j] = count + <span class="string">&#x27;0&#x27;</span>;</span><br><span class="line">                            (*p)++;</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>C 语言</category>
+      </categories>
+      <tags>
+        <tag>扫雷游戏</tag>
       </tags>
   </entry>
   <entry>
