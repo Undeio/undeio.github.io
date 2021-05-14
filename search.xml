@@ -1497,6 +1497,89 @@
       </tags>
   </entry>
   <entry>
+    <title>VB 调试之 P-Code 替换操作码</title>
+    <url>/posts/3307503664/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-22">CrackMe 和 opcodes.txt</a>来自互联网，仅供学习使用；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
+</ul>
+<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
+<li><p>运行程序，程序会先弹出一个 NAG 窗口，点击确定后弹出主窗体：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuyri1qyhj30sy0lcaau.jpg" alt="运行程序"></p>
+</li>
+<li><p>导入<code>OD</code>开始分析，首先按照常规思路，既然有弹窗，肯定会使用 API：<code>rtcMsgBox</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuyuvjmrpj31dv0u0tcb.jpg" alt="查找API"></p>
+<p>查看 API 列表，找到<code>rtcMsgBox</code>设置断点，然后运行程序；</p>
+</li>
+<li><p>程序中断后，在栈窗口<code>反汇编窗口跟随</code>到返回位置：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuywuticyj31dv0u0q6f.jpg" alt="反汇编窗口跟随"></p>
+<p>在调用位置设置断点，然后重载并运行程序；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv2fpugyyj31dx0u078s.jpg" alt="在调用位置设置断点"></p>
+</li>
+<li><p>调用指令是<code>CALL EAX</code>，当前 EAX 值为 401000，<code>Ctrl + G</code> 跳转到 401000，正是<code>rtcMsgBox</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuz7bgembj31dr0u00wd.jpg" alt="401000"></p>
+<p>按下<code>-</code>减号键，回到断点位置，既然是调用函数，CALL 上面的指令就是它的参数，这种传参方式在 P-Code 中很常见，还没有完，继续；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuznpzrsjj31dv0u0n28.jpg" alt="CALL的参数"></p>
+<p>CALL 的参数到底是什么呢？</p>
+<p>根据上面的代码逻辑，获取一个操作码后无条件跳转了，所以，<code>JMP</code>以上的代码与 CALL 无关；</p>
+<p>因此，CALL 的参数应该是<code>JMP</code>向下，直到<code>CALl</code>；</p>
+<p>给参数起始位置设置断点，因为中间包含<code>JE</code>跳转，为了防止跳转，同时给<code>JE</code>也设置断点，重载并运行程序；</p>
+</li>
+<li><p>这里的戏就很精彩了，程序中断在参数位置：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuzxxlr7hj31dy0u0tcz.jpg" alt="程序中断在参数位置"></p>
+<p>然后按下<code>Ctrl + A</code>分析程序，在信息窗口发现跳转至此处的位置太多，如果挨个儿去跟，那就相当精彩了；</p>
+<p>同时，EAX 中有一个操作码<code>OA</code>，为啥它是操作码？因为根据 P-Code 的惯例，接下来既然要获取参数了，且代码没有执行，那 EAX 中存放的就是上一步的结果，而 P-Code 的逻辑就是先获取操作码，紧接着就是获取参数，那就说明，接下来获取的参数既是 CALL 的参数，也是<code>OA</code>操作码的参数，So，<code>OA</code>肯定是一个操作码；</p>
+<p>数据窗口跟随 ESI，发现<code>OA</code>位于当前 ESI 之前，地址是：401AD2；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv0ahg84qj31e00u0n1p.jpg" alt="数据窗口跟随 ESI"></p>
+<p>既然接下来要执行 CALL 也就是<code>rtcMsgBox</code>函数了，那么<code>OA</code>在 P-Code 中是否就是<code>rtcMsgBox</code>呢？</p>
+</li>
+<li><p>继续运行程序，直到将要获取下一个操作码：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv0jiz60tj31dw0u0q6r.jpg" alt="将要获取下一个操作码"></p>
+<p>标志性的获取操作码的语句，接下来要获取的操作码是<code>36</code>，同时也反向说明，在这行代码之前，<code>OA</code>操作码是一直有效的；</p>
+<p>而且，<code>OA</code>的参数是两个：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv10zic33j31e00u0q8d.jpg" alt="OA 的参数是两个"></p>
+<p>因为操作了两次 ESI，同时，位于<code>OA</code>和<code>36</code>之间的数据被分别放入了 ECX 和 EDI；</p>
+</li>
+<li><p>大胆的猜测一下，如果<code>OA</code>就是<code>rtcMsgBox</code>，那么替换它是否就能跳过弹窗呢？</p>
+</li>
+<li><p>重载程序，在数据窗口 goto 到<code>OA</code>，也就是 401AD2：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv0sw66o4j31dz0u0n0r.jpg" alt="goto 到 OA"></p>
+</li>
+<li><p>打开<code>opcode.txt</code>，发现<code>07</code>与<code>OA</code>参数数量和参数大小都相同，且<code>07</code>没有副作用：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv20byaqvj312e0e20sz.jpg" alt="opcode.txt"></p>
+<p>如上图所示：</p>
+<ul>
+<li><code>OA</code>表示调用指针（ptr）指向的函数，且没有返回值，4 字节大小，有 2 个参数，参数一 2 字节，参数二 2 字节（4 2 2 2）；</li>
+<li><code>07</code>表示 PUSH 值到堆栈，4 字节大小，有 2 个参数，参数一 2 字节，参数二 2 字节（4 2 2 2）；</li>
+</ul>
+<p>这里不用 <code>0B</code>替换<code>OA</code>的原因是：CALL 的副作用要比 PUSH 大的多；</p>
+<p>所以，替换<code>0A</code>为<code>07</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv18ioilnj31dz0u0wiv.jpg" alt="替换 OA"></p>
+<p>需要注意的是：替换操作码时，两个操作码的参数数量和参数大小必须完全相同，且替换的操作码对程序的运行没有副作用；</p>
+</li>
+<li><p>然后运行程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv1e58hd6j31dz0u0n10.jpg" alt="然后运行程序"></p>
+<p>没有出现 NAG 窗口，直接显示程序主窗体；</p>
+</li>
+<li><p>保存修改到可执行文件，运行程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv1hpnkpqj30wa0k23z2.jpg" alt="保存修改到可执行文件"></p>
+<p>修改依然没有问题，完工！</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>逆向分析</category>
+        <category>Windows</category>
+        <category>VB 汇总</category>
+      </categories>
+      <tags>
+        <tag>VB 调试</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>VB 调试之优先创建窗体</title>
     <url>/posts/3326045461/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -1582,75 +1665,109 @@
       </tags>
   </entry>
   <entry>
-    <title>VB 调试之 P-Code 替换操作码</title>
-    <url>/posts/3307503664/</url>
+    <title>VB 调试之分析 N-Code（一）</title>
+    <url>/posts/1203909517/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-5">OllyDbg</a>修改版，简称<code>OD</code>；</li>
 <li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-22">CrackMe 和 opcodes.txt</a>来自互联网，仅供学习使用；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-17">CrackMe</a>来自互联网，仅供学习使用；</li>
 <li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
 </ul>
 <h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
-<li><p>运行程序，程序会先弹出一个 NAG 窗口，点击确定后弹出主窗体：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuyri1qyhj30sy0lcaau.jpg" alt="运行程序"></p>
-</li>
-<li><p>导入<code>OD</code>开始分析，首先按照常规思路，既然有弹窗，肯定会使用 API：<code>rtcMsgBox</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuyuvjmrpj31dv0u0tcb.jpg" alt="查找API"></p>
-<p>查看 API 列表，找到<code>rtcMsgBox</code>设置断点，然后运行程序；</p>
-</li>
-<li><p>程序中断后，在栈窗口<code>反汇编窗口跟随</code>到返回位置：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuywuticyj31dv0u0q6f.jpg" alt="反汇编窗口跟随"></p>
-<p>在调用位置设置断点，然后重载并运行程序；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv2fpugyyj31dx0u078s.jpg" alt="在调用位置设置断点"></p>
-</li>
-<li><p>调用指令是<code>CALL EAX</code>，当前 EAX 值为 401000，<code>Ctrl + G</code> 跳转到 401000，正是<code>rtcMsgBox</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuz7bgembj31dr0u00wd.jpg" alt="401000"></p>
-<p>按下<code>-</code>减号键，回到断点位置，既然是调用函数，CALL 上面的指令就是它的参数，这种传参方式在 P-Code 中很常见，还没有完，继续；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuznpzrsjj31dv0u0n28.jpg" alt="CALL的参数"></p>
-<p>CALL 的参数到底是什么呢？</p>
-<p>根据上面的代码逻辑，获取一个操作码后无条件跳转了，所以，<code>JMP</code>以上的代码与 CALL 无关；</p>
-<p>因此，CALL 的参数应该是<code>JMP</code>向下，直到<code>CALl</code>；</p>
-<p>给参数起始位置设置断点，因为中间包含<code>JE</code>跳转，为了防止跳转，同时给<code>JE</code>也设置断点，重载并运行程序；</p>
-</li>
-<li><p>这里的戏就很精彩了，程序中断在参数位置：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuzxxlr7hj31dy0u0tcz.jpg" alt="程序中断在参数位置"></p>
-<p>然后按下<code>Ctrl + A</code>分析程序，在信息窗口发现跳转至此处的位置太多，如果挨个儿去跟，那就相当精彩了；</p>
-<p>同时，EAX 中有一个操作码<code>OA</code>，为啥它是操作码？因为根据 P-Code 的惯例，接下来既然要获取参数了，且代码没有执行，那 EAX 中存放的就是上一步的结果，而 P-Code 的逻辑就是先获取操作码，紧接着就是获取参数，那就说明，接下来获取的参数既是 CALL 的参数，也是<code>OA</code>操作码的参数，So，<code>OA</code>肯定是一个操作码；</p>
-<p>数据窗口跟随 ESI，发现<code>OA</code>位于当前 ESI 之前，地址是：401AD2；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv0ahg84qj31e00u0n1p.jpg" alt="数据窗口跟随 ESI"></p>
-<p>既然接下来要执行 CALL 也就是<code>rtcMsgBox</code>函数了，那么<code>OA</code>在 P-Code 中是否就是<code>rtcMsgBox</code>呢？</p>
-</li>
-<li><p>继续运行程序，直到将要获取下一个操作码：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv0jiz60tj31dw0u0q6r.jpg" alt="将要获取下一个操作码"></p>
-<p>标志性的获取操作码的语句，接下来要获取的操作码是<code>36</code>，同时也反向说明，在这行代码之前，<code>OA</code>操作码是一直有效的；</p>
-<p>而且，<code>OA</code>的参数是两个：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv10zic33j31e00u0q8d.jpg" alt="OA 的参数是两个"></p>
-<p>因为操作了两次 ESI，同时，位于<code>OA</code>和<code>36</code>之间的数据被分别放入了 ECX 和 EDI；</p>
-</li>
-<li><p>大胆的猜测一下，如果<code>OA</code>就是<code>rtcMsgBox</code>，那么替换它是否就能跳过弹窗呢？</p>
-</li>
-<li><p>重载程序，在数据窗口 goto 到<code>OA</code>，也就是 401AD2：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv0sw66o4j31dz0u0n0r.jpg" alt="goto 到 OA"></p>
-</li>
-<li><p>打开<code>opcode.txt</code>，发现<code>07</code>与<code>OA</code>参数数量和参数大小都相同，且<code>07</code>没有副作用：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv20byaqvj312e0e20sz.jpg" alt="opcode.txt"></p>
-<p>如上图所示：</p>
+<li><p>首先运行软件，了解一下程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwwx2zk5ij30cg0j474t.jpg" alt="运行程序"></p>
+<p>O, No!</p>
 <ul>
-<li><code>OA</code>表示调用指针（ptr）指向的函数，且没有返回值，4 字节大小，有 2 个参数，参数一 2 字节，参数二 2 字节（4 2 2 2）；</li>
-<li><code>07</code>表示 PUSH 值到堆栈，4 字节大小，有 2 个参数，参数一 2 字节，参数二 2 字节（4 2 2 2）；</li>
+<li><p>首先是一个<code>NAG 窗口</code>:</p>
+<blockquote>
+<p><code>NAG 窗口</code>：软件未注册或软件的试用版经常会弹出一些提示窗口要求注册，这些窗口被称为 nag 窗口，也叫烦人的窗口；</p>
+</blockquote>
+</li>
+<li><p>然后才是软件窗口，要求输入注册码；</p>
+</li>
+<li><p>输入随机字符点击 OK，一个奇怪的弹窗，应该是 No? Thanks?</p>
+</li>
 </ul>
-<p>这里不用 <code>0B</code>替换<code>OA</code>的原因是：CALL 的副作用要比 PUSH 大的多；</p>
-<p>所以，替换<code>0A</code>为<code>07</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv18ioilnj31dz0u0wiv.jpg" alt="替换 OA"></p>
-<p>需要注意的是：替换操作码时，两个操作码的参数数量和参数大小必须完全相同，且替换的操作码对程序的运行没有副作用；</p>
 </li>
-<li><p>然后运行程序：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv1e58hd6j31dz0u0n10.jpg" alt="然后运行程序"></p>
-<p>没有出现 NAG 窗口，直接显示程序主窗体；</p>
+<li><p>将<code>CrackMe</code>倒入<code>OD</code>，开始分析：</p>
+<ul>
+<li><p>首先，第一件事儿是去掉<code>烦人的窗口</code>：</p>
+<p>既然是弹窗，那么它肯定调用了<code>MessageBox</code>这个 API，不过，VB 有专有的 API <code>rtcMsgBox</code>：调用一个消息框，类似于 Windows 里的 MessageBox/A/EXA，此之前一定有个 PUSH 命令将要在消息框中显示的数据压入椎栈；</p>
+<ol>
+<li><p>既然已经知道了它调用的 API，那还等什么，给<code>rtcMsgBox</code>设置断点：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwf5ajmbfj319x0u0ado.jpg" alt="设置断点"></p>
+<p>按下<code>Ctrl + G</code>输入<code>rtcMsgBox</code>，然后点击确定，程序会跳转到<code>rtcMsgBox</code>函数的行首，然后双击该行设置断点，并做好备注；</p>
 </li>
-<li><p>保存修改到可执行文件，运行程序：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv1hpnkpqj30wa0k23z2.jpg" alt="保存修改到可执行文件"></p>
-<p>修改依然没有问题，完工！</p>
+<li><p>设置好断点后，<code>F9</code>运行程序，程序会中断在断点位置，然后在<code>堆栈窗口</code>跟踪调用位置：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwfej14e2j31a10u0787.jpg" alt="反汇编窗口中跟随"></p>
+</li>
+<li><p>来到<code>反汇编窗口</code>，这个时候函数<code>rtcMsgBox</code>已经调用完成，既然找到了调用位置，那怎么能去掉<code>烦人的窗口</code>呢？</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwrwzbi2mj31a40u0q74.jpg" alt="返回位置"></p>
+<p>设置好断点，重载并运行程序后，程序中断在预先设置好的断点位置，而下面一行的<code>CALL</code>就是调用<code>rtcMsgBox</code>的位置，如果把这个调用<code>NOP</code>了，是不是就没有<code>NAG 窗口</code>了，听起来蛮靠谱，试一试：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmws2k2c0gj31a00u0adj.jpg" alt="NOP"></p>
+</li>
+<li><p><code>NOP</code>了调用<code>rtcMsgBox</code>的<code>CALL</code>后，继续运行程序，但并没有按照预期显示程序主窗口，而是程序结束了，这是怎么回事儿呢？</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmws7fd2l7j319y0u0jus.jpg" alt="程序终止了"></p>
+<p>按下<code>-</code>减号键，返回上层位置，把修改的内容保存下来试试：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwszp7i1mj31c90u0ag0.jpg" alt="保存到文件"></p>
+<p>双击运行保存的程序，没有任何反应，em ～～ 看来程序被玩坏了，此路不通；</p>
+</li>
+<li><p>重载并运行程序，重新来到<code>反汇编窗口</code>，既然把直接调用函数<code>NOP</code>了不行，那就只能继续运行程序，看看它的上一级调用：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwtwz0lpqj319u0u0gq0.jpg" alt="上级调用"></p>
+<p>来到上级调用的返回位置，上一行的<code>CALl</code>就是刚才整段代码的调用位置，如果把这个<code>CALl</code>干掉，那么弹窗也就没有了，试一试，但愿程序不被玩儿坏；</p>
+<p>在这个<code>CALl</code>的参数的上一行设置断点，重载并运行程序；</p>
+</li>
+<li><p>程序中断在预定位置，选择下面<code>CALl</code>和它的参数用<code>NOP</code>填充：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwu4tmu4yj319x0u0789.jpg" alt="用NOP填充"></p>
+</li>
+<li><p>继续运行程序，啊哈，期待已久的程序主窗口终于出现了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwu6csc67j319y0u0adb.jpg" alt="程序主窗口"></p>
+<p>主程序出现，说明这个方法可行；</p>
+</li>
+<li><p>为了后面找码方便，把修改后的程序另存为一个新的程序：终于要和<code>烦人的窗口</code>说拜拜了，至于保存的方法，上面已经说明，不再赘述；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwue6f08gj30fa0hyglz.jpg" alt="NoNAG"></p>
+<p>运行修改的程序，嗯，没有<code>NAG 窗口</code>，直接出现程序主窗体，一切 OK；</p>
+</li>
+</ol>
+</li>
+<li><p>搞定<code>NAG 窗口</code>后，是时候寻找一下注册码了：</p>
+<ol>
+<li><p>把修改后的程序倒入<code>OD</code>，然后运行程序，主窗体出现：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwujt8bmmj31a10u0whn.jpg" alt="运行修改程序"></p>
+</li>
+<li><p>输入随机注册码，但不要点 OK，但不要点 OK，但不要点 OK，重要的事情说三遍：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwunevjelj31a90u0419.jpg" alt="内存访问断点"></p>
+<p>接着到<code>内存窗口</code>，在<code>CODE 段</code>设置<code>内存访问断点</code>，然后到程序中点击 OK；</p>
+</li>
+<li><p>点击 OK 后，程序中断：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwuq1qlscj31a70u0dj1.jpg" alt="程序中断"></p>
+<p>这里的代码看不大懂，不过没关系，也没有找到需要的信息；</p>
+</li>
+<li><p>继续运行程序，直到看到了随机输入的注册码和字符串比较函数：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwuupo64mj319x0u0wi4.jpg" alt="字符串比较"></p>
+<p>随机输入的字符作为字符串比较函数的参数，那另一个参数毋庸置疑，肯定是真实的注册码；</p>
+</li>
+<li><p>不过遗憾的是，由于这个软件是西欧字符软件，好多字符无法正确显示，找到了真实的注册码也无法输入，复制也不行，因为系统字符集中没有某些字符：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwv3kqadtj319w0u0jxi.jpg" alt="字符集"></p>
+</li>
+<li><p>既然无法输入真实注册码，那就只能让任意字符成为注册码了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwvbq3c94j319r0u0wif.jpg" alt="比较不成立"></p>
+<p>首先，字符串比较函数的返回结果非 0，说明两个参数不相等，继续向下分析；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmww36rsqtj319z0u0jwe.jpg" alt="向下分析"></p>
+<p>把比较的结果从 EAX 拷贝到 EDI 中，然后进行了一系列的操作，然而，如果 EDI 为 0，则这些操作没有任何意义，至于中间夹杂的其他操作可以忽略了，因为没有涉及到 EDI：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmww36rsqtj319z0u0jwe.jpg" alt="操作 EDI"></p>
+<p>这里有一个 JE 跳转，上一行代码是<code>TEST DI, DI</code>，如果 EDI 自身为 0，则<code>TEST DI, DI</code>影响 ZF 标志位，ZF 置 1，反之为 0，而恰恰 JE 根据 ZF 标志位跳转，可以看到，程序运行到了这里，ZF 依然为 0，则间接说明了输入的注册码不正确；</p>
+<p>既然这个跳转根据比较的结果进行跳转，那就可以确定它是关键跳，如果将 JE 修改为 JMP，是否就能满足<code>让任意字符成为注册码</code>？值得一试：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwwqklr2hj319v0u0jv1.jpg" alt="修改为 JMP"></p>
+<p>修改 JE 为 JMP 后，取消内存访问断点，然后<code>F9</code>运行程序，It’s OK，终于看到了成功弹窗，不过由于字符集的原因，部分字符无法显示；</p>
+</li>
+<li><p>保存修改到文件，然后输入任意字符：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwwuohw0dj30ca0i4mxh.jpg" alt="成功"></p>
+<p>成功的弹窗是 Yes? Thanks?</p>
+</li>
+</ol>
+</li>
+</ul>
 </li>
 </ol>
 ]]></content>
@@ -2088,123 +2205,6 @@
 </tbody></table>
 ]]></content>
       <categories>
-        <category>Windows</category>
-        <category>VB 汇总</category>
-      </categories>
-      <tags>
-        <tag>VB 调试</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>VB 调试之分析 N-Code（一）</title>
-    <url>/posts/1203909517/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-5">OllyDbg</a>修改版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-17">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
-</ul>
-<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
-<li><p>首先运行软件，了解一下程序：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwwx2zk5ij30cg0j474t.jpg" alt="运行程序"></p>
-<p>O, No!</p>
-<ul>
-<li><p>首先是一个<code>NAG 窗口</code>:</p>
-<blockquote>
-<p><code>NAG 窗口</code>：软件未注册或软件的试用版经常会弹出一些提示窗口要求注册，这些窗口被称为 nag 窗口，也叫烦人的窗口；</p>
-</blockquote>
-</li>
-<li><p>然后才是软件窗口，要求输入注册码；</p>
-</li>
-<li><p>输入随机字符点击 OK，一个奇怪的弹窗，应该是 No? Thanks?</p>
-</li>
-</ul>
-</li>
-<li><p>将<code>CrackMe</code>倒入<code>OD</code>，开始分析：</p>
-<ul>
-<li><p>首先，第一件事儿是去掉<code>烦人的窗口</code>：</p>
-<p>既然是弹窗，那么它肯定调用了<code>MessageBox</code>这个 API，不过，VB 有专有的 API <code>rtcMsgBox</code>：调用一个消息框，类似于 Windows 里的 MessageBox/A/EXA，此之前一定有个 PUSH 命令将要在消息框中显示的数据压入椎栈；</p>
-<ol>
-<li><p>既然已经知道了它调用的 API，那还等什么，给<code>rtcMsgBox</code>设置断点：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwf5ajmbfj319x0u0ado.jpg" alt="设置断点"></p>
-<p>按下<code>Ctrl + G</code>输入<code>rtcMsgBox</code>，然后点击确定，程序会跳转到<code>rtcMsgBox</code>函数的行首，然后双击该行设置断点，并做好备注；</p>
-</li>
-<li><p>设置好断点后，<code>F9</code>运行程序，程序会中断在断点位置，然后在<code>堆栈窗口</code>跟踪调用位置：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwfej14e2j31a10u0787.jpg" alt="反汇编窗口中跟随"></p>
-</li>
-<li><p>来到<code>反汇编窗口</code>，这个时候函数<code>rtcMsgBox</code>已经调用完成，既然找到了调用位置，那怎么能去掉<code>烦人的窗口</code>呢？</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwrwzbi2mj31a40u0q74.jpg" alt="返回位置"></p>
-<p>设置好断点，重载并运行程序后，程序中断在预先设置好的断点位置，而下面一行的<code>CALL</code>就是调用<code>rtcMsgBox</code>的位置，如果把这个调用<code>NOP</code>了，是不是就没有<code>NAG 窗口</code>了，听起来蛮靠谱，试一试：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmws2k2c0gj31a00u0adj.jpg" alt="NOP"></p>
-</li>
-<li><p><code>NOP</code>了调用<code>rtcMsgBox</code>的<code>CALL</code>后，继续运行程序，但并没有按照预期显示程序主窗口，而是程序结束了，这是怎么回事儿呢？</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmws7fd2l7j319y0u0jus.jpg" alt="程序终止了"></p>
-<p>按下<code>-</code>减号键，返回上层位置，把修改的内容保存下来试试：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwszp7i1mj31c90u0ag0.jpg" alt="保存到文件"></p>
-<p>双击运行保存的程序，没有任何反应，em ～～ 看来程序被玩坏了，此路不通；</p>
-</li>
-<li><p>重载并运行程序，重新来到<code>反汇编窗口</code>，既然把直接调用函数<code>NOP</code>了不行，那就只能继续运行程序，看看它的上一级调用：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwtwz0lpqj319u0u0gq0.jpg" alt="上级调用"></p>
-<p>来到上级调用的返回位置，上一行的<code>CALl</code>就是刚才整段代码的调用位置，如果把这个<code>CALl</code>干掉，那么弹窗也就没有了，试一试，但愿程序不被玩儿坏；</p>
-<p>在这个<code>CALl</code>的参数的上一行设置断点，重载并运行程序；</p>
-</li>
-<li><p>程序中断在预定位置，选择下面<code>CALl</code>和它的参数用<code>NOP</code>填充：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwu4tmu4yj319x0u0789.jpg" alt="用NOP填充"></p>
-</li>
-<li><p>继续运行程序，啊哈，期待已久的程序主窗口终于出现了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwu6csc67j319y0u0adb.jpg" alt="程序主窗口"></p>
-<p>主程序出现，说明这个方法可行；</p>
-</li>
-<li><p>为了后面找码方便，把修改后的程序另存为一个新的程序：终于要和<code>烦人的窗口</code>说拜拜了，至于保存的方法，上面已经说明，不再赘述；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwue6f08gj30fa0hyglz.jpg" alt="NoNAG"></p>
-<p>运行修改的程序，嗯，没有<code>NAG 窗口</code>，直接出现程序主窗体，一切 OK；</p>
-</li>
-</ol>
-</li>
-<li><p>搞定<code>NAG 窗口</code>后，是时候寻找一下注册码了：</p>
-<ol>
-<li><p>把修改后的程序倒入<code>OD</code>，然后运行程序，主窗体出现：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwujt8bmmj31a10u0whn.jpg" alt="运行修改程序"></p>
-</li>
-<li><p>输入随机注册码，但不要点 OK，但不要点 OK，但不要点 OK，重要的事情说三遍：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwunevjelj31a90u0419.jpg" alt="内存访问断点"></p>
-<p>接着到<code>内存窗口</code>，在<code>CODE 段</code>设置<code>内存访问断点</code>，然后到程序中点击 OK；</p>
-</li>
-<li><p>点击 OK 后，程序中断：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwuq1qlscj31a70u0dj1.jpg" alt="程序中断"></p>
-<p>这里的代码看不大懂，不过没关系，也没有找到需要的信息；</p>
-</li>
-<li><p>继续运行程序，直到看到了随机输入的注册码和字符串比较函数：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwuupo64mj319x0u0wi4.jpg" alt="字符串比较"></p>
-<p>随机输入的字符作为字符串比较函数的参数，那另一个参数毋庸置疑，肯定是真实的注册码；</p>
-</li>
-<li><p>不过遗憾的是，由于这个软件是西欧字符软件，好多字符无法正确显示，找到了真实的注册码也无法输入，复制也不行，因为系统字符集中没有某些字符：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwv3kqadtj319w0u0jxi.jpg" alt="字符集"></p>
-</li>
-<li><p>既然无法输入真实注册码，那就只能让任意字符成为注册码了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwvbq3c94j319r0u0wif.jpg" alt="比较不成立"></p>
-<p>首先，字符串比较函数的返回结果非 0，说明两个参数不相等，继续向下分析；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmww36rsqtj319z0u0jwe.jpg" alt="向下分析"></p>
-<p>把比较的结果从 EAX 拷贝到 EDI 中，然后进行了一系列的操作，然而，如果 EDI 为 0，则这些操作没有任何意义，至于中间夹杂的其他操作可以忽略了，因为没有涉及到 EDI：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmww36rsqtj319z0u0jwe.jpg" alt="操作 EDI"></p>
-<p>这里有一个 JE 跳转，上一行代码是<code>TEST DI, DI</code>，如果 EDI 自身为 0，则<code>TEST DI, DI</code>影响 ZF 标志位，ZF 置 1，反之为 0，而恰恰 JE 根据 ZF 标志位跳转，可以看到，程序运行到了这里，ZF 依然为 0，则间接说明了输入的注册码不正确；</p>
-<p>既然这个跳转根据比较的结果进行跳转，那就可以确定它是关键跳，如果将 JE 修改为 JMP，是否就能满足<code>让任意字符成为注册码</code>？值得一试：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwwqklr2hj319v0u0jv1.jpg" alt="修改为 JMP"></p>
-<p>修改 JE 为 JMP 后，取消内存访问断点，然后<code>F9</code>运行程序，It’s OK，终于看到了成功弹窗，不过由于字符集的原因，部分字符无法显示；</p>
-</li>
-<li><p>保存修改到文件，然后输入任意字符：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmwwuohw0dj30ca0i4mxh.jpg" alt="成功"></p>
-<p>成功的弹窗是 Yes? Thanks?</p>
-</li>
-</ol>
-</li>
-</ul>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>逆向分析</category>
         <category>Windows</category>
         <category>VB 汇总</category>
       </categories>
@@ -3710,95 +3710,6 @@ E --&gt; |&quot;否，未解决&quot;| G
       </tags>
   </entry>
   <entry>
-    <title>硬编码寻找序列号（二）</title>
-    <url>/posts/3097998650/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-2">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
-</ul>
-<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
-<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
-</li>
-<li><p>倒入<code>OD</code>开始分析：</p>
-<ul>
-<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
-</li>
-<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，咦，发现可疑函数：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy5o1g2gpj30g90bwjsq.jpg" alt="函数"></p>
-<p>很好的开始，在<code>GetDlgItemTextA</code>函数上设置断点，然后去<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
-</li>
-<li><p>然后<code>F9</code>运行程序，“随便输入” 一些字符后点击验证，可以随便输入，但请记住它；</p>
-</li>
-<li><p>程序断在了设置断点的 API 的行首，在堆栈窗口可以看到 API 的各种参数，而参数 Buffer 里存放着函数返回的数据，选中 Buffer 右键<code>数据窗口中跟随</code>，可以看到，由于断点中断在了函数的第一行，所以这个地址里什么也没有：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy5y9rif4j30sr0fsq51.jpg" alt="运行"></p>
-</li>
-<li><p>接着按下 Ctrl + F9 或点击菜单栏的调试选项并选择<code>执行到返回</code>，然后发现 Buffer 对应的地址里有数据了，并且是我们输入的字符串；</p>
-</li>
-<li><p>在上一步中，我们<code>执行到返回</code>，那就意味着接下来登场的将会是<code>RETN</code>了，按下 F8，返回到调用 API 的程序，哇，密密麻麻全是汇编语句，往下翻了翻，也没发现什么关键字、有用的信息，接着<code>F9</code>运行，直接弹出了错误信息：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy69uwm08j303z03z0sn.jpg" alt="弹窗"></p>
-</li>
-<li><p>看来此路不通啊，但是“程序给我们关上了一扇门，同时又开了一扇窗”，没错，就是它，弹窗，在最开始的函数列表中也有它的身影<code>MessageBoxA</code>，那就从它入手试试；</p>
-</li>
-<li><p>禁用<code>GetDlgItemTextA</code>并设置<code>MessageBoxA</code>断点，重新运行程序，输入并运行程序后，拦截到了即将要弹出的信息，信息显示在堆栈窗口：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy6hpjnooj30ug0i0wgm.jpg" alt="错误"></p>
-<p>如果程序继续运行，将弹出<code>错误！</code>弹窗；</p>
-</li>
-<li><p>堆栈窗口的顶部显示的是调用信息，包括调用地址、返回地址等</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy6m2r60qj30cw05q0t2.jpg" alt="堆栈"></p>
-</li>
-<li><p>堆栈顶端，也就是当前<code>ESP</code>指向的堆栈中则是调用地址，也就是说这个地址调用了<code>MessageBoxA</code>这个<code>API</code>，根据程序的流程：程序经过比较之后，发现序列号不对，所以调用<code>MessageBoxA</code>并弹出错误窗口。<br>按照这个逻辑，如果跟随调用地址，是不是就能找到程序进行比较的代码？那还等什么，右键堆栈顶端的地址（堆栈中被标注黑色背景的地址就是堆栈顶端）选择<code>反汇编窗口中跟随</code>，就来到了调用<code>MessageBoxA</code>的程序，查看上面的代码，发现了一些端倪：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy7fm1cz5j30ue0j8jur.jpg" alt="调用"></p>
-<p>上面有一个<code>JNZ</code>跳转进来，从而调用了<code>MessageBoxA</code>，所以弹出了错误弹窗，而<code>JNZ</code>的下面还有一个<code>MessageBoxA</code>，那可以猜测，如果不跳转继续向下执行，很有可能弹出的就是注册成功的弹窗，<code>JNZ</code>根据<code>ZF 标志位</code>进行跳转，如果修改<code>ZF 标志位</code>为<code>1</code>，就可以验证一下猜测是否正确，如何修改呢，继续往上翻代码，嘿嘿，发现一个有用的东西<code>GetDlgItemTextA</code>，在调用地址双击数据窗口设置<code>CC断点</code>，重载程序</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy84b4uhoj30uc0j7acn.jpg" alt="重载"></p>
-</li>
-<li><p>输入并运行程序后，在最后设置断点的地方停了下来，那下面就是要执行的代码了，分析一下看能不能找到隐藏的序列号：</p>
-<ul>
-<li><p>才分析了几行代码，有一种上了恶当的感觉，感觉它在转移某些内容，就暂且将它转移的内容称为“可疑字符串”：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy8q1uc0zj30p50740ts.jpg" alt="序列号"></p>
-</li>
-<li><p>不管了，继续分析，依然没有收获：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy90t76crj30om05zjrs.jpg" alt="没有收获"></p>
-</li>
-<li><p>直到分析了一个轮回，终于有了收获，程序会用我们输入的序列号的每一个字节的机器码减 14 后，和指定的机器码进行比较：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy9zbazz5j30p10ac75f.jpg" alt="循环"></p>
-</li>
-<li><p>而我们利用<code>MessageBoxA</code>断点，分析的<code>JNZ</code>的跳转条件是：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giyb22if59j30p10hewgy.jpg" alt="JNZ"></p>
-</li>
-<li><p>如何让条件成立呢？恰恰在我们没有分析到的代码，因为我们输入的序列号是错误的，所以正确的代码根本不会执行，更谈不上分析了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giybg7od2pj30p20acjsn.jpg" alt="正确"></p>
-<p>在这里，如果是正确的序列号，那么每次比较完成后，<code>EBP - 10</code>和<code>EBP - 34</code>作为两个计数器，它们会正确的同时自增，在最后的比较长度时也就会相等了；</p>
-</li>
-</ul>
-</li>
-<li><p>所以，正确的序列号是什么呢？</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giybxcwm3ej30p00abjtb.jpg" alt="序列号"></p>
-<ul>
-<li>在比较的位置设置断点，获取每次比较时给定的字符的机器码，然后加上 14，最后转为 ASCII 码，就是正确的序列号；</li>
-<li>获取到的给定字符的机器码：<code>1D 1E 1F 44 61 51 3C 5B 36 55 51</code>；</li>
-<li>字符的机器码加 14 之后的值：<code>31 32 33 58 75 65 50 6F 4A 69 65</code>；</li>
-<li>转换为 ASCII 码后的值：123XuePoJie；</li>
-</ul>
-</li>
-<li><p>最后，完整的分析图：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giyciwo9jqj30y80u0tf0.jpg" alt="完整图"></p>
-</li>
-</ul>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>逆向分析</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>硬编码</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>硬编码寻找序列号（三）</title>
     <url>/posts/4122547819/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -3917,6 +3828,95 @@ E --&gt; |&quot;否，未解决&quot;| G
         <tag>硬编码</tag>
         <tag>软编码</tag>
         <tag>算法分析</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>硬编码寻找序列号（二）</title>
+    <url>/posts/3097998650/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-2">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
+</ul>
+<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
+<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
+</li>
+<li><p>倒入<code>OD</code>开始分析：</p>
+<ul>
+<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
+</li>
+<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，咦，发现可疑函数：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy5o1g2gpj30g90bwjsq.jpg" alt="函数"></p>
+<p>很好的开始，在<code>GetDlgItemTextA</code>函数上设置断点，然后去<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
+</li>
+<li><p>然后<code>F9</code>运行程序，“随便输入” 一些字符后点击验证，可以随便输入，但请记住它；</p>
+</li>
+<li><p>程序断在了设置断点的 API 的行首，在堆栈窗口可以看到 API 的各种参数，而参数 Buffer 里存放着函数返回的数据，选中 Buffer 右键<code>数据窗口中跟随</code>，可以看到，由于断点中断在了函数的第一行，所以这个地址里什么也没有：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy5y9rif4j30sr0fsq51.jpg" alt="运行"></p>
+</li>
+<li><p>接着按下 Ctrl + F9 或点击菜单栏的调试选项并选择<code>执行到返回</code>，然后发现 Buffer 对应的地址里有数据了，并且是我们输入的字符串；</p>
+</li>
+<li><p>在上一步中，我们<code>执行到返回</code>，那就意味着接下来登场的将会是<code>RETN</code>了，按下 F8，返回到调用 API 的程序，哇，密密麻麻全是汇编语句，往下翻了翻，也没发现什么关键字、有用的信息，接着<code>F9</code>运行，直接弹出了错误信息：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy69uwm08j303z03z0sn.jpg" alt="弹窗"></p>
+</li>
+<li><p>看来此路不通啊，但是“程序给我们关上了一扇门，同时又开了一扇窗”，没错，就是它，弹窗，在最开始的函数列表中也有它的身影<code>MessageBoxA</code>，那就从它入手试试；</p>
+</li>
+<li><p>禁用<code>GetDlgItemTextA</code>并设置<code>MessageBoxA</code>断点，重新运行程序，输入并运行程序后，拦截到了即将要弹出的信息，信息显示在堆栈窗口：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy6hpjnooj30ug0i0wgm.jpg" alt="错误"></p>
+<p>如果程序继续运行，将弹出<code>错误！</code>弹窗；</p>
+</li>
+<li><p>堆栈窗口的顶部显示的是调用信息，包括调用地址、返回地址等</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy6m2r60qj30cw05q0t2.jpg" alt="堆栈"></p>
+</li>
+<li><p>堆栈顶端，也就是当前<code>ESP</code>指向的堆栈中则是调用地址，也就是说这个地址调用了<code>MessageBoxA</code>这个<code>API</code>，根据程序的流程：程序经过比较之后，发现序列号不对，所以调用<code>MessageBoxA</code>并弹出错误窗口。<br>按照这个逻辑，如果跟随调用地址，是不是就能找到程序进行比较的代码？那还等什么，右键堆栈顶端的地址（堆栈中被标注黑色背景的地址就是堆栈顶端）选择<code>反汇编窗口中跟随</code>，就来到了调用<code>MessageBoxA</code>的程序，查看上面的代码，发现了一些端倪：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy7fm1cz5j30ue0j8jur.jpg" alt="调用"></p>
+<p>上面有一个<code>JNZ</code>跳转进来，从而调用了<code>MessageBoxA</code>，所以弹出了错误弹窗，而<code>JNZ</code>的下面还有一个<code>MessageBoxA</code>，那可以猜测，如果不跳转继续向下执行，很有可能弹出的就是注册成功的弹窗，<code>JNZ</code>根据<code>ZF 标志位</code>进行跳转，如果修改<code>ZF 标志位</code>为<code>1</code>，就可以验证一下猜测是否正确，如何修改呢，继续往上翻代码，嘿嘿，发现一个有用的东西<code>GetDlgItemTextA</code>，在调用地址双击数据窗口设置<code>CC断点</code>，重载程序</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy84b4uhoj30uc0j7acn.jpg" alt="重载"></p>
+</li>
+<li><p>输入并运行程序后，在最后设置断点的地方停了下来，那下面就是要执行的代码了，分析一下看能不能找到隐藏的序列号：</p>
+<ul>
+<li><p>才分析了几行代码，有一种上了恶当的感觉，感觉它在转移某些内容，就暂且将它转移的内容称为“可疑字符串”：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy8q1uc0zj30p50740ts.jpg" alt="序列号"></p>
+</li>
+<li><p>不管了，继续分析，依然没有收获：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy90t76crj30om05zjrs.jpg" alt="没有收获"></p>
+</li>
+<li><p>直到分析了一个轮回，终于有了收获，程序会用我们输入的序列号的每一个字节的机器码减 14 后，和指定的机器码进行比较：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy9zbazz5j30p10ac75f.jpg" alt="循环"></p>
+</li>
+<li><p>而我们利用<code>MessageBoxA</code>断点，分析的<code>JNZ</code>的跳转条件是：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giyb22if59j30p10hewgy.jpg" alt="JNZ"></p>
+</li>
+<li><p>如何让条件成立呢？恰恰在我们没有分析到的代码，因为我们输入的序列号是错误的，所以正确的代码根本不会执行，更谈不上分析了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giybg7od2pj30p20acjsn.jpg" alt="正确"></p>
+<p>在这里，如果是正确的序列号，那么每次比较完成后，<code>EBP - 10</code>和<code>EBP - 34</code>作为两个计数器，它们会正确的同时自增，在最后的比较长度时也就会相等了；</p>
+</li>
+</ul>
+</li>
+<li><p>所以，正确的序列号是什么呢？</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giybxcwm3ej30p00abjtb.jpg" alt="序列号"></p>
+<ul>
+<li>在比较的位置设置断点，获取每次比较时给定的字符的机器码，然后加上 14，最后转为 ASCII 码，就是正确的序列号；</li>
+<li>获取到的给定字符的机器码：<code>1D 1E 1F 44 61 51 3C 5B 36 55 51</code>；</li>
+<li>字符的机器码加 14 之后的值：<code>31 32 33 58 75 65 50 6F 4A 69 65</code>；</li>
+<li>转换为 ASCII 码后的值：123XuePoJie；</li>
+</ul>
+</li>
+<li><p>最后，完整的分析图：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giyciwo9jqj30y80u0tf0.jpg" alt="完整图"></p>
+</li>
+</ul>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>逆向分析</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>硬编码</tag>
       </tags>
   </entry>
   <entry>
