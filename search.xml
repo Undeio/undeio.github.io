@@ -1599,90 +1599,6 @@
       </tags>
   </entry>
   <entry>
-    <title>VB 调试之 P-Code 替换操作码</title>
-    <url>/posts/3307503664/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-22">CrackMe 和 opcodes.txt</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
-</ul>
-<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
-<li><p>运行程序，程序会先弹出一个 NAG 窗口，点击确定后弹出主窗体：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuyri1qyhj30sy0lcaau.jpg" alt="运行程序"></p>
-</li>
-<li><p>导入<code>OD</code>开始分析，首先按照常规思路，既然有弹窗，肯定会使用 API：<code>rtcMsgBox</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuyuvjmrpj31dv0u0tcb.jpg" alt="查找API"></p>
-<p>查看 API 列表，找到<code>rtcMsgBox</code>设置断点，然后运行程序；</p>
-</li>
-<li><p>程序中断后，在栈窗口<code>反汇编窗口跟随</code>到返回位置：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuywuticyj31dv0u0q6f.jpg" alt="反汇编窗口跟随"></p>
-<p>在调用位置设置断点，然后重载并运行程序；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv2fpugyyj31dx0u078s.jpg" alt="在调用位置设置断点"></p>
-</li>
-<li><p>调用指令是<code>CALL EAX</code>，当前 EAX 值为 401000，<code>Ctrl + G</code> 跳转到 401000，正是<code>rtcMsgBox</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuz7bgembj31dr0u00wd.jpg" alt="401000"></p>
-<p>按下<code>-</code>减号键，回到断点位置，既然是调用函数，CALL 上面的指令就是它的参数，这种传参方式在 P-Code 中很常见，还没有完，继续；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuznpzrsjj31dv0u0n28.jpg" alt="CALL的参数"></p>
-<p>CALL 的参数到底是什么呢？</p>
-<p>根据上面的代码逻辑，获取一个操作码后无条件跳转了，所以，<code>JMP</code>以上的代码与 CALL 无关；</p>
-<p>因此，CALL 的参数应该是<code>JMP</code>向下，直到<code>CALl</code>；</p>
-<p>给参数起始位置设置断点，因为中间包含<code>JE</code>跳转，为了防止跳转，同时给<code>JE</code>也设置断点，重载并运行程序；</p>
-</li>
-<li><p>这里的戏就很精彩了，程序中断在参数位置：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuzxxlr7hj31dy0u0tcz.jpg" alt="程序中断在参数位置"></p>
-<p>然后按下<code>Ctrl + A</code>分析程序，在信息窗口发现跳转至此处的位置太多，如果挨个儿去跟，那就相当精彩了；</p>
-<p>同时，EAX 中有一个操作码<code>OA</code>，为啥它是操作码？因为根据 P-Code 的惯例，接下来既然要获取参数了，且代码没有执行，那 EAX 中存放的就是上一步的结果，而 P-Code 的逻辑就是先获取操作码，紧接着就是获取参数，那就说明，接下来获取的参数既是 CALL 的参数，也是<code>OA</code>操作码的参数，So，<code>OA</code>肯定是一个操作码；</p>
-<p>数据窗口跟随 ESI，发现<code>OA</code>位于当前 ESI 之前，地址是：401AD2；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv0ahg84qj31e00u0n1p.jpg" alt="数据窗口跟随 ESI"></p>
-<p>既然接下来要执行 CALL 也就是<code>rtcMsgBox</code>函数了，那么<code>OA</code>在 P-Code 中是否就是<code>rtcMsgBox</code>呢？</p>
-</li>
-<li><p>继续运行程序，直到将要获取下一个操作码：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv0jiz60tj31dw0u0q6r.jpg" alt="将要获取下一个操作码"></p>
-<p>标志性的获取操作码的语句，接下来要获取的操作码是<code>36</code>，同时也反向说明，在这行代码之前，<code>OA</code>操作码是一直有效的；</p>
-<p>而且，<code>OA</code>的参数是两个：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv10zic33j31e00u0q8d.jpg" alt="OA 的参数是两个"></p>
-<p>因为操作了两次 ESI，同时，位于<code>OA</code>和<code>36</code>之间的数据被分别放入了 ECX 和 EDI；</p>
-</li>
-<li><p>大胆的猜测一下，如果<code>OA</code>就是<code>rtcMsgBox</code>，那么替换它是否就能跳过弹窗呢？</p>
-</li>
-<li><p>重载程序，在数据窗口 goto 到<code>OA</code>，也就是 401AD2：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv0sw66o4j31dz0u0n0r.jpg" alt="goto 到 OA"></p>
-</li>
-<li><p>打开<code>opcode.txt</code>，发现<code>07</code>与<code>OA</code>参数数量和参数大小都相同，且<code>07</code>没有副作用：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv20byaqvj312e0e20sz.jpg" alt="opcode.txt"></p>
-<p>如上图所示：</p>
-<ul>
-<li><code>OA</code>表示调用指针（ptr）指向的函数，且没有返回值，4 字节大小，有 2 个参数，参数一 2 字节，参数二 2 字节（4 2 2 2）；</li>
-<li><code>07</code>表示 PUSH 值到堆栈，4 字节大小，有 2 个参数，参数一 2 字节，参数二 2 字节（4 2 2 2）；</li>
-</ul>
-<p>这里不用 <code>0B</code>替换<code>OA</code>的原因是：CALL 的副作用要比 PUSH 大的多；</p>
-<p>所以，替换<code>0A</code>为<code>07</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv18ioilnj31dz0u0wiv.jpg" alt="替换 OA"></p>
-<p>需要注意的是：替换操作码时，两个操作码的参数数量和参数大小必须完全相同，且替换的操作码对程序的运行没有副作用；</p>
-</li>
-<li><p>然后运行程序：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv1e58hd6j31dz0u0n10.jpg" alt="然后运行程序"></p>
-<p>没有出现 NAG 窗口，直接显示程序主窗体；</p>
-</li>
-<li><p>保存修改到可执行文件，运行程序：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv1hpnkpqj30wa0k23z2.jpg" alt="保存修改到可执行文件"></p>
-<p>修改依然没有问题，完工！</p>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>逆向分析</category>
-        <category>Windows</category>
-        <category>VB 汇总</category>
-      </categories>
-      <tags>
-        <tag>VB 调试</tag>
-        <tag>NAG 窗口</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>VB 调试之优先创建窗体</title>
     <url>/posts/3326045461/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -1754,6 +1670,90 @@
 <p>接着，运行保存的文件：</p>
 <p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmxpknxv21j30nc0m2n0o.jpg" alt="reverse"></p>
 <p>直接出现程序主窗体，NAG 窗口被去除；</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>逆向分析</category>
+        <category>Windows</category>
+        <category>VB 汇总</category>
+      </categories>
+      <tags>
+        <tag>VB 调试</tag>
+        <tag>NAG 窗口</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>VB 调试之 P-Code 替换操作码</title>
+    <url>/posts/3307503664/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-22">CrackMe 和 opcodes.txt</a>来自互联网，仅供学习使用；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
+</ul>
+<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
+<li><p>运行程序，程序会先弹出一个 NAG 窗口，点击确定后弹出主窗体：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuyri1qyhj30sy0lcaau.jpg" alt="运行程序"></p>
+</li>
+<li><p>导入<code>OD</code>开始分析，首先按照常规思路，既然有弹窗，肯定会使用 API：<code>rtcMsgBox</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuyuvjmrpj31dv0u0tcb.jpg" alt="查找API"></p>
+<p>查看 API 列表，找到<code>rtcMsgBox</code>设置断点，然后运行程序；</p>
+</li>
+<li><p>程序中断后，在栈窗口<code>反汇编窗口跟随</code>到返回位置：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuywuticyj31dv0u0q6f.jpg" alt="反汇编窗口跟随"></p>
+<p>在调用位置设置断点，然后重载并运行程序；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv2fpugyyj31dx0u078s.jpg" alt="在调用位置设置断点"></p>
+</li>
+<li><p>调用指令是<code>CALL EAX</code>，当前 EAX 值为 401000，<code>Ctrl + G</code> 跳转到 401000，正是<code>rtcMsgBox</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuz7bgembj31dr0u00wd.jpg" alt="401000"></p>
+<p>按下<code>-</code>减号键，回到断点位置，既然是调用函数，CALL 上面的指令就是它的参数，这种传参方式在 P-Code 中很常见，还没有完，继续；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuznpzrsjj31dv0u0n28.jpg" alt="CALL的参数"></p>
+<p>CALL 的参数到底是什么呢？</p>
+<p>根据上面的代码逻辑，获取一个操作码后无条件跳转了，所以，<code>JMP</code>以上的代码与 CALL 无关；</p>
+<p>因此，CALL 的参数应该是<code>JMP</code>向下，直到<code>CALl</code>；</p>
+<p>给参数起始位置设置断点，因为中间包含<code>JE</code>跳转，为了防止跳转，同时给<code>JE</code>也设置断点，重载并运行程序；</p>
+</li>
+<li><p>这里的戏就很精彩了，程序中断在参数位置：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuzxxlr7hj31dy0u0tcz.jpg" alt="程序中断在参数位置"></p>
+<p>然后按下<code>Ctrl + A</code>分析程序，在信息窗口发现跳转至此处的位置太多，如果挨个儿去跟，那就相当精彩了；</p>
+<p>同时，EAX 中有一个操作码<code>OA</code>，为啥它是操作码？因为根据 P-Code 的惯例，接下来既然要获取参数了，且代码没有执行，那 EAX 中存放的就是上一步的结果，而 P-Code 的逻辑就是先获取操作码，紧接着就是获取参数，那就说明，接下来获取的参数既是 CALL 的参数，也是<code>OA</code>操作码的参数，So，<code>OA</code>肯定是一个操作码；</p>
+<p>数据窗口跟随 ESI，发现<code>OA</code>位于当前 ESI 之前，地址是：401AD2；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv0ahg84qj31e00u0n1p.jpg" alt="数据窗口跟随 ESI"></p>
+<p>既然接下来要执行 CALL 也就是<code>rtcMsgBox</code>函数了，那么<code>OA</code>在 P-Code 中是否就是<code>rtcMsgBox</code>呢？</p>
+</li>
+<li><p>继续运行程序，直到将要获取下一个操作码：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv0jiz60tj31dw0u0q6r.jpg" alt="将要获取下一个操作码"></p>
+<p>标志性的获取操作码的语句，接下来要获取的操作码是<code>36</code>，同时也反向说明，在这行代码之前，<code>OA</code>操作码是一直有效的；</p>
+<p>而且，<code>OA</code>的参数是两个：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv10zic33j31e00u0q8d.jpg" alt="OA 的参数是两个"></p>
+<p>因为操作了两次 ESI，同时，位于<code>OA</code>和<code>36</code>之间的数据被分别放入了 ECX 和 EDI；</p>
+</li>
+<li><p>大胆的猜测一下，如果<code>OA</code>就是<code>rtcMsgBox</code>，那么替换它是否就能跳过弹窗呢？</p>
+</li>
+<li><p>重载程序，在数据窗口 goto 到<code>OA</code>，也就是 401AD2：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv0sw66o4j31dz0u0n0r.jpg" alt="goto 到 OA"></p>
+</li>
+<li><p>打开<code>opcode.txt</code>，发现<code>07</code>与<code>OA</code>参数数量和参数大小都相同，且<code>07</code>没有副作用：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv20byaqvj312e0e20sz.jpg" alt="opcode.txt"></p>
+<p>如上图所示：</p>
+<ul>
+<li><code>OA</code>表示调用指针（ptr）指向的函数，且没有返回值，4 字节大小，有 2 个参数，参数一 2 字节，参数二 2 字节（4 2 2 2）；</li>
+<li><code>07</code>表示 PUSH 值到堆栈，4 字节大小，有 2 个参数，参数一 2 字节，参数二 2 字节（4 2 2 2）；</li>
+</ul>
+<p>这里不用 <code>0B</code>替换<code>OA</code>的原因是：CALL 的副作用要比 PUSH 大的多；</p>
+<p>所以，替换<code>0A</code>为<code>07</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv18ioilnj31dz0u0wiv.jpg" alt="替换 OA"></p>
+<p>需要注意的是：替换操作码时，两个操作码的参数数量和参数大小必须完全相同，且替换的操作码对程序的运行没有副作用；</p>
+</li>
+<li><p>然后运行程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv1e58hd6j31dz0u0n10.jpg" alt="然后运行程序"></p>
+<p>没有出现 NAG 窗口，直接显示程序主窗体；</p>
+</li>
+<li><p>保存修改到可执行文件，运行程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv1hpnkpqj30wa0k23z2.jpg" alt="保存修改到可执行文件"></p>
+<p>修改依然没有问题，完工！</p>
 </li>
 </ol>
 ]]></content>
@@ -2805,74 +2805,6 @@
       </tags>
   </entry>
   <entry>
-    <title>内存访问定位 OEP</title>
-    <url>/posts/3449356463/</url>
-    <content><![CDATA[<blockquote>
-<p>OEP：当外壳保护的程序运行时，会先执行外壳程序，外壳程序负责在内存中把原程序解压、还原，并把控制权还给解压后的真正程序，再跳到原来程序的入口点，这个解压后真正程序的入口点称为 OEP（Original Entry Point，原始入口点）；</p>
-<p>EP：与 OEP 对应的是 EP（Entry Point，入口点），无壳程序的 EP 与 OEP 相同，加壳程序的 EP 是壳的入口点，而不是原程序的入口点；</p>
-</blockquote>
-<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-5">OllyDbg</a>修改版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/UnPackMe-1">UnPackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
-</ul>
-<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><h4 id="使用改版-OD-到达-OEP"><a href="#使用改版-OD-到达-OEP" class="headerlink" title="使用改版 OD 到达 OEP"></a>使用改版 OD 到达 OEP</h4><ol>
-<li><p>此方法来自<a href="http://xuepojie.com/">SharkHeng</a>；</p>
-</li>
-<li><p>将 CM 导入 OD 后，会弹出警告，提示入口点超出代码段范围，这是因为当前 EP 指向外壳部分，而不是代码段：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnw2w2pc78j31cg06u0sz.jpg" alt="英文版"></p>
-<p>再来个中文版（感谢汉化 OD 的大佬）：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnw2w4uhjmj312w06sdg1.jpg" alt="中文版"></p>
-<p>虽然弹窗可以在 OD 设置中关闭，但弹窗也是一件好事儿，弹出这种窗口就是提示我们程序加壳了；</p>
-</li>
-<li><p>既然提示 EP 不在代码段，那就来到内存窗口，查看各区段范围：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnw37zkq86j31a50u0aeh.jpg" alt="各区段范围"></p>
-<p>可以看到，当前 EP 为 00413000，而代码段的范围是：00401000 ～ 00404FFF，确实不在这个范围，所以才会有一开始的弹窗；</p>
-</li>
-<li><p>在代码段（.text）设置内存访问断点，然后<code>F9</code>运行程序：</p>
-<p>加壳程序在运行时，会将原程序解压、还原，控制权交还，然后原程序执行，此时，就会触发<code>内存执行断点</code>，从而产生中断；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnw3gh6rdoj314w0iuq3l.jpg" alt="产生中断"></p>
-<p>中断位置的代码看起来像是数据，不过很有规律，按下<code>Ctrl + A</code>，分析程序：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnw3k3n4ftj31a00u0ad9.jpg" alt="分析程序"></p>
-<p>分析之后的代码就正常了，开始位置是生成栈帧的指令，表示函数要开始执行了，而且，当前 EIP 也处于代码段；</p>
-</li>
-</ol>
-<h4 id="使用原版-OD-到达-OEP"><a href="#使用原版-OD-到达-OEP" class="headerlink" title="使用原版 OD 到达 OEP"></a>使用原版 OD 到达 OEP</h4><ol>
-<li><p>此方法来自<a href="https://bbs.pediy.com/forum-99.htm">加密解密</a>第 16 章：16.2.2；</p>
-</li>
-<li><p>将 CM 导入原版 OD，打开内存窗口，在代码段（.text）以及相邻的只读数据段（.rdata）设置<code>F2</code>断点：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnw3usmmfwj31dv0u0771.jpg" alt="设置`F2`断点"></p>
-<p>.rdata 设置的断点不是必须的，也可以在其它区段设置断点（外壳所在区段除外）；</p>
-<p>此处设置断点的意义是：加壳程序运行时，会依次解压各区段，所以，对后面的其它区段设置断点，如果程序在 .text 中断后再次中断，说明代码段已解压完毕；</p>
-</li>
-<li><p>运行程序，首先中断在 .text：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnw464c4ryj31dw0u00x9.jpg" alt="中断在 .text"></p>
-<p>此时中断说明将要对代码段进行操作了；</p>
-</li>
-<li><p>再次运行程序，程序中断在 .rdata：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnw48ao7ibj31dx0u0td5.jpg" alt="中断在 .rdata"></p>
-<p>通过查看内存窗口知道，代码段的范围是：00401000 ～ 00404FFF；</p>
-<p>而当前将要访问的位置是：00405000，不在代码段范围内，也就说明对代码段的操作结束了；</p>
-</li>
-<li><p>再次来到内存窗口，对代码段设置<code>F2</code>断点，然后运行程序：</p>
-<p>这里设置断点的意义是：既然外壳对代码段的解压、还原已经结束了，如果再次访问代码段的话，就是程序执行的时候；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnw4d6kf2lj31dw0u041w.jpg" alt="程序中断在 OEP"></p>
-<p>中断位置与方法一一致；</p>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>脱壳技术</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>OEP</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>基址重定位</title>
     <url>/posts/4077178284/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -2974,19 +2906,6 @@
 <p><code>.reloc</code>区段已经被剔除了；</p>
 </li>
 </ol>
-<p>年龄：30<br>性别：男<br>婚姻现状：未婚<br>婚姻困惑的十个问题：</p>
-<ol>
-<li>坚持最初的自己值不值得，妥协包容值不值得；</li>
-<li>某些事情缺乏认同感；</li>
-<li>每一个空闲的时刻都必须要在一起；</li>
-<li>琐碎小事之间的争吵；</li>
-<li>财务管理的问题；</li>
-<li>一边是抱怨的爱人，一边是刁难的父母；</li>
-<li>责任都是你的，因为我是女生；</li>
-<li>和父母边界不清晰，什么都要听他们的；</li>
-<li>子女教育问题；</li>
-<li>什么都是别人家的好，没有对比就没有伤害；</li>
-</ol>
 ]]></content>
       <categories>
         <category>逆向工程</category>
@@ -2996,6 +2915,74 @@
       </categories>
       <tags>
         <tag>PE</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>内存访问定位 OEP</title>
+    <url>/posts/3449356463/</url>
+    <content><![CDATA[<blockquote>
+<p>OEP：当外壳保护的程序运行时，会先执行外壳程序，外壳程序负责在内存中把原程序解压、还原，并把控制权还给解压后的真正程序，再跳到原来程序的入口点，这个解压后真正程序的入口点称为 OEP（Original Entry Point，原始入口点）；</p>
+<p>EP：与 OEP 对应的是 EP（Entry Point，入口点），无壳程序的 EP 与 OEP 相同，加壳程序的 EP 是壳的入口点，而不是原程序的入口点；</p>
+</blockquote>
+<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-5">OllyDbg</a>修改版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/UnPackMe-1">UnPackMe</a>来自互联网，仅供学习使用；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
+</ul>
+<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><h4 id="使用改版-OD-到达-OEP"><a href="#使用改版-OD-到达-OEP" class="headerlink" title="使用改版 OD 到达 OEP"></a>使用改版 OD 到达 OEP</h4><ol>
+<li><p>此方法来自<a href="http://xuepojie.com/">SharkHeng</a>；</p>
+</li>
+<li><p>将 CM 导入 OD 后，会弹出警告，提示入口点超出代码段范围，这是因为当前 EP 指向外壳部分，而不是代码段：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnw2w2pc78j31cg06u0sz.jpg" alt="英文版"></p>
+<p>再来个中文版（感谢汉化 OD 的大佬）：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnw2w4uhjmj312w06sdg1.jpg" alt="中文版"></p>
+<p>虽然弹窗可以在 OD 设置中关闭，但弹窗也是一件好事儿，弹出这种窗口就是提示我们程序加壳了；</p>
+</li>
+<li><p>既然提示 EP 不在代码段，那就来到内存窗口，查看各区段范围：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnw37zkq86j31a50u0aeh.jpg" alt="各区段范围"></p>
+<p>可以看到，当前 EP 为 00413000，而代码段的范围是：00401000 ～ 00404FFF，确实不在这个范围，所以才会有一开始的弹窗；</p>
+</li>
+<li><p>在代码段（.text）设置内存访问断点，然后<code>F9</code>运行程序：</p>
+<p>加壳程序在运行时，会将原程序解压、还原，控制权交还，然后原程序执行，此时，就会触发<code>内存执行断点</code>，从而产生中断；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnw3gh6rdoj314w0iuq3l.jpg" alt="产生中断"></p>
+<p>中断位置的代码看起来像是数据，不过很有规律，按下<code>Ctrl + A</code>，分析程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnw3k3n4ftj31a00u0ad9.jpg" alt="分析程序"></p>
+<p>分析之后的代码就正常了，开始位置是生成栈帧的指令，表示函数要开始执行了，而且，当前 EIP 也处于代码段；</p>
+</li>
+</ol>
+<h4 id="使用原版-OD-到达-OEP"><a href="#使用原版-OD-到达-OEP" class="headerlink" title="使用原版 OD 到达 OEP"></a>使用原版 OD 到达 OEP</h4><ol>
+<li><p>此方法来自<a href="https://bbs.pediy.com/forum-99.htm">加密解密</a>第 16 章：16.2.2；</p>
+</li>
+<li><p>将 CM 导入原版 OD，打开内存窗口，在代码段（.text）以及相邻的只读数据段（.rdata）设置<code>F2</code>断点：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnw3usmmfwj31dv0u0771.jpg" alt="设置`F2`断点"></p>
+<p>.rdata 设置的断点不是必须的，也可以在其它区段设置断点（外壳所在区段除外）；</p>
+<p>此处设置断点的意义是：加壳程序运行时，会依次解压各区段，所以，对后面的其它区段设置断点，如果程序在 .text 中断后再次中断，说明代码段已解压完毕；</p>
+</li>
+<li><p>运行程序，首先中断在 .text：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnw464c4ryj31dw0u00x9.jpg" alt="中断在 .text"></p>
+<p>此时中断说明将要对代码段进行操作了；</p>
+</li>
+<li><p>再次运行程序，程序中断在 .rdata：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnw48ao7ibj31dx0u0td5.jpg" alt="中断在 .rdata"></p>
+<p>通过查看内存窗口知道，代码段的范围是：00401000 ～ 00404FFF；</p>
+<p>而当前将要访问的位置是：00405000，不在代码段范围内，也就说明对代码段的操作结束了；</p>
+</li>
+<li><p>再次来到内存窗口，对代码段设置<code>F2</code>断点，然后运行程序：</p>
+<p>这里设置断点的意义是：既然外壳对代码段的解压、还原已经结束了，如果再次访问代码段的话，就是程序执行的时候；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnw4d6kf2lj31dw0u041w.jpg" alt="程序中断在 OEP"></p>
+<p>中断位置与方法一一致；</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>脱壳技术</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>OEP</tag>
       </tags>
   </entry>
   <entry>
