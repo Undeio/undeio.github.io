@@ -9,6 +9,13 @@
   </url>
   
   <url>
+    <loc>https://undeio.me/posts/2058068268/</loc>
+    
+    <lastmod>2020-10-18</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://undeio.me/posts/1220899652/</loc>
     
     <lastmod>2020-10-15</lastmod>
@@ -494,7 +501,7 @@
   </url>
   
   <url>
-    <loc>https://undeio.me/tags/IP-%E5%9C%B0%E5%9D%80/</loc>
+    <loc>https://undeio.me/tags/IP/</loc>
     <lastmod>2021-07-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
@@ -614,6 +621,20 @@
   
   <url>
     <loc>https://undeio.me/tags/%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86/</loc>
+    <lastmod>2021-07-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://undeio.me/tags/net-user/</loc>
+    <lastmod>2021-07-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://undeio.me/tags/net-localgroup/</loc>
     <lastmod>2021-07-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
