@@ -98,6 +98,130 @@
       </tags>
   </entry>
   <entry>
+    <title>DNS 服务器</title>
+    <url>/posts/1115613161/</url>
+    <content><![CDATA[<h4 id="DNS-服务器"><a href="#DNS-服务器" class="headerlink" title="DNS 服务器"></a>DNS 服务器</h4><ol>
+<li>DNS（Domain Name System，域名系统），一个域名与 IP 地址相互映射的分布式数据库；</li>
+<li>DNS 服务器为客户机提供域名解析服务，通过域名最终得到域名对应 IP 地址的过程叫做域名解析；</li>
+<li><code>主机名.域名</code>称为完全限定域名（FQDN）；</li>
+<li>一个域名下可以有多个主机，域名是全球唯一的，所以<code>主机名.域名</code>也是全球唯一的；</li>
+<li>DNS 服务器的分类：<ol>
+<li>根名称服务器；</li>
+<li>主要名称服务器；</li>
+<li>辅助名称服务器；</li>
+<li>高速缓存名称服务器；</li>
+</ol>
+</li>
+<li>常见的域名解析类型：<ol>
+<li>A 记录：正向解析；</li>
+<li>CNAME 记录：别名解析；</li>
+<li>PTR 记录：反向解析；</li>
+<li>MX 记录：邮件交换记录解析；</li>
+<li>NS 记录：域名服务器解析；</li>
+</ol>
+</li>
+<li>DNS 解析按照查询方式分为两种：<ol>
+<li>递归查询：客户机与本地 DNS 服务器之间的解析过程，即，所问即所答；</li>
+<li>迭代查询：本地 DNS 服务器与根或其他 DNS 服务器之间的解析过程，即，只告诉你线索，答案我不知道；</li>
+</ol>
+</li>
+<li>DNS 转发的过程是递归查询；</li>
+<li>DNS 解析按照查询内容分为两种：<ol>
+<li>正向解析：已知域名，解析 IP 地址；</li>
+<li>反向解析：已知 IP 地址，解析域名；</li>
+</ol>
+</li>
+<li>客户机请求域名解析的顺序：<ol>
+<li>本机 DNS 缓存；</li>
+<li>本机 Host 文件；</li>
+<li>本地 DNS 服务器；</li>
+</ol>
+</li>
+<li>DNS 服务器对域名请求的解析顺序：<ol>
+<li>DNS 高速缓存；</li>
+<li>本地区域解析文件；</li>
+<li>转发器；</li>
+<li>根；</li>
+</ol>
+</li>
+<li>DNS 服务的端口是<code>TCP/UDP:53</code>；</li>
+<li><code>nslookup 域名</code>：查看指定域名的 DNS 解析；</li>
+<li><code>ipconfig /flushdns</code>：清除 DNS 缓存；</li>
+<li><code>ipconfig /displaydns</code>：查看本机 DNS 缓存；</li>
+</ol>
+]]></content>
+      <categories>
+        <category>网络安全</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>DNS</tag>
+        <tag>DOS 命令</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>DHCP 服务器</title>
+    <url>/posts/1498644050/</url>
+    <content><![CDATA[<h4 id="DHCP-服务器"><a href="#DHCP-服务器" class="headerlink" title="DHCP 服务器"></a>DHCP 服务器</h4><ol>
+<li><p>DHCP（Dynamic Host Configuration Protocol，动态主机配置协议）是一个局域网的网络协议，使用 UDP 协议工作；</p>
+</li>
+<li><p>DHCP 的功能是：集中管理、分配 IP 地址；</p>
+</li>
+<li><p>DHCP 协议工作的端口是<code>UDP:67/68</code>；<span id="more"></span></p>
+</li>
+<li><p>DHCP 可以减少工作量，避免 IP 冲突，提高地址利用率；</p>
+</li>
+<li><p>DHCP 的工作原理，也叫 DHCP 的租约过程：</p>
+<ol>
+<li>客户机发广播寻找 DHCP 服务器；<br>客户机发送包含 MAC 地址的 DHCP Discover 广播包，表明我是谁；</li>
+<li>服务器单播响应客户端；<br>当 DHCP 服务器收到 Discover 包时，会单播回复客户机一个 DHCP Offer 包，里面包含一个 IP 地址，但不包含子网掩码、网关、DNS、租约等信息；</li>
+<li>客户机广播发送 Request 请求；<br>客户机收到 Offer 包，并确认使用此 IP 时，广播发送 DCHP Request 请求，请求该 IP 地址的详细信息，并通知其他 DHCP 服务器，自己已经有 IP 了；</li>
+<li>服务器单播发送 ACK；<br>在 DHCP 服务器收到 Request 请求后， 会向客户机发送 DHCP ACK 包，表明服务器已经确定了租约，并提供 IP 地址的详细信息，子网掩码、网关、DNS、租约等信息，客户机在收到 ACK 包后，就可以愉快的使用这个 IP 地址了；</li>
+</ol>
+</li>
+<li><p>DHCP 续约：DHCP 服务器分配给客户机的 IP 地址有默认的租期，也就是说，过了这个租期，DHCP 服务器就会收回该 IP，客户机无法再通过此 IP 上网，所以，在租期内，客户机通过计时器来实现续租和释放 IP：</p>
+<ol>
+<li>当租期到达 50% 时，客户机会单播发送 DHCP Request 包，来申请延长 IP 地址的租期，服务器会响应 DHCP ACK 包，并给客户机一个新的租期，客户机更新计时器并继续使用，如果服务器没有响应，则继续使用，并等待响应；</li>
+<li>当租期到达 87.5% 时，客户机会再次发送 DHCP Request 包，如果收到 DCHP ACK 响应，则更新计时器，继续使用，如果收到 DHCP NAK，则立即停用现有 IP，并重新申请 IP；</li>
+<li>当租约到期后，仍然没有收到服务器的响应，客户机会发送 DHCP Release 包，表示释放当前 IP，并重新发送 DHCP Discover 广播包来获取 IP 地址；</li>
+</ol>
+</li>
+<li><p>当客户机发送 DHCP Discover 广播包后，如果没有任何服务器响应，客户机会自动给自己分配一个<code>169.254.0.0/16</code>的 IP 地址，该地址属于全球统一的无效地址，用于局域网内部临时通讯；</p>
+</li>
+<li><p>当客户机和 DHCP 服务器不在同一网段，但又想从服务器获取 IP 时，可以使用 DHCP 中继功能，让路由器转发服务器的数据报文，从而获取 IP 地址；</p>
+</li>
+<li><p>DHCP 服务器自身的 IP 地址必须是静态的；</p>
+</li>
+<li><p>可以在服务器中动态保留 IP（绑定 MAC 地址），针对固定的 MAC 地址动态分配固定的 IP 地址；</p>
+</li>
+<li><p>作用域的相同配置，可以在服务器选项中设置（如 DNS），作用域会继承服务器的配置；</p>
+</li>
+<li><p>相同配置，作用域的配置优先级高于服务器的配置，也就是本地配置高于继承的配置；（就近原则？）</p>
+</li>
+<li><p><code>ipconfig</code>：查看本机网络配置信息；</p>
+</li>
+<li><p><code>ipconfig /all</code>：查看本机网络配置详细信息；</p>
+</li>
+<li><p><code>ipconfig /release</code>：手动释放 IP（只是释放，不会重新获取），取消租约（改为手动配置 IP 也可以取消租约）；</p>
+</li>
+<li><p><code>ipconfig /renew</code>：如果没有 IP，则发送 DHCP Discover 包，获取 IP 地址，如果有 IP，则发送 DHCP Request 包续约；</p>
+</li>
+</ol>
+<h4 id="攻击与防御"><a href="#攻击与防御" class="headerlink" title="攻击与防御"></a>攻击与防御</h4><ol>
+<li>服务器攻击：向服务器频繁发送伪装的 DHCP 请求，直到将地址池的资源耗尽，其他客户机则无法获取 IP 地址；<br>防御：在管理型交换机上配置动态绑定 MAC 地址；</li>
+<li>客户机攻击：将自己部署为 DHCP 服务器，为客户机提供非法的 IP 地址；<br>防御：在管理型交换机上配置除合法的 DHCP 服务器外的所有端口全部禁止发送 DHCP Offer 包；</li>
+</ol>
+]]></content>
+      <categories>
+        <category>网络安全</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>DOS 命令</tag>
+        <tag>DHCP</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Hexo 添加 Utterance 评论功能</title>
     <url>/posts/3357819964/</url>
     <content><![CDATA[<blockquote>
@@ -291,6 +415,63 @@
       </categories>
       <tags>
         <tag>IP</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>NTFS 权限</title>
+    <url>/posts/100817360/</url>
+    <content><![CDATA[<h4 id="NTFS-权限"><a href="#NTFS-权限" class="headerlink" title="NTFS 权限"></a>NTFS 权限</h4><ol>
+<li><p>磁盘格式为 NTFS 才能实现访问控制；</p>
+</li>
+<li><p>通过设置 NTFS 权限，实现不同用户访问不同文件或文件夹的权限；</p>
+</li>
+<li><p>分配了正确的访问权限后，用户才能访问资源；<span id="more"></span></p>
+</li>
+<li><p>NTFS 的特点：</p>
+<ol>
+<li>提高磁盘读写性能；</li>
+<li>可靠性；</li>
+<li>加密文件系统；</li>
+<li>访问控制表；</li>
+<li>磁盘利用率；</li>
+<li>压缩；</li>
+<li>磁盘配额；</li>
+<li>单文件支持大于 4G 的文件；</li>
+</ol>
+</li>
+<li><p>修改 NTFS 权限首先需要取消权限继承；</p>
+<p>WINXP 取消权限继承：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gsihelqrfmj30u00ha77k.jpg" alt="xp"></p>
+<p>WIN7 取消权限继承：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gsiherjod5j31bc0qp461.jpg" alt="win7"></p>
+<p>WIN10 取消权限继承：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gsiheunuzaj31bv0nudmj.jpg" alt="win10"></p>
+</li>
+<li><p>当用户权限与预期不一致时，可以考虑用户是否处于多个组而产生了权限累加；</p>
+</li>
+<li><p>拒绝权限优先级最高；</p>
+</li>
+<li><p>管理员可以取得所有文件的所有权；</p>
+</li>
+<li><p>强制继承可以恢复子文件的权限为父文件夹的权限状态；</p>
+<p>WINXP 强制继承：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gsihve6mhdj30pv0hk41l.jpg" alt="WINXP"></p>
+<p>WIN7/10 以此类推；</p>
+</li>
+<li><p>文件复制和移动后对权限的影响：</p>
+<ol>
+<li>文件复制后（<code>ctrl + c</code>），文件的权限会被目标文件夹的权限覆盖；</li>
+<li>文件移动后（<code>ctrl + x</code>），同一分区的文件权限不会被覆盖，不同分区的文件权限会被覆盖；</li>
+</ol>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>网络安全</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>NTFS</tag>
       </tags>
   </entry>
   <entry>
@@ -511,8 +692,8 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>逆向分析</category>
         <category>Windows</category>
+        <category>逆向分析</category>
       </categories>
       <tags>
         <tag>反调试</tag>
@@ -626,8 +807,8 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>逆向分析</category>
         <category>Windows</category>
+        <category>逆向分析</category>
       </categories>
       <tags>
         <tag>反调试</tag>
@@ -771,8 +952,8 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>逆向分析</category>
         <category>Windows</category>
+        <category>逆向分析</category>
       </categories>
       <tags>
         <tag>反调试</tag>
@@ -926,8 +1107,8 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>逆向分析</category>
         <category>Windows</category>
+        <category>逆向分析</category>
       </categories>
       <tags>
         <tag>反调试</tag>
@@ -1073,8 +1254,8 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>逆向分析</category>
         <category>Windows</category>
+        <category>逆向分析</category>
       </categories>
       <tags>
         <tag>反调试</tag>
@@ -1227,8 +1408,8 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>逆向分析</category>
         <category>Windows</category>
+        <category>逆向分析</category>
       </categories>
       <tags>
         <tag>反调试</tag>
@@ -1430,9 +1611,9 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
+        <category>Windows</category>
         <category>逆向分析</category>
         <category>文章资料</category>
-        <category>Windows</category>
       </categories>
       <tags>
         <tag>断点</tag>
@@ -1711,8 +1892,8 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>逆向分析</category>
         <category>Windows</category>
+        <category>逆向分析</category>
         <category>VB 汇总</category>
       </categories>
       <tags>
@@ -1794,8 +1975,8 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>逆向分析</category>
         <category>Windows</category>
+        <category>逆向分析</category>
         <category>VB 汇总</category>
       </categories>
       <tags>
@@ -1880,8 +2061,8 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>逆向分析</category>
         <category>Windows</category>
+        <category>逆向分析</category>
         <category>VB 汇总</category>
       </categories>
       <tags>
@@ -1998,8 +2179,8 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>逆向分析</category>
         <category>Windows</category>
+        <category>逆向分析</category>
         <category>VB 汇总</category>
       </categories>
       <tags>
@@ -2161,8 +2342,8 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>逆向分析</category>
         <category>Windows</category>
+        <category>逆向分析</category>
         <category>VB 汇总</category>
       </categories>
       <tags>
@@ -2262,8 +2443,8 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>逆向分析</category>
         <category>Windows</category>
+        <category>逆向分析</category>
         <category>VB 汇总</category>
       </categories>
       <tags>
@@ -3099,8 +3280,8 @@
       <categories>
         <category>逆向工程</category>
         <category>脱壳技术</category>
-        <category>文章资料</category>
         <category>Windows</category>
+        <category>文章资料</category>
       </categories>
       <tags>
         <tag>PE</tag>
@@ -3248,8 +3429,8 @@
       <categories>
         <category>逆向工程</category>
         <category>脱壳技术</category>
-        <category>文章资料</category>
         <category>Windows</category>
+        <category>文章资料</category>
       </categories>
       <tags>
         <tag>壳基础</tag>
@@ -3837,8 +4018,8 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>逆向分析</category>
         <category>Windows</category>
+        <category>逆向分析</category>
       </categories>
       <tags>
         <tag>异常处理</tag>
@@ -3886,12 +4067,80 @@ E --&gt; |&quot;否，未解决&quot;| G
 ]]></content>
       <categories>
         <category>逆向工程</category>
+        <category>Windows</category>
         <category>逆向分析</category>
         <category>文章资料</category>
-        <category>Windows</category>
       </categories>
       <tags>
         <tag>异常处理</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>文件共享服务器 CIFS</title>
+    <url>/posts/1791418955/</url>
+    <content><![CDATA[<h4 id="CIFS"><a href="#CIFS" class="headerlink" title="CIFS"></a>CIFS</h4><ol>
+<li><p>CIFS（Common Internet File System），是 Windows 上的一个文件共享协议；</p>
+</li>
+<li><p>所有 Windows 系统默认含有 CIFS；</p>
+</li>
+<li><p>Windows 系统可以在开始运行或文件管理器地址栏输入 UNC 地址（以<code>\\</code>开头），即可访问 CIFS 文件共享服务；<span id="more"></span></p>
+</li>
+<li><p>其他系统可以使用<code>smb://x.x.x.x</code>访问 CIFS 服务器；</p>
+<p>例如 macOS：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gsiir7qshoj31ag0u0afw.jpg" alt="macOS"></p>
+</li>
+<li><p>在本地登录时，共享的文件只受 NTFS 权限影响；</p>
+</li>
+<li><p>在远程登录时，共享的文件将受 NTFS 权限以及共享权限的共同影响，且取最严格的部分（交集）；</p>
+</li>
+<li><p>如需便捷的设置权限，可以将共享权限设置为完全控制，然后具体的权限需求在 NTFS 权限中设置，毕竟共享权限的设置太简陋；</p>
+</li>
+<li><p>在共享文件名后加美元符号<code>$</code>可以隐藏共享，访问隐藏共享需要具体的共享文件名；</p>
+</li>
+<li><p><code>net share</code>：查看本机所有共享的项目；</p>
+</li>
+<li><p><code>net share xxx /del</code>：删除指定共享；</p>
+<p>WINXP 的隐藏共享：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gsij2kkg99j30ij0c3t9n.jpg" alt="net share"></p>
+<p><code>IPC$</code>：空链接，访问<code>IPC$</code>就可以访问目标计算机上的所有文件，<code>IPC$</code>无法删除，但可以指向空；</p>
+<p>隐藏的共享项目开机自动生成，所以<code>net share</code>只能暂时删除；</p>
+<p>可以使用批处理在开机时删除隐藏共享，并将<code>IPC$</code>指向空；</p>
+</li>
+<li><p>屏蔽系统隐藏共享自动生成：</p>
+<ol>
+<li>按下<code>Windows + R</code>键，输入<code>regedit</code>并回车，打开注册表编辑器；</li>
+<li>定位共享注册表位置：<code>HKEY_Local_MACHINE\System\CurrentControlSet\Services\LanmanServer\Paramenters\</code>；</li>
+<li>新建 DWORD 类型的 <code>AutoShareServer</code> 键，值为 0；</li>
+</ol>
+</li>
+<li><p>关闭 445 共享端口：</p>
+<ol>
+<li><p>按下<code>Windows + R</code>键，输入<code>services.msc</code>并回车，打开服务管理；</p>
+</li>
+<li><p>停止并禁用 server 服务；</p>
+</li>
+<li><p>修改恢复选项为无操作；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gsijlqwepoj61re0u0ajl02.jpg" alt="关闭 445 端口"></p>
+</li>
+<li><p>勒索病毒就是通过 445 端口入侵的；</p>
+</li>
+</ol>
+</li>
+</ol>
+<h4 id="题外话"><a href="#题外话" class="headerlink" title="题外话"></a>题外话</h4><ol>
+<li><code>whoami</code>：可以查看当前用户；</li>
+<li><code>whoami /user</code>：可以查看用户的 SID；</li>
+<li><code>dxdiag</code>可以查看系统信息，包括 bios 版本，查看机器配置再也不用娱乐大师了；</li>
+</ol>
+]]></content>
+      <categories>
+        <category>网络安全</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>DOS 命令</tag>
+        <tag>CIFS</tag>
+        <tag>文件共享</tag>
       </tags>
   </entry>
   <entry>
@@ -4093,17 +4342,26 @@ E --&gt; |&quot;否，未解决&quot;| G
 <li>可以使用<code>netstat -an</code>查看本机开放的所有端口；</li>
 </ol>
 <h4 id="粘滞键漏洞"><a href="#粘滞键漏洞" class="headerlink" title="粘滞键漏洞"></a>粘滞键漏洞</h4><p>在登录界面按 5 次 shift 键会弹出粘滞键对话框，这一步是必须的，如果漏洞已修复，则无法利用；</p>
-<p>部分 win7 和 win10 可以利用系统修复漏洞篡改粘滞键应用程序 sethc.exe 为终端程序 cmd.exe，从而打开管理员权限修的终端窗口；</p>
+<p>部分 win7 和 win10 可以利用系统修复漏洞篡改粘滞键应用程序<code>sethc.exe</code>为终端程序<code>cmd.exe</code>，从而打开管理员权限修的终端窗口；</p>
 <p>漏洞利用过程：</p>
 <ol>
-<li>在开机过程中强制关机（切断电源），再次开机时会有启动修复选项，如果一次未成功，可以多次尝试，直到出现启动修复选项；</li>
-<li>首先会提示还原系统，点击取消后，会弹出将问题发送给微软的弹窗；</li>
-<li>在弹窗的底部有查看问题详细信息的选项，点击展开描述，滚动到描述的结尾，有两个超链接；</li>
-<li>第 2 个超链接是一份本机文件，点击链接后，会调用当前计算机的记事本应用打开；</li>
-<li>在记事本的菜单栏中选择文件选项中的打开，会显示当前计算机的所有文件；</li>
-<li>进入 c:\windows\system32，首先重命名 sethc.exe 为任意名称，然后找到 cmd.exe 并重命名为 sethc.exe，修改时无需添加 .exe 后缀；</li>
-<li>重启电脑，在登录界面按 5 次 shift 键后就会打开管理员权限的 cmd 窗口；</li>
-<li>这可是管理员权限的 cmd 窗口；</li>
+<li><p>在开机过程中强制关机（切断电源），再次开机时会有启动修复选项，如果一次未成功，可以多次尝试，直到出现启动修复选项；</p>
+</li>
+<li><p>首先会提示还原系统，点击取消后，会弹出将问题发送给微软的弹窗；</p>
+</li>
+<li><p>在弹窗的底部有查看问题详细信息的选项，点击展开描述，滚动到描述的结尾，有两个超链接；</p>
+</li>
+<li><p>第 2 个超链接是一份本机文件，点击链接后，会调用当前计算机的记事本应用打开；</p>
+</li>
+<li><p>在记事本的菜单栏中选择文件选项中的打开，会显示当前计算机的所有文件；</p>
+</li>
+<li><p>进入<code>c:\windows\system32</code>，首先重命名<code>sethc.exe</code>为任意名称，然后找到<code>cmd.exe</code>并重命名为<code>sethc.exe</code>，修改时无需添加<code>.exe</code>后缀；</p>
+</li>
+<li><p>重启电脑，在登录界面按 5 次 shift 键后就会打开管理员权限的 cmd 窗口；</p>
+</li>
+<li><p>这可是管理员权限的 cmd 窗口；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gsigjyhtlaj31cl0rw0wj.jpg" alt="管理员权限的 cmd 窗口"></p>
+</li>
 </ol>
 ]]></content>
       <categories>
@@ -4111,8 +4369,7 @@ E --&gt; |&quot;否，未解决&quot;| G
         <category>Windows</category>
       </categories>
       <tags>
-        <tag>net user</tag>
-        <tag>net localgroup</tag>
+        <tag>DOS 命令</tag>
       </tags>
   </entry>
   <entry>
@@ -4174,8 +4431,8 @@ E --&gt; |&quot;否，未解决&quot;| G
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>逆向分析</category>
         <category>Windows</category>
+        <category>逆向分析</category>
       </categories>
       <tags>
         <tag>硬编码</tag>
@@ -4293,8 +4550,8 @@ E --&gt; |&quot;否，未解决&quot;| G
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>逆向分析</category>
         <category>Windows</category>
+        <category>逆向分析</category>
       </categories>
       <tags>
         <tag>硬编码</tag>
@@ -4384,8 +4641,8 @@ E --&gt; |&quot;否，未解决&quot;| G
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>逆向分析</category>
         <category>Windows</category>
+        <category>逆向分析</category>
       </categories>
       <tags>
         <tag>硬编码</tag>
@@ -4451,8 +4708,8 @@ E --&gt; |&quot;否，未解决&quot;| G
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>逆向分析</category>
         <category>Windows</category>
+        <category>逆向分析</category>
       </categories>
       <tags>
         <tag>硬编码</tag>
@@ -4554,8 +4811,8 @@ E --&gt; |&quot;否，未解决&quot;| G
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>逆向分析</category>
         <category>Windows</category>
+        <category>逆向分析</category>
       </categories>
       <tags>
         <tag>硬编码</tag>
@@ -4621,8 +4878,8 @@ E --&gt; |&quot;否，未解决&quot;| G
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>逆向分析</category>
         <category>Windows</category>
+        <category>逆向分析</category>
       </categories>
       <tags>
         <tag>硬编码</tag>
@@ -4994,8 +5251,8 @@ E --&gt; |&quot;否，未解决&quot;| G
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>逆向分析</category>
         <category>Windows</category>
+        <category>逆向分析</category>
       </categories>
       <tags>
         <tag>软编码</tag>
@@ -5393,8 +5650,8 @@ E --&gt; |&quot;否，未解决&quot;| G
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>逆向分析</category>
         <category>Windows</category>
+        <category>逆向分析</category>
       </categories>
       <tags>
         <tag>软编码</tag>
@@ -5518,8 +5775,8 @@ E --&gt; |&quot;否，未解决&quot;| G
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>逆向分析</category>
         <category>Windows</category>
+        <category>逆向分析</category>
       </categories>
       <tags>
         <tag>软编码</tag>
@@ -5700,8 +5957,8 @@ E --&gt; |&quot;否，未解决&quot;| G
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>逆向分析</category>
         <category>Windows</category>
+        <category>逆向分析</category>
       </categories>
       <tags>
         <tag>软编码</tag>
@@ -5898,8 +6155,8 @@ E --&gt; |&quot;否，未解决&quot;| G
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>逆向分析</category>
         <category>Windows</category>
+        <category>逆向分析</category>
         <category>VB 汇总</category>
       </categories>
       <tags>
@@ -6464,9 +6721,9 @@ E --&gt; |&quot;否，未解决&quot;| G
       <categories>
         <category>逆向工程</category>
         <category>脱壳技术</category>
+        <category>Windows</category>
         <category>逆向分析</category>
         <category>文章资料</category>
-        <category>Windows</category>
       </categories>
       <tags>
         <tag>异常处理</tag>
@@ -8284,8 +8541,8 @@ E --&gt; |&quot;否，未解决&quot;| G
       <categories>
         <category>逆向工程</category>
         <category>脱壳技术</category>
-        <category>文章资料</category>
         <category>Windows</category>
+        <category>文章资料</category>
       </categories>
       <tags>
         <tag>PE</tag>
