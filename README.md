@@ -8,7 +8,7 @@
 
 在线阅读[传送门](https://undeio.me)
 
-文章底部评论会自动创建相关的`issues`，请在文章底部评论而不是新开`issues`。
+文章底部评论会自动创建相关`issues`，请在文章底部评论而不是新开`issues`。
 
 ## License
 
