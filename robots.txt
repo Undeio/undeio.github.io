@@ -14,5 +14,4 @@ Disallow: /fonts/
 Disallow: /vendors/
 Disallow: /fancybox/
 
-Sitemap: https://www.undeio.me/sitemap.xml
-Sitemap: https://www.undeio.me/baidusitemap.xml
+Sitemap: https://www.undeio.com/sitemap.xml
