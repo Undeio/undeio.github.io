@@ -685,7 +685,7 @@
   </url>
   
   <url>
-    <loc>https://undeio.com/tags/DHCP/</loc>
+    <loc>https://undeio.com/tags/DNS/</loc>
     <lastmod>2022-05-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -699,7 +699,7 @@
   </url>
   
   <url>
-    <loc>https://undeio.com/tags/DNS/</loc>
+    <loc>https://undeio.com/tags/DHCP/</loc>
     <lastmod>2022-05-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -769,14 +769,14 @@
   </url>
   
   <url>
-    <loc>https://undeio.com/tags/NTFS/</loc>
+    <loc>https://undeio.com/tags/IP/</loc>
     <lastmod>2022-05-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
-    <loc>https://undeio.com/tags/IP/</loc>
+    <loc>https://undeio.com/tags/NTFS/</loc>
     <lastmod>2022-05-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -832,14 +832,14 @@
   </url>
   
   <url>
-    <loc>https://undeio.com/tags/VB-%E8%B0%83%E8%AF%95/</loc>
+    <loc>https://undeio.com/tags/ASPack/</loc>
     <lastmod>2022-05-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
-    <loc>https://undeio.com/tags/ASPack/</loc>
+    <loc>https://undeio.com/tags/VB-%E8%B0%83%E8%AF%95/</loc>
     <lastmod>2022-05-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -916,14 +916,14 @@
   </url>
   
   <url>
-    <loc>https://undeio.com/tags/%E5%AF%84%E5%AD%98%E5%99%A8/</loc>
+    <loc>https://undeio.com/tags/%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4/</loc>
     <lastmod>2022-05-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
-    <loc>https://undeio.com/tags/%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4/</loc>
+    <loc>https://undeio.com/tags/%E5%AF%84%E5%AD%98%E5%99%A8/</loc>
     <lastmod>2022-05-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
