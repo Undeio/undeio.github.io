@@ -98,6 +98,68 @@
       </tags>
   </entry>
   <entry>
+    <title>DHCP 服务器</title>
+    <url>/posts/1498644050/</url>
+    <content><![CDATA[<h4 id="DHCP-服务器"><a href="#DHCP-服务器" class="headerlink" title="DHCP 服务器"></a>DHCP 服务器</h4><ol>
+<li><p>DHCP（Dynamic Host Configuration Protocol，动态主机配置协议）是一个局域网的网络协议，使用 UDP 协议工作；</p>
+</li>
+<li><p>DHCP 的功能是：集中管理、分配 IP 地址；</p>
+</li>
+<li><p>DHCP 协议工作的端口是<code>UDP:67/68</code>；<span id="more"></span></p>
+</li>
+<li><p>DHCP 可以减少工作量，避免 IP 冲突，提高地址利用率；</p>
+</li>
+<li><p>DHCP 的工作原理，也叫 DHCP 的租约过程：</p>
+<ol>
+<li>客户机发广播寻找 DHCP 服务器；<br>客户机发送包含 MAC 地址的 DHCP Discover 广播包，表明我是谁；</li>
+<li>服务器单播响应客户端；<br>当 DHCP 服务器收到 Discover 包时，会单播回复客户机一个 DHCP Offer 包，里面包含一个 IP 地址，但不包含子网掩码、网关、DNS、租约等信息；</li>
+<li>客户机广播发送 Request 请求；<br>客户机收到 Offer 包，并确认使用此 IP 时，广播发送 DCHP Request 请求，请求该 IP 地址的详细信息，并通知其他 DHCP 服务器，自己已经有 IP 了；</li>
+<li>服务器单播发送 ACK；<br>在 DHCP 服务器收到 Request 请求后， 会向客户机发送 DHCP ACK 包，表明服务器已经确定了租约，并提供 IP 地址的详细信息，子网掩码、网关、DNS、租约等信息，客户机在收到 ACK 包后，就可以愉快的使用这个 IP 地址了；</li>
+</ol>
+</li>
+<li><p>DHCP 续约：DHCP 服务器分配给客户机的 IP 地址有默认的租期，也就是说，过了这个租期，DHCP 服务器就会收回该 IP，客户机无法再通过此 IP 上网，所以，在租期内，客户机通过计时器来实现续租和释放 IP：</p>
+<ol>
+<li>当租期到达 50% 时，客户机会单播发送 DHCP Request 包，来申请延长 IP 地址的租期，服务器会响应 DHCP ACK 包，并给客户机一个新的租期，客户机更新计时器并继续使用，如果服务器没有响应，则继续使用，并等待响应；</li>
+<li>当租期到达 87.5% 时，客户机会再次发送 DHCP Request 包，如果收到 DCHP ACK 响应，则更新计时器，继续使用，如果收到 DHCP NAK，则立即停用现有 IP，并重新申请 IP；</li>
+<li>当租约到期后，仍然没有收到服务器的响应，客户机会发送 DHCP Release 包，表示释放当前 IP，并重新发送 DHCP Discover 广播包来获取 IP 地址；</li>
+</ol>
+</li>
+<li><p>当客户机发送 DHCP Discover 广播包后，如果没有任何服务器响应，客户机会自动给自己分配一个<code>169.254.0.0/16</code>的 IP 地址，该地址属于全球统一的无效地址，用于局域网内部临时通讯；</p>
+</li>
+<li><p>当客户机和 DHCP 服务器不在同一网段，但又想从服务器获取 IP 时，可以使用 DHCP 中继功能，让路由器转发服务器的数据报文，从而获取 IP 地址；</p>
+</li>
+<li><p>DHCP 服务器自身的 IP 地址必须是静态的；</p>
+</li>
+<li><p>可以在服务器中动态保留 IP（绑定 MAC 地址），针对固定的 MAC 地址动态分配固定的 IP 地址；</p>
+</li>
+<li><p>作用域的相同配置，可以在服务器选项中设置（如 DNS），作用域会继承服务器的配置；</p>
+</li>
+<li><p>相同配置，作用域的配置优先级高于服务器的配置，也就是本地配置高于继承的配置；（就近原则？）</p>
+</li>
+<li><p><code>ipconfig</code>：查看本机网络配置信息；</p>
+</li>
+<li><p><code>ipconfig /all</code>：查看本机网络配置详细信息；</p>
+</li>
+<li><p><code>ipconfig /release</code>：手动释放 IP（只是释放，不会重新获取），取消租约（改为手动配置 IP 也可以取消租约）；</p>
+</li>
+<li><p><code>ipconfig /renew</code>：如果没有 IP，则发送 DHCP Discover 包，获取 IP 地址，如果有 IP，则发送 DHCP Request 包续约；</p>
+</li>
+</ol>
+<h4 id="攻击与防御"><a href="#攻击与防御" class="headerlink" title="攻击与防御"></a>攻击与防御</h4><ol>
+<li>服务器攻击：向服务器频繁发送伪装的 DHCP 请求，直到将地址池的资源耗尽，其他客户机则无法获取 IP 地址；<br>防御：在管理型交换机上配置动态绑定 MAC 地址；</li>
+<li>客户机攻击：将自己部署为 DHCP 服务器，为客户机提供非法的 IP 地址；<br>防御：在管理型交换机上配置除合法的 DHCP 服务器外的所有端口全部禁止发送 DHCP Offer 包；</li>
+</ol>
+]]></content>
+      <categories>
+        <category>网络安全</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>DHCP</tag>
+        <tag>DOS 命令</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>HTML 与 CSS 面试考点汇总</title>
     <url>/posts/732491287/</url>
     <content><![CDATA[<blockquote>
@@ -379,56 +441,56 @@
       </tags>
   </entry>
   <entry>
-    <title>DHCP 服务器</title>
-    <url>/posts/1498644050/</url>
-    <content><![CDATA[<h4 id="DHCP-服务器"><a href="#DHCP-服务器" class="headerlink" title="DHCP 服务器"></a>DHCP 服务器</h4><ol>
-<li><p>DHCP（Dynamic Host Configuration Protocol，动态主机配置协议）是一个局域网的网络协议，使用 UDP 协议工作；</p>
-</li>
-<li><p>DHCP 的功能是：集中管理、分配 IP 地址；</p>
-</li>
-<li><p>DHCP 协议工作的端口是<code>UDP:67/68</code>；<span id="more"></span></p>
-</li>
-<li><p>DHCP 可以减少工作量，避免 IP 冲突，提高地址利用率；</p>
-</li>
-<li><p>DHCP 的工作原理，也叫 DHCP 的租约过程：</p>
-<ol>
-<li>客户机发广播寻找 DHCP 服务器；<br>客户机发送包含 MAC 地址的 DHCP Discover 广播包，表明我是谁；</li>
-<li>服务器单播响应客户端；<br>当 DHCP 服务器收到 Discover 包时，会单播回复客户机一个 DHCP Offer 包，里面包含一个 IP 地址，但不包含子网掩码、网关、DNS、租约等信息；</li>
-<li>客户机广播发送 Request 请求；<br>客户机收到 Offer 包，并确认使用此 IP 时，广播发送 DCHP Request 请求，请求该 IP 地址的详细信息，并通知其他 DHCP 服务器，自己已经有 IP 了；</li>
-<li>服务器单播发送 ACK；<br>在 DHCP 服务器收到 Request 请求后， 会向客户机发送 DHCP ACK 包，表明服务器已经确定了租约，并提供 IP 地址的详细信息，子网掩码、网关、DNS、租约等信息，客户机在收到 ACK 包后，就可以愉快的使用这个 IP 地址了；</li>
+    <title>DNS 服务器</title>
+    <url>/posts/1115613161/</url>
+    <content><![CDATA[<h4 id="DNS-服务器"><a href="#DNS-服务器" class="headerlink" title="DNS 服务器"></a>DNS 服务器</h4><ol>
+<li>DNS（Domain Name System，域名系统），一个域名与 IP 地址相互映射的分布式数据库；</li>
+<li>DNS 服务器为客户机提供域名解析服务，通过域名最终得到域名对应 IP 地址的过程叫做域名解析；</li>
+<li><code>主机名.域名</code>称为完全限定域名（FQDN）；<span id="more"></span></li>
+<li>一个域名下可以有多个主机，域名是全球唯一的，所以<code>主机名.域名</code>也是全球唯一的；</li>
+<li>DNS 服务器的分类：<ol>
+<li>根名称服务器；</li>
+<li>主要名称服务器；</li>
+<li>辅助名称服务器；</li>
+<li>高速缓存名称服务器；</li>
 </ol>
 </li>
-<li><p>DHCP 续约：DHCP 服务器分配给客户机的 IP 地址有默认的租期，也就是说，过了这个租期，DHCP 服务器就会收回该 IP，客户机无法再通过此 IP 上网，所以，在租期内，客户机通过计时器来实现续租和释放 IP：</p>
-<ol>
-<li>当租期到达 50% 时，客户机会单播发送 DHCP Request 包，来申请延长 IP 地址的租期，服务器会响应 DHCP ACK 包，并给客户机一个新的租期，客户机更新计时器并继续使用，如果服务器没有响应，则继续使用，并等待响应；</li>
-<li>当租期到达 87.5% 时，客户机会再次发送 DHCP Request 包，如果收到 DCHP ACK 响应，则更新计时器，继续使用，如果收到 DHCP NAK，则立即停用现有 IP，并重新申请 IP；</li>
-<li>当租约到期后，仍然没有收到服务器的响应，客户机会发送 DHCP Release 包，表示释放当前 IP，并重新发送 DHCP Discover 广播包来获取 IP 地址；</li>
+<li>常见的域名解析类型：<ol>
+<li>A 记录：正向解析；</li>
+<li>CNAME 记录：别名解析；</li>
+<li>PTR 记录：反向解析；</li>
+<li>MX 记录：邮件交换记录解析；</li>
+<li>NS 记录：域名服务器解析；</li>
 </ol>
 </li>
-<li><p>当客户机发送 DHCP Discover 广播包后，如果没有任何服务器响应，客户机会自动给自己分配一个<code>169.254.0.0/16</code>的 IP 地址，该地址属于全球统一的无效地址，用于局域网内部临时通讯；</p>
-</li>
-<li><p>当客户机和 DHCP 服务器不在同一网段，但又想从服务器获取 IP 时，可以使用 DHCP 中继功能，让路由器转发服务器的数据报文，从而获取 IP 地址；</p>
-</li>
-<li><p>DHCP 服务器自身的 IP 地址必须是静态的；</p>
-</li>
-<li><p>可以在服务器中动态保留 IP（绑定 MAC 地址），针对固定的 MAC 地址动态分配固定的 IP 地址；</p>
-</li>
-<li><p>作用域的相同配置，可以在服务器选项中设置（如 DNS），作用域会继承服务器的配置；</p>
-</li>
-<li><p>相同配置，作用域的配置优先级高于服务器的配置，也就是本地配置高于继承的配置；（就近原则？）</p>
-</li>
-<li><p><code>ipconfig</code>：查看本机网络配置信息；</p>
-</li>
-<li><p><code>ipconfig /all</code>：查看本机网络配置详细信息；</p>
-</li>
-<li><p><code>ipconfig /release</code>：手动释放 IP（只是释放，不会重新获取），取消租约（改为手动配置 IP 也可以取消租约）；</p>
-</li>
-<li><p><code>ipconfig /renew</code>：如果没有 IP，则发送 DHCP Discover 包，获取 IP 地址，如果有 IP，则发送 DHCP Request 包续约；</p>
-</li>
+<li>DNS 解析按照查询方式分为两种：<ol>
+<li>递归查询：客户机与本地 DNS 服务器之间的解析过程，即，所问即所答；</li>
+<li>迭代查询：本地 DNS 服务器与根或其他 DNS 服务器之间的解析过程，即，只告诉你线索，答案我不知道；</li>
 </ol>
-<h4 id="攻击与防御"><a href="#攻击与防御" class="headerlink" title="攻击与防御"></a>攻击与防御</h4><ol>
-<li>服务器攻击：向服务器频繁发送伪装的 DHCP 请求，直到将地址池的资源耗尽，其他客户机则无法获取 IP 地址；<br>防御：在管理型交换机上配置动态绑定 MAC 地址；</li>
-<li>客户机攻击：将自己部署为 DHCP 服务器，为客户机提供非法的 IP 地址；<br>防御：在管理型交换机上配置除合法的 DHCP 服务器外的所有端口全部禁止发送 DHCP Offer 包；</li>
+</li>
+<li>DNS 转发的过程是递归查询；</li>
+<li>DNS 解析按照查询内容分为两种：<ol>
+<li>正向解析：已知域名，解析 IP 地址；</li>
+<li>反向解析：已知 IP 地址，解析域名；</li>
+</ol>
+</li>
+<li>客户机请求域名解析的顺序：<ol>
+<li>本机 DNS 缓存；</li>
+<li>本机 Host 文件；</li>
+<li>本地 DNS 服务器；</li>
+</ol>
+</li>
+<li>DNS 服务器对域名请求的解析顺序：<ol>
+<li>DNS 高速缓存；</li>
+<li>本地区域解析文件；</li>
+<li>转发器；</li>
+<li>根；</li>
+</ol>
+</li>
+<li>DNS 服务的端口是<code>TCP/UDP:53</code>；</li>
+<li><code>nslookup 域名</code>：查看指定域名的 DNS 解析；</li>
+<li><code>ipconfig /flushdns</code>：清除 DNS 缓存；</li>
+<li><code>ipconfig /displaydns</code>：查看本机 DNS 缓存；</li>
 </ol>
 ]]></content>
       <categories>
@@ -436,8 +498,8 @@
         <category>Windows</category>
       </categories>
       <tags>
-        <tag>DHCP</tag>
         <tag>DOS 命令</tag>
+        <tag>DNS</tag>
       </tags>
   </entry>
   <entry>
@@ -622,68 +684,6 @@
       <tags>
         <tag>Homebrew</tag>
         <tag>Shell</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>DNS 服务器</title>
-    <url>/posts/1115613161/</url>
-    <content><![CDATA[<h4 id="DNS-服务器"><a href="#DNS-服务器" class="headerlink" title="DNS 服务器"></a>DNS 服务器</h4><ol>
-<li>DNS（Domain Name System，域名系统），一个域名与 IP 地址相互映射的分布式数据库；</li>
-<li>DNS 服务器为客户机提供域名解析服务，通过域名最终得到域名对应 IP 地址的过程叫做域名解析；</li>
-<li><code>主机名.域名</code>称为完全限定域名（FQDN）；<span id="more"></span></li>
-<li>一个域名下可以有多个主机，域名是全球唯一的，所以<code>主机名.域名</code>也是全球唯一的；</li>
-<li>DNS 服务器的分类：<ol>
-<li>根名称服务器；</li>
-<li>主要名称服务器；</li>
-<li>辅助名称服务器；</li>
-<li>高速缓存名称服务器；</li>
-</ol>
-</li>
-<li>常见的域名解析类型：<ol>
-<li>A 记录：正向解析；</li>
-<li>CNAME 记录：别名解析；</li>
-<li>PTR 记录：反向解析；</li>
-<li>MX 记录：邮件交换记录解析；</li>
-<li>NS 记录：域名服务器解析；</li>
-</ol>
-</li>
-<li>DNS 解析按照查询方式分为两种：<ol>
-<li>递归查询：客户机与本地 DNS 服务器之间的解析过程，即，所问即所答；</li>
-<li>迭代查询：本地 DNS 服务器与根或其他 DNS 服务器之间的解析过程，即，只告诉你线索，答案我不知道；</li>
-</ol>
-</li>
-<li>DNS 转发的过程是递归查询；</li>
-<li>DNS 解析按照查询内容分为两种：<ol>
-<li>正向解析：已知域名，解析 IP 地址；</li>
-<li>反向解析：已知 IP 地址，解析域名；</li>
-</ol>
-</li>
-<li>客户机请求域名解析的顺序：<ol>
-<li>本机 DNS 缓存；</li>
-<li>本机 Host 文件；</li>
-<li>本地 DNS 服务器；</li>
-</ol>
-</li>
-<li>DNS 服务器对域名请求的解析顺序：<ol>
-<li>DNS 高速缓存；</li>
-<li>本地区域解析文件；</li>
-<li>转发器；</li>
-<li>根；</li>
-</ol>
-</li>
-<li>DNS 服务的端口是<code>TCP/UDP:53</code>；</li>
-<li><code>nslookup 域名</code>：查看指定域名的 DNS 解析；</li>
-<li><code>ipconfig /flushdns</code>：清除 DNS 缓存；</li>
-<li><code>ipconfig /displaydns</code>：查看本机 DNS 缓存；</li>
-</ol>
-]]></content>
-      <categories>
-        <category>网络安全</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>DOS 命令</tag>
-        <tag>DNS</tag>
       </tags>
   </entry>
   <entry>
@@ -2085,74 +2085,6 @@
       </tags>
   </entry>
   <entry>
-    <title>SFX 功能定位 OEP</title>
-    <url>/posts/3371155739/</url>
-    <content><![CDATA[<blockquote>
-<p>对壳一无所知的情况下，通过简单的操作完成程序的脱壳，从而增加成就感，获得学习的乐趣及动力；</p>
-</blockquote>
-<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li>加壳工具使用了<a href="https://upx.github.io/">UPX</a>，感谢 🙏 开源，以及 <a href="http://www.aspack.com/">ASPACK</a>：收费软件，可以试用；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-7">UnPackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
-</ul>
-<h4 id="壳"><a href="#壳" class="headerlink" title="壳"></a>壳</h4><p>壳（也叫“外壳”）是一种专用加密软件技术；</p>
-<p>壳分为：压缩壳、加密壳、虚拟机保护软件；</p>
-<h3 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h3><ol>
-<li><p>首先，将原始程序导入 OD，然后查看 OEP：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv7l4xkb9j31dp0u0jv3.jpg" alt="原始程序导入 OD"></p>
-<p>可以看到，原始程序的 OEP 是：00401000；</p>
-</li>
-<li><p>安装 UPX，然后打开并给 CM 加壳：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv797t16ij31340u076k.jpg" alt="给 CM 加壳"></p>
-<p>将 CM 拖入 UPX，选项默认，点击 RUN 即可；</p>
-<p>不会生成新文件，而是直接在源程序上加壳，所以，记得备份源程序；</p>
-</li>
-<li><p>打开 OD 设置 SFX：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv7j8uzeuj31dx0u0n2e.jpg" alt="设置 SFX"></p>
-<p>打开调试设置，在异常选项卡下，勾选全部选项，是为了防止 SFX 在自动分析中，中断在某个异常而导致失败；</p>
-<p>然后，在 SFX 选项卡下，勾选 <code>块方式跟踪</code>或<code>字节方式跟踪</code>其一，它们的区别是查找速度与准确率，首先选择速度较快的<code>块方式跟踪</code>；</p>
-</li>
-<li><p>然后将加壳后的程序载入 OD，发现没有任何反应，即使切换 SFX 选项卡为<code>字节方式跟踪</code>也没有任何反应，这是为什么呢？</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv7vp6yy2j31e30u0jut.jpg" alt="没有任何反应"></p>
-</li>
-<li><p>原来，SFX 使用是有限制的：程序在载入 OD 后，入口点必须位于代码段（.code）之外，才会生效；</p>
-<p>打开内存窗口：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv7xm4w2qj31e00u077c.jpg" alt="内存窗口"></p>
-<p>发现当前程序的代码段起始位置为：00409000，大小为 1000，也就是说，当前程序代码段的范围是 00409000 ～ 00409FFF；</p>
-<p>而程序载入 OD 后，EP（入口点）位于 00409BF0，处于代码段范围，所以 SFX 没有生效；</p>
-</li>
-<li><p>既然 UPX 加壳后入口点在代码段，那就切换加壳软件，使用 ASPACK；</p>
-<p>安装 ASPACK 并打开，在打开文件选项卡下点击打开并选择原始程序，就会自动加壳：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv8e3edj4j30n80iat9g.jpg" alt="ASPACK"></p>
-<p>ASPACK 同样不会生成新文件，所以，记得备份源程序；</p>
-</li>
-<li><p>首先，打开 OD 确认 SFX 以及异常选项卡设置 OK，然后将 ASPACK 加密后的程序导入 OD：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv8k4495oj31du0u0q6x.jpg" alt="ASPACK 加密后的程序导入 OD"></p>
-<p>CM 运行起来了，然而，程序并非停留在 OEP 上，因为第 1 步的时候，已经确认了原始程序的 OEP 是：00401000；</p>
-<p>看来 SFX 的<code>块方式跟踪</code>速度很快但是不够准确，不过，既然 CM 能够运行，也侧面说明了，ASPACK 加壳后，EP 位于代码段之外；</p>
-</li>
-<li><p>切换 SFX 选项为<code>字节方式跟踪</code>并删除 OD 操作日志（UDD 文件夹内），重新将 ASPACK 加密后的程序导入 OD：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv8u6b8v9j31dy0u0wi4.jpg" alt="程序已脱壳"></p>
-<p>此时 EP 停留在 00401000 上，也就 OEP 上，说明程序已经脱壳了；</p>
-</li>
-<li><p>加壳方式多种多样，这种脱壳方式可用范围应该很小，毕竟换了加壳工具后就失效了，不过，很振奋人心；</p>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>脱壳技术</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>OEP</tag>
-        <tag>SFX</tag>
-        <tag>UPX</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Stolen-Code 与 Anti-Dump</title>
     <url>/posts/1563828353/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -2268,6 +2200,114 @@
         <tag>IAT</tag>
         <tag>Stolen-Code</tag>
         <tag>PELock</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>VB 程序快速定位 OEP</title>
+    <url>/posts/69889928/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-5">OllyDbg</a>修改版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-19">UnPackMe</a>来自互联网，仅供学习使用；</li>
+<li>加壳工具为<a href="http://www.aspack.com/">ASPACK</a>：收费软件，可以试用；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
+</ul>
+<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
+<li><p>使用 ASPACK 给 CM 加壳；</p>
+</li>
+<li><p>将加壳后的 CM 导入 OD，然后来到内存窗口，找到 MSVBVM60.dll 的代码段，设置内存访问断点：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwh95tsoij31a30u0ad4.jpg" alt="MSVBVM60"></p>
+<p>VB 程序有个特点：入口处都是一个 PUSH 指令，然后一个 CALL 指令，并且 CALL 指令中的 JMP 指向 MSVBVM60&#x2F;50；</p>
+<p>所以这里的思路就是：当外壳程序执行完毕，跳转至 OEP 时，程序会调用 MSVBVM60&#x2F;50，所以，只要给 MSVBVM60&#x2F;50 设置断点，然后跟随到调用位置，就到达 OEP 了；</p>
+</li>
+<li><p>设置好断点并<code>F9</code>运行程序，程序会中断在 MSVBVM60&#x2F;50 的行首：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwi48xrnrj31a60u0adj.jpg" alt="中断在 MSVBVM60/50 的行首"></p>
+<p>此时在栈窗口跟随到调用位置：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwicoomz0j31a50u0wi6.jpg" alt="调用位置"></p>
+<p>这里，通过上面的函数列表就已经可以确定是 OEP，VB 程序的 OEP 基本类似，都是这种结构；</p>
+</li>
+<li><p>删除代码分析后，更加确定这里就是 OEP：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwi9wuc1ij31a40u0djm.jpg" alt="删除代码分析后"></p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>脱壳技术</category>
+        <category>Windows</category>
+        <category>VB</category>
+      </categories>
+      <tags>
+        <tag>OEP</tag>
+        <tag>ASPack</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>SFX 功能定位 OEP</title>
+    <url>/posts/3371155739/</url>
+    <content><![CDATA[<blockquote>
+<p>对壳一无所知的情况下，通过简单的操作完成程序的脱壳，从而增加成就感，获得学习的乐趣及动力；</p>
+</blockquote>
+<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li>加壳工具使用了<a href="https://upx.github.io/">UPX</a>，感谢 🙏 开源，以及 <a href="http://www.aspack.com/">ASPACK</a>：收费软件，可以试用；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-7">UnPackMe</a>来自互联网，仅供学习使用；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
+</ul>
+<h4 id="壳"><a href="#壳" class="headerlink" title="壳"></a>壳</h4><p>壳（也叫“外壳”）是一种专用加密软件技术；</p>
+<p>壳分为：压缩壳、加密壳、虚拟机保护软件；</p>
+<h3 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h3><ol>
+<li><p>首先，将原始程序导入 OD，然后查看 OEP：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv7l4xkb9j31dp0u0jv3.jpg" alt="原始程序导入 OD"></p>
+<p>可以看到，原始程序的 OEP 是：00401000；</p>
+</li>
+<li><p>安装 UPX，然后打开并给 CM 加壳：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv797t16ij31340u076k.jpg" alt="给 CM 加壳"></p>
+<p>将 CM 拖入 UPX，选项默认，点击 RUN 即可；</p>
+<p>不会生成新文件，而是直接在源程序上加壳，所以，记得备份源程序；</p>
+</li>
+<li><p>打开 OD 设置 SFX：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv7j8uzeuj31dx0u0n2e.jpg" alt="设置 SFX"></p>
+<p>打开调试设置，在异常选项卡下，勾选全部选项，是为了防止 SFX 在自动分析中，中断在某个异常而导致失败；</p>
+<p>然后，在 SFX 选项卡下，勾选 <code>块方式跟踪</code>或<code>字节方式跟踪</code>其一，它们的区别是查找速度与准确率，首先选择速度较快的<code>块方式跟踪</code>；</p>
+</li>
+<li><p>然后将加壳后的程序载入 OD，发现没有任何反应，即使切换 SFX 选项卡为<code>字节方式跟踪</code>也没有任何反应，这是为什么呢？</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv7vp6yy2j31e30u0jut.jpg" alt="没有任何反应"></p>
+</li>
+<li><p>原来，SFX 使用是有限制的：程序在载入 OD 后，入口点必须位于代码段（.code）之外，才会生效；</p>
+<p>打开内存窗口：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv7xm4w2qj31e00u077c.jpg" alt="内存窗口"></p>
+<p>发现当前程序的代码段起始位置为：00409000，大小为 1000，也就是说，当前程序代码段的范围是 00409000 ～ 00409FFF；</p>
+<p>而程序载入 OD 后，EP（入口点）位于 00409BF0，处于代码段范围，所以 SFX 没有生效；</p>
+</li>
+<li><p>既然 UPX 加壳后入口点在代码段，那就切换加壳软件，使用 ASPACK；</p>
+<p>安装 ASPACK 并打开，在打开文件选项卡下点击打开并选择原始程序，就会自动加壳：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv8e3edj4j30n80iat9g.jpg" alt="ASPACK"></p>
+<p>ASPACK 同样不会生成新文件，所以，记得备份源程序；</p>
+</li>
+<li><p>首先，打开 OD 确认 SFX 以及异常选项卡设置 OK，然后将 ASPACK 加密后的程序导入 OD：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv8k4495oj31du0u0q6x.jpg" alt="ASPACK 加密后的程序导入 OD"></p>
+<p>CM 运行起来了，然而，程序并非停留在 OEP 上，因为第 1 步的时候，已经确认了原始程序的 OEP 是：00401000；</p>
+<p>看来 SFX 的<code>块方式跟踪</code>速度很快但是不够准确，不过，既然 CM 能够运行，也侧面说明了，ASPACK 加壳后，EP 位于代码段之外；</p>
+</li>
+<li><p>切换 SFX 选项为<code>字节方式跟踪</code>并删除 OD 操作日志（UDD 文件夹内），重新将 ASPACK 加密后的程序导入 OD：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv8u6b8v9j31dy0u0wi4.jpg" alt="程序已脱壳"></p>
+<p>此时 EP 停留在 00401000 上，也就 OEP 上，说明程序已经脱壳了；</p>
+</li>
+<li><p>加壳方式多种多样，这种脱壳方式可用范围应该很小，毕竟换了加壳工具后就失效了，不过，很振奋人心；</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>脱壳技术</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>OEP</tag>
+        <tag>SFX</tag>
+        <tag>UPX</tag>
       </tags>
   </entry>
   <entry>
@@ -3293,103 +3333,6 @@
       </tags>
   </entry>
   <entry>
-    <title>VB 程序快速定位 OEP</title>
-    <url>/posts/69889928/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-5">OllyDbg</a>修改版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-19">UnPackMe</a>来自互联网，仅供学习使用；</li>
-<li>加壳工具为<a href="http://www.aspack.com/">ASPACK</a>：收费软件，可以试用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
-</ul>
-<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
-<li><p>使用 ASPACK 给 CM 加壳；</p>
-</li>
-<li><p>将加壳后的 CM 导入 OD，然后来到内存窗口，找到 MSVBVM60.dll 的代码段，设置内存访问断点：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwh95tsoij31a30u0ad4.jpg" alt="MSVBVM60"></p>
-<p>VB 程序有个特点：入口处都是一个 PUSH 指令，然后一个 CALL 指令，并且 CALL 指令中的 JMP 指向 MSVBVM60&#x2F;50；</p>
-<p>所以这里的思路就是：当外壳程序执行完毕，跳转至 OEP 时，程序会调用 MSVBVM60&#x2F;50，所以，只要给 MSVBVM60&#x2F;50 设置断点，然后跟随到调用位置，就到达 OEP 了；</p>
-</li>
-<li><p>设置好断点并<code>F9</code>运行程序，程序会中断在 MSVBVM60&#x2F;50 的行首：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwi48xrnrj31a60u0adj.jpg" alt="中断在 MSVBVM60/50 的行首"></p>
-<p>此时在栈窗口跟随到调用位置：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwicoomz0j31a50u0wi6.jpg" alt="调用位置"></p>
-<p>这里，通过上面的函数列表就已经可以确定是 OEP，VB 程序的 OEP 基本类似，都是这种结构；</p>
-</li>
-<li><p>删除代码分析后，更加确定这里就是 OEP：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnwi9wuc1ij31a40u0djm.jpg" alt="删除代码分析后"></p>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>脱壳技术</category>
-        <category>Windows</category>
-        <category>VB</category>
-      </categories>
-      <tags>
-        <tag>OEP</tag>
-        <tag>ASPack</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>VB 调试之 P-Code 寻找操作码</title>
-    <url>/posts/3657232687/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li>VB 静态分析工具<a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-8">exdec</a>来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-20">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
-</ul>
-<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><h5 id="方法一：手动寻找"><a href="#方法一：手动寻找" class="headerlink" title="方法一：手动寻找"></a>方法一：手动寻找</h5><ol>
-<li><p>将<code>CrackMe</code>倒入<code>OD</code>，会停留在程序的入口点，向上滚动代码：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnmu1cuo5wj31b40u0q6o.jpg" alt="程序入口"></p>
-<p>会发现一个 API <code>MethCallEngine</code>是用来初始化<code>P-Code</code>的，不过<code>P-Code</code>的初始化和常见的程序相反，一般，程序在运行时，会初始化所有资源以供调用，而<code>P-Code</code>却是在调用时才会初始化；</p>
-</li>
-<li><p>在<code>MethCallEngine</code>上右键菜单选择跟随或者在<code>MethCallEngine</code>上按下<code>Enter</code>，进入函数内部：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnmu8fdabdj31b30u0n0r.jpg" alt="函数内部"></p>
-<p>双击行首或按下<code>F2</code>设置断点并做好备注；</p>
-</li>
-<li><p>接着运行程序，发现程序主窗体已经出现，但并没有中断在设置的断点位置：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnmuif7y2nj31b50u0jv1.jpg" alt="没有中断在断点位置"></p>
-<p>然后输入随机注册码，点击<code>Registrar</code>后，程序才会中断在断点位置，这也从侧面说明了<code>P-Code</code>是先调用，后初始化；</p>
-</li>
-<li><p>来到<code>内存窗口</code>，在代码段设置<code>内存访问断点</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnmuonz3vuj31b20u076z.jpg" alt="内存访问断点"></p>
-<p>虽然<code>P-Code</code>使用的是操作码，但它依然会存储在代码段；</p>
-</li>
-<li><p>接下来就是寻找操作码了，操作码的格式是<code>MOVE AL, BYTE PTR DS:[ESI]</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnmuyuyqyzj31b40u0jvu.jpg" alt="第1操作码"></p>
-<p>多次中断后会停留在预期的指令上，而这条指令的作用就是获取操作码，数据窗口查看<code>ESI</code>会得到具体的操作码；</p>
-</li>
-</ol>
-<h5 id="方法二：工具分析"><a href="#方法二：工具分析" class="headerlink" title="方法二：工具分析"></a>方法二：工具分析</h5><ol>
-<li><p>使用<code>exdec</code>工具分析程序，会得到程序的静态分析结果：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnmv9f05wgj31b20u0td9.jpg" alt="静态分析"></p>
-<p>可以看到，分析的结果和手动寻找的结果一致，地址相同，操作码相同；</p>
-</li>
-<li><p>测试一下：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnmvhn1zp8j31b60u0af0.jpg" alt="设置内存访问断点"></p>
-<p>重载程序，在数据窗口跟随分析结果第 1 操作码的地址，然后在第 1 操作码上设置内存访问断点；</p>
-</li>
-<li><p>运行程序，输入注册码，点击 Registrar：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnmvo4idw0j31b50u0435.jpg" alt="中断在操作码位置"></p>
-<p>程序中断在第 1 操作码的位置；</p>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>Windows</category>
-        <category>逆向分析</category>
-        <category>VB</category>
-      </categories>
-      <tags>
-        <tag>VB 调试</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>VB 调试之 P-Code 替换操作码</title>
     <url>/posts/3307503664/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -3459,6 +3402,149 @@
 <li><p>保存修改到可执行文件，运行程序：</p>
 <p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv1hpnkpqj30wa0k23z2.jpg" alt="保存修改到可执行文件"></p>
 <p>修改依然没有问题，完工！</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>Windows</category>
+        <category>逆向分析</category>
+        <category>VB</category>
+      </categories>
+      <tags>
+        <tag>VB 调试</tag>
+        <tag>NAG 窗口</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>VB 调试之 P-Code 寻找操作码</title>
+    <url>/posts/3657232687/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li>VB 静态分析工具<a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-8">exdec</a>来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-20">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
+</ul>
+<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><h5 id="方法一：手动寻找"><a href="#方法一：手动寻找" class="headerlink" title="方法一：手动寻找"></a>方法一：手动寻找</h5><ol>
+<li><p>将<code>CrackMe</code>倒入<code>OD</code>，会停留在程序的入口点，向上滚动代码：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnmu1cuo5wj31b40u0q6o.jpg" alt="程序入口"></p>
+<p>会发现一个 API <code>MethCallEngine</code>是用来初始化<code>P-Code</code>的，不过<code>P-Code</code>的初始化和常见的程序相反，一般，程序在运行时，会初始化所有资源以供调用，而<code>P-Code</code>却是在调用时才会初始化；</p>
+</li>
+<li><p>在<code>MethCallEngine</code>上右键菜单选择跟随或者在<code>MethCallEngine</code>上按下<code>Enter</code>，进入函数内部：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnmu8fdabdj31b30u0n0r.jpg" alt="函数内部"></p>
+<p>双击行首或按下<code>F2</code>设置断点并做好备注；</p>
+</li>
+<li><p>接着运行程序，发现程序主窗体已经出现，但并没有中断在设置的断点位置：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnmuif7y2nj31b50u0jv1.jpg" alt="没有中断在断点位置"></p>
+<p>然后输入随机注册码，点击<code>Registrar</code>后，程序才会中断在断点位置，这也从侧面说明了<code>P-Code</code>是先调用，后初始化；</p>
+</li>
+<li><p>来到<code>内存窗口</code>，在代码段设置<code>内存访问断点</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnmuonz3vuj31b20u076z.jpg" alt="内存访问断点"></p>
+<p>虽然<code>P-Code</code>使用的是操作码，但它依然会存储在代码段；</p>
+</li>
+<li><p>接下来就是寻找操作码了，操作码的格式是<code>MOVE AL, BYTE PTR DS:[ESI]</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnmuyuyqyzj31b40u0jvu.jpg" alt="第1操作码"></p>
+<p>多次中断后会停留在预期的指令上，而这条指令的作用就是获取操作码，数据窗口查看<code>ESI</code>会得到具体的操作码；</p>
+</li>
+</ol>
+<h5 id="方法二：工具分析"><a href="#方法二：工具分析" class="headerlink" title="方法二：工具分析"></a>方法二：工具分析</h5><ol>
+<li><p>使用<code>exdec</code>工具分析程序，会得到程序的静态分析结果：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnmv9f05wgj31b20u0td9.jpg" alt="静态分析"></p>
+<p>可以看到，分析的结果和手动寻找的结果一致，地址相同，操作码相同；</p>
+</li>
+<li><p>测试一下：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnmvhn1zp8j31b60u0af0.jpg" alt="设置内存访问断点"></p>
+<p>重载程序，在数据窗口跟随分析结果第 1 操作码的地址，然后在第 1 操作码上设置内存访问断点；</p>
+</li>
+<li><p>运行程序，输入注册码，点击 Registrar：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnmvo4idw0j31b50u0435.jpg" alt="中断在操作码位置"></p>
+<p>程序中断在第 1 操作码的位置；</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>Windows</category>
+        <category>逆向分析</category>
+        <category>VB</category>
+      </categories>
+      <tags>
+        <tag>VB 调试</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>VB 调试之优先创建窗体</title>
+    <url>/posts/3326045461/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-5">OllyDbg</a>修改版，简称<code>OD</code>；</li>
+<li><code>OD</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-18">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
+</ul>
+<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
+<li><p>首先运行软件，了解一下程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmxg8pjn3fg30mw0i4qit.gif" alt="运行程序"></p>
+<ul>
+<li>运行程序后，首先出现一个倒计时 5 秒的窗体；</li>
+<li>同时 Continue 按钮处于禁用状态；</li>
+<li>倒计时结束后，Continue 按钮启用，并在点击后可进入主窗体；</li>
+</ul>
+</li>
+<li><p>将<code>CrackMe</code>倒入<code>OD</code>，开始分析：</p>
+<ul>
+<li><p>这里的倒计时窗体可以算得上是<code>NAG</code>窗口了，很是烦人啊有木有；</p>
+</li>
+<li><p>如何跳过<code>烦人的窗口</code>直接进入主程序呢？</p>
+<ol>
+<li><p>倒计时结束后，点击 Continue ，程序跳转进入主程序；</p>
+</li>
+<li><p>程序的跳转肯定发生在<code>CODE</code>段；</p>
+</li>
+<li><p>在倒计时结束后，到<code>内存窗口</code>给<code>CODE</code>段设置内存访问断点，然后在程序界面点击 Continue：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmxj7a5ioxj31a40u0tf3.jpg" alt="内存访问断点"></p>
+</li>
+<li><p>程序中断，可以看到接下来要执行 JMP，根据程序的逻辑可以确定，这个 JMP 就是跳转到主窗体的：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmxjcnfvr5j319s0u0gpl.jpg" alt="跳转到主窗体"></p>
+<p>相邻的还有 3 个 JMP，给它们全部设置断点，看看它们分别要做的事情；</p>
+</li>
+<li><p>重载并运行程序，程序中断在第三个 JMP，根据程序逻辑，程序初始运行后，会先展示一个<code>NAG</code>窗口，<code>F9</code>运行程序，果然不出所料；</p>
+</li>
+<li><p>接着运行程序，程序中断在第四个 JMP，共计中断 5 次，不用说，这个是倒计时跳转，同时，最后一次中断后，Continue 按钮启用；</p>
+</li>
+<li><p>点击 Continue 按钮，程序中断在第一个 JMP 位置，四个跳转已知其三，第二个 JMP 肯定是 Exit，最后，分析结果如图：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmxjzjje22j319x0u0q60.jpg" alt="分析"></p>
+</li>
+<li><p>既然已经知道了第一个 JMP 是跳转至程序主窗体的，那能否让程序刚运行就跳转到主窗体，这样是不是就绕过了<code>NAG</code>窗口？值得一试：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmxk4ry1mij30mu0meq6g.jpg" alt="NoNAG"></p>
+<p>将修改保存到文件，保存方法不再赘述，然后运行程序，Perfect！</p>
+</li>
+</ol>
+</li>
+</ul>
+</li>
+<li><p>4C 法</p>
+<blockquote>
+<p>4C 法对于单纯的本地验证应该比较好用，但是基于网络验证可能就不是很好用了，尽管可以到达程序主窗口，但功能也许还是不可用；</p>
+</blockquote>
+<p>还是这个<code>CrackMe</code>，将<code>CrackMe</code>倒入<code>OD</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmxlfn0d4cj319r0u0tbr.jpg" alt="第一行"></p>
+<blockquote>
+<p>VB 程序有个特点：入口处都是一个 PUSH 指令，然后一个 CALL 指令；</p>
+</blockquote>
+<p>发现第一行是一个 PUSH 指令，4C 法就是将 PUSH 的地址加上<code>4C</code>，然后在数据窗口中跟随这个地址；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmxlkobm9sj31a80u0tcv.jpg" alt="加上 4C"></p>
+<p><code>Ctrl + G</code>跟随地址后，发现这个地址中存储着另外一个地址，选择存储的地址，然后右键选择<code>数据窗口中跟随（DWORD）</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmxlsfxheaj319s0u00xh.jpg" alt="跟随 4 字节地址"></p>
+<p>跟踪地址来到数据窗口：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmxp8l5p0lj31a00u0goo.jpg" alt="结构类似"></p>
+<p>这里可以看到两块类似的数据,每块 50(十六进制)个字节的长度,每块数据的第 24(十六进制)个字节处都有一个标志（第一个是 00，第二个是 01）；</p>
+<p>该标志指定了代码块（也就是程序启动后要加载的窗体）出现的顺序，先加载 00，也就是我们要去掉的 NAG 窗口，再加载 01，也就是主窗口；</p>
+<p>所以，为了去掉<code>烦人的窗口</code>，将此处的两个标志的值互换，即：00 改 01，01 改 00，这样的话 NAG 窗口就永远也没机会出现了，最后将修改保存到文件；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmxphhj5cjj30ys0dm74w.jpg" alt="互换值"></p>
+<p>接着，运行保存的文件：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmxpknxv21j30nc0m2n0o.jpg" alt="reverse"></p>
+<p>直接出现程序主窗体，NAG 窗口被去除；</p>
 </li>
 </ol>
 ]]></content>
@@ -3658,92 +3744,6 @@
 <p>直接显示程序主窗体，输入注册码，显示 OK 弹窗！</p>
 </li>
 </ul>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>Windows</category>
-        <category>逆向分析</category>
-        <category>VB</category>
-      </categories>
-      <tags>
-        <tag>VB 调试</tag>
-        <tag>NAG 窗口</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>VB 调试之优先创建窗体</title>
-    <url>/posts/3326045461/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-5">OllyDbg</a>修改版，简称<code>OD</code>；</li>
-<li><code>OD</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-18">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
-</ul>
-<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
-<li><p>首先运行软件，了解一下程序：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmxg8pjn3fg30mw0i4qit.gif" alt="运行程序"></p>
-<ul>
-<li>运行程序后，首先出现一个倒计时 5 秒的窗体；</li>
-<li>同时 Continue 按钮处于禁用状态；</li>
-<li>倒计时结束后，Continue 按钮启用，并在点击后可进入主窗体；</li>
-</ul>
-</li>
-<li><p>将<code>CrackMe</code>倒入<code>OD</code>，开始分析：</p>
-<ul>
-<li><p>这里的倒计时窗体可以算得上是<code>NAG</code>窗口了，很是烦人啊有木有；</p>
-</li>
-<li><p>如何跳过<code>烦人的窗口</code>直接进入主程序呢？</p>
-<ol>
-<li><p>倒计时结束后，点击 Continue ，程序跳转进入主程序；</p>
-</li>
-<li><p>程序的跳转肯定发生在<code>CODE</code>段；</p>
-</li>
-<li><p>在倒计时结束后，到<code>内存窗口</code>给<code>CODE</code>段设置内存访问断点，然后在程序界面点击 Continue：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmxj7a5ioxj31a40u0tf3.jpg" alt="内存访问断点"></p>
-</li>
-<li><p>程序中断，可以看到接下来要执行 JMP，根据程序的逻辑可以确定，这个 JMP 就是跳转到主窗体的：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmxjcnfvr5j319s0u0gpl.jpg" alt="跳转到主窗体"></p>
-<p>相邻的还有 3 个 JMP，给它们全部设置断点，看看它们分别要做的事情；</p>
-</li>
-<li><p>重载并运行程序，程序中断在第三个 JMP，根据程序逻辑，程序初始运行后，会先展示一个<code>NAG</code>窗口，<code>F9</code>运行程序，果然不出所料；</p>
-</li>
-<li><p>接着运行程序，程序中断在第四个 JMP，共计中断 5 次，不用说，这个是倒计时跳转，同时，最后一次中断后，Continue 按钮启用；</p>
-</li>
-<li><p>点击 Continue 按钮，程序中断在第一个 JMP 位置，四个跳转已知其三，第二个 JMP 肯定是 Exit，最后，分析结果如图：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmxjzjje22j319x0u0q60.jpg" alt="分析"></p>
-</li>
-<li><p>既然已经知道了第一个 JMP 是跳转至程序主窗体的，那能否让程序刚运行就跳转到主窗体，这样是不是就绕过了<code>NAG</code>窗口？值得一试：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmxk4ry1mij30mu0meq6g.jpg" alt="NoNAG"></p>
-<p>将修改保存到文件，保存方法不再赘述，然后运行程序，Perfect！</p>
-</li>
-</ol>
-</li>
-</ul>
-</li>
-<li><p>4C 法</p>
-<blockquote>
-<p>4C 法对于单纯的本地验证应该比较好用，但是基于网络验证可能就不是很好用了，尽管可以到达程序主窗口，但功能也许还是不可用；</p>
-</blockquote>
-<p>还是这个<code>CrackMe</code>，将<code>CrackMe</code>倒入<code>OD</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmxlfn0d4cj319r0u0tbr.jpg" alt="第一行"></p>
-<blockquote>
-<p>VB 程序有个特点：入口处都是一个 PUSH 指令，然后一个 CALL 指令；</p>
-</blockquote>
-<p>发现第一行是一个 PUSH 指令，4C 法就是将 PUSH 的地址加上<code>4C</code>，然后在数据窗口中跟随这个地址；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmxlkobm9sj31a80u0tcv.jpg" alt="加上 4C"></p>
-<p><code>Ctrl + G</code>跟随地址后，发现这个地址中存储着另外一个地址，选择存储的地址，然后右键选择<code>数据窗口中跟随（DWORD）</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmxlsfxheaj319s0u00xh.jpg" alt="跟随 4 字节地址"></p>
-<p>跟踪地址来到数据窗口：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmxp8l5p0lj31a00u0goo.jpg" alt="结构类似"></p>
-<p>这里可以看到两块类似的数据,每块 50(十六进制)个字节的长度,每块数据的第 24(十六进制)个字节处都有一个标志（第一个是 00，第二个是 01）；</p>
-<p>该标志指定了代码块（也就是程序启动后要加载的窗体）出现的顺序，先加载 00，也就是我们要去掉的 NAG 窗口，再加载 01，也就是主窗口；</p>
-<p>所以，为了去掉<code>烦人的窗口</code>，将此处的两个标志的值互换，即：00 改 01，01 改 00，这样的话 NAG 窗口就永远也没机会出现了，最后将修改保存到文件；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmxphhj5cjj30ys0dm74w.jpg" alt="互换值"></p>
-<p>接着，运行保存的文件：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmxpknxv21j30nc0m2n0o.jpg" alt="reverse"></p>
-<p>直接出现程序主窗体，NAG 窗口被去除；</p>
 </li>
 </ol>
 ]]></content>
@@ -4141,6 +4141,66 @@
       </tags>
   </entry>
   <entry>
+    <title>WSL2 下 VS Code 编写 C 代码</title>
+    <url>/posts/3184033620/</url>
+    <content><![CDATA[<blockquote>
+<p>记录 WSL2 下使用 VS Code 编写 C 代码并通过 Clang 调试时遇到的问题。</p>
+</blockquote>
+<h4 id="前戏"><a href="#前戏" class="headerlink" title="前戏"></a>前戏</h4><p>WSL2 的安装就不用说了，官方文档的描述非常详细，网上还有诸多大佬披荆斩棘写了很多好教程，搜索引擎一波就啥都搞定了；</p>
+<p>VS Code 的语言插件就更不用说了，指定文件后缀并保存后，自然而然就知道需要装啥插件了，实在不行不还有搜索引擎嘛；</p>
+<span id="more"></span>
+
+<p>这里只安装了</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNgy1gutsz57gzij60ce02m0so02.jpg" alt="C/C++"></p>
+<p>和</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNgy1gutsz2guvlj60ce02imx602.jpg" alt="Remote - WSL"></p>
+<p>既然要用 Clang，当然需要安装了：在 WSL2 的子系统 linux 上安装<code>llvm</code>，<code>lldb</code>，<code>clang</code>；</p>
+<p>然后随便写个 demo 用于生成调试配置文件：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNgy1gutt2ndp26j60xm0d7mz002.jpg" alt="1，2"></p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNgy1gutt3dybd2j60za0ag0ub02.jpg" alt="3"></p>
+<p>WSL 当然要选 <code>C++(GDB/LLDB)</code>了；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNgy1gutt3fie12j60l408z3zw02.jpg" alt="4"></p>
+<p>首先要选的是 Clang，至于选哪个看心情，反正哪个都能用，区别在于<code>/usr/bin</code>和<code>/usr/sbin</code>，搜索引擎一波就知道差异和选择了；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNgy1gutt7faff4j60cw06ggls02.jpg" alt="5"></p>
+<p>至此，调试文件就生成了，开始调试，问题也就来了；</p>
+<h4 id="问题一：找不到lldb-mi-xxx，xxx-表示版本号"><a href="#问题一：找不到lldb-mi-xxx，xxx-表示版本号" class="headerlink" title="问题一：找不到lldb-mi-xxx，xxx 表示版本号"></a>问题一：找不到<code>lldb-mi-xxx</code>，xxx 表示版本号</h4><p>无图无真相：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNgy1gutta2i2ncj60vb0t0q7502.jpg" alt="error"></p>
+<p>看到问题提示时一头雾水，什么情况，还没开始就结束了？难道<code>lldb</code>中不包含<code>lldb-mi</code>吗？</p>
+<blockquote>
+<p>lldb-mi: MI 调试程序；</p>
+</blockquote>
+<p>几经查找后发现，貌似是 10.0 版本之后就不包含<code>lldb-mi</code>了，如果需要使用则自己编译，那还等什么；</p>
+<p>官方存储库 <a href="https://github.com/lldb-tools/lldb-mi">lldb-tools&#x2F;lldb-mi</a> 根据文档编译即可（在 WSL2 的 linux 上）；</p>
+<p>懒得看请运行：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git <span class="built_in">clone</span> https://github.com/lldb-tools/lldb-mi.git</span><br><span class="line"><span class="built_in">cd</span> lldb-mi</span><br><span class="line">make .</span><br><span class="line">make --build .</span><br><span class="line">sudo <span class="built_in">cp</span> src/lldb-mi /usr/bin</span><br></pre></td></tr></table></figure>
+
+<p>当然，也可以不管不顾直接调试（我就是这么干的 😭），毕竟“不听不听，王八念经”，然后会得到以下错误：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1guttwgzuy2j60fx040wev02.jpg" alt="error1"></p>
+<p>或者：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">Unable to start debugging. Unable to establish a connection to LLDB. The following message was written to stderr:</span><br><span class="line">lldb: unrecognized option &#x27;--interpreter=mi&#x27;</span><br><span class="line">...</span><br><span class="line">(此处略去好多字儿)</span><br></pre></td></tr></table></figure>
+
+<p>最后还得滚回去（咳咳）编译<code>lldb-mi</code>；</p>
+<p>莫慌，还有其他解决方案，安装<code>CodeLLDB</code>插件，一触即达，也就不会遇到下面两个问题了；</p>
+<h5 id="问题一点五：编译lldb-mi时cmake命令不存在？"><a href="#问题一点五：编译lldb-mi时cmake命令不存在？" class="headerlink" title="问题一点五：编译lldb-mi时cmake命令不存在？"></a>问题一点五：编译<code>lldb-mi</code>时<code>cmake</code>命令不存在？</h5><p>这还不简单，<code>sudo pacman -S cmake</code>（仅适用于 Arch，其他版本请自查）；</p>
+<h4 id="问题二：编译lldb-mi时出现”CMAKE-MAKE-PROGRAM-is-not-set-”"><a href="#问题二：编译lldb-mi时出现”CMAKE-MAKE-PROGRAM-is-not-set-”" class="headerlink" title="问题二：编译lldb-mi时出现”CMAKE_MAKE_PROGRAM is not set.”"></a>问题二：编译<code>lldb-mi</code>时出现”CMAKE_MAKE_PROGRAM is not set.”</h4><p>出现此问题的应该不多，这里使用的是 Arch，其他 WSL2 子系统未知；</p>
+<p>如果你也使用的是 Arch，并且是通过 <a href="https://github.com/yuk7/ArchWSL">yuk7&#x2F;ArchWSL</a> 安装的，那么就需要手动安装<code>base-devel</code>基础包，单独安装 cmake 会报此错误；</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">sudo pacman -S base-devel</span><br></pre></td></tr></table></figure>
+
+<p>如果是自己下载手动安装的 Arch（没有使用<code>yuk7/ArchWSL</code>），则不存在此问题；</p>
+<p>然后编译并拷贝<code>lldb-mi</code>到<code>/usr/bin</code>或其他<code>$PATH</code>路径，然后修改<code>launch.json</code>的<code>&quot;miDebuggerPath&quot;</code>为<code>&quot;/usr/bin/lldb-mi&quot;</code>(默认是”&#x2F;usr&#x2F;bin&#x2F;lldb-mi-xxx”)，当然，也可以在拷贝时改名为<code>lldb-mi-xxx</code>，配置文件就不用改了；</p>
+<p>目前就遇到这两个问题，既然解决了，测试一下：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNgy1gutuesp8g5j61950qlwie02.jpg" alt="ok"></p>
+]]></content>
+      <categories>
+        <category>Windows</category>
+        <category>C</category>
+      </categories>
+      <tags>
+        <tag>VS Code</tag>
+        <tag>WSL2</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>VB 调试之初识 VB</title>
     <url>/posts/674877238/</url>
     <content><![CDATA[<blockquote>
@@ -4472,66 +4532,6 @@
       </tags>
   </entry>
   <entry>
-    <title>WSL2 下 VS Code 编写 C 代码</title>
-    <url>/posts/3184033620/</url>
-    <content><![CDATA[<blockquote>
-<p>记录 WSL2 下使用 VS Code 编写 C 代码并通过 Clang 调试时遇到的问题。</p>
-</blockquote>
-<h4 id="前戏"><a href="#前戏" class="headerlink" title="前戏"></a>前戏</h4><p>WSL2 的安装就不用说了，官方文档的描述非常详细，网上还有诸多大佬披荆斩棘写了很多好教程，搜索引擎一波就啥都搞定了；</p>
-<p>VS Code 的语言插件就更不用说了，指定文件后缀并保存后，自然而然就知道需要装啥插件了，实在不行不还有搜索引擎嘛；</p>
-<span id="more"></span>
-
-<p>这里只安装了</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNgy1gutsz57gzij60ce02m0so02.jpg" alt="C/C++"></p>
-<p>和</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNgy1gutsz2guvlj60ce02imx602.jpg" alt="Remote - WSL"></p>
-<p>既然要用 Clang，当然需要安装了：在 WSL2 的子系统 linux 上安装<code>llvm</code>，<code>lldb</code>，<code>clang</code>；</p>
-<p>然后随便写个 demo 用于生成调试配置文件：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNgy1gutt2ndp26j60xm0d7mz002.jpg" alt="1，2"></p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNgy1gutt3dybd2j60za0ag0ub02.jpg" alt="3"></p>
-<p>WSL 当然要选 <code>C++(GDB/LLDB)</code>了；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNgy1gutt3fie12j60l408z3zw02.jpg" alt="4"></p>
-<p>首先要选的是 Clang，至于选哪个看心情，反正哪个都能用，区别在于<code>/usr/bin</code>和<code>/usr/sbin</code>，搜索引擎一波就知道差异和选择了；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNgy1gutt7faff4j60cw06ggls02.jpg" alt="5"></p>
-<p>至此，调试文件就生成了，开始调试，问题也就来了；</p>
-<h4 id="问题一：找不到lldb-mi-xxx，xxx-表示版本号"><a href="#问题一：找不到lldb-mi-xxx，xxx-表示版本号" class="headerlink" title="问题一：找不到lldb-mi-xxx，xxx 表示版本号"></a>问题一：找不到<code>lldb-mi-xxx</code>，xxx 表示版本号</h4><p>无图无真相：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNgy1gutta2i2ncj60vb0t0q7502.jpg" alt="error"></p>
-<p>看到问题提示时一头雾水，什么情况，还没开始就结束了？难道<code>lldb</code>中不包含<code>lldb-mi</code>吗？</p>
-<blockquote>
-<p>lldb-mi: MI 调试程序；</p>
-</blockquote>
-<p>几经查找后发现，貌似是 10.0 版本之后就不包含<code>lldb-mi</code>了，如果需要使用则自己编译，那还等什么；</p>
-<p>官方存储库 <a href="https://github.com/lldb-tools/lldb-mi">lldb-tools&#x2F;lldb-mi</a> 根据文档编译即可（在 WSL2 的 linux 上）；</p>
-<p>懒得看请运行：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git <span class="built_in">clone</span> https://github.com/lldb-tools/lldb-mi.git</span><br><span class="line"><span class="built_in">cd</span> lldb-mi</span><br><span class="line">make .</span><br><span class="line">make --build .</span><br><span class="line">sudo <span class="built_in">cp</span> src/lldb-mi /usr/bin</span><br></pre></td></tr></table></figure>
-
-<p>当然，也可以不管不顾直接调试（我就是这么干的 😭），毕竟“不听不听，王八念经”，然后会得到以下错误：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1guttwgzuy2j60fx040wev02.jpg" alt="error1"></p>
-<p>或者：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">Unable to start debugging. Unable to establish a connection to LLDB. The following message was written to stderr:</span><br><span class="line">lldb: unrecognized option &#x27;--interpreter=mi&#x27;</span><br><span class="line">...</span><br><span class="line">(此处略去好多字儿)</span><br></pre></td></tr></table></figure>
-
-<p>最后还得滚回去（咳咳）编译<code>lldb-mi</code>；</p>
-<p>莫慌，还有其他解决方案，安装<code>CodeLLDB</code>插件，一触即达，也就不会遇到下面两个问题了；</p>
-<h5 id="问题一点五：编译lldb-mi时cmake命令不存在？"><a href="#问题一点五：编译lldb-mi时cmake命令不存在？" class="headerlink" title="问题一点五：编译lldb-mi时cmake命令不存在？"></a>问题一点五：编译<code>lldb-mi</code>时<code>cmake</code>命令不存在？</h5><p>这还不简单，<code>sudo pacman -S cmake</code>（仅适用于 Arch，其他版本请自查）；</p>
-<h4 id="问题二：编译lldb-mi时出现”CMAKE-MAKE-PROGRAM-is-not-set-”"><a href="#问题二：编译lldb-mi时出现”CMAKE-MAKE-PROGRAM-is-not-set-”" class="headerlink" title="问题二：编译lldb-mi时出现”CMAKE_MAKE_PROGRAM is not set.”"></a>问题二：编译<code>lldb-mi</code>时出现”CMAKE_MAKE_PROGRAM is not set.”</h4><p>出现此问题的应该不多，这里使用的是 Arch，其他 WSL2 子系统未知；</p>
-<p>如果你也使用的是 Arch，并且是通过 <a href="https://github.com/yuk7/ArchWSL">yuk7&#x2F;ArchWSL</a> 安装的，那么就需要手动安装<code>base-devel</code>基础包，单独安装 cmake 会报此错误；</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">sudo pacman -S base-devel</span><br></pre></td></tr></table></figure>
-
-<p>如果是自己下载手动安装的 Arch（没有使用<code>yuk7/ArchWSL</code>），则不存在此问题；</p>
-<p>然后编译并拷贝<code>lldb-mi</code>到<code>/usr/bin</code>或其他<code>$PATH</code>路径，然后修改<code>launch.json</code>的<code>&quot;miDebuggerPath&quot;</code>为<code>&quot;/usr/bin/lldb-mi&quot;</code>(默认是”&#x2F;usr&#x2F;bin&#x2F;lldb-mi-xxx”)，当然，也可以在拷贝时改名为<code>lldb-mi-xxx</code>，配置文件就不用改了；</p>
-<p>目前就遇到这两个问题，既然解决了，测试一下：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNgy1gutuesp8g5j61950qlwie02.jpg" alt="ok"></p>
-]]></content>
-      <categories>
-        <category>Windows</category>
-        <category>C</category>
-      </categories>
-      <tags>
-        <tag>VS Code</tag>
-        <tag>WSL2</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>macOS 10.15.7 无法挂载 NTFS 硬盘的解决方案</title>
     <url>/posts/1266483541/</url>
     <content><![CDATA[<blockquote>
@@ -4723,8 +4723,8 @@
         <category>Windows</category>
       </categories>
       <tags>
-        <tag>UPX</tag>
         <tag>IAT</tag>
+        <tag>UPX</tag>
       </tags>
   </entry>
   <entry>
@@ -4792,6 +4792,83 @@
       <tags>
         <tag>IAT</tag>
         <tag>ASPack</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>修复 IAT 重定向（二）</title>
+    <url>/posts/3434170335/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/UnPackMe-6">UnPackMe</a>来自互联网，仅供学习使用；</li>
+<li>Dump 工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-3">PETools</a>，来自互联网；</li>
+<li>IAT 重建工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-4">ImportREC</a>，来自互联网；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
+</ul>
+<h4 id="操作流程"><a href="#操作流程" class="headerlink" title="操作流程"></a>操作流程</h4><ol>
+<li><p>将 CM 导入 OD，使用<code>内存访问定位法</code>到达 OEP；</p>
+</li>
+<li><p>到达 OEP 后跟随任意 CALL 定位 IAT，发现 IAT 中有部分未知数据：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go23yjs5xnj31ds0u0aed.jpg" alt="加密了"></p>
+<p>通过跟随部分地址后确定不是无效数据，而是被部分 IAT 被重定向了；</p>
+</li>
+<li><p>记录 OEP 的 RVA，IAT 起始地址 RVA 和结束地址 RVA，计算 Size：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go245belssj31e70u0gq6.jpg" alt="记录 RVA"></p>
+<p>OEP 的 RVA 为 271B0；<br>IAT 的起始 RVA 为：60818；<br>IAT 的结束 RVA 为：60F28；<br>IAT 的 Size &#x3D; 60F28 - 60818 &#x3D; 710；</p>
+</li>
+<li><p>使用 PETools 将内存数据 Dump 并保存为可执行文件；</p>
+</li>
+<li><p>重载程序，给 IAT 的起始地址 00460818 设置内存写入断点，运行程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go24d39nuyj31dq0u0gq1.jpg" alt="元数据写入"></p>
+<p>程序中断后，可以看到当前写入 IAT 起始地址的数据与到达 OEP 后 IAT 中的数据不一致；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go24l458usj31dw0u0qai.jpg" alt="执行 1 行"></p>
+<p>执行当前指令后，查看相关数据，发现当前写入的是函数字符串指针，而到达 OEP 后却是重定向数据，说明外壳在加载过程中对 IAT 进行了处理；</p>
+</li>
+<li><p>继续向下执行指令：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go24sy4g8ej31e20u0gqa.jpg" alt="加密了"></p>
+<p>执行当前指令后，00460818 中存放的函数字符串指针被替换为 Hook API 数据，所以当前位置是关键代码；</p>
+</li>
+<li><p>找到关键代码后，为了不让外壳处理 IAT，需要跳过，上面的跳转是关键跳转：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go24wacrjwj31dt0u0tch.jpg" alt="关键跳转"></p>
+<p>多个跳转嵌套，弯弯绕，如果只是为了不让外壳加密程序，是否可以修改当前指令为无用指令（花指令）呢？</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go252malcjj31dy0u0wiu.jpg" alt="修改关键指令"></p>
+<p>既然要重定向部分 IAT，加密操作肯定是循环，So，单步执行代码重新来到关键位置，修改指令；</p>
+</li>
+<li><p>修改完成后，取消内存断点，并且给代码段设置断点（为了到达 OEP），然后运行程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go25cgldhcj31du0u0jwg.jpg" alt="错误弹窗"></p>
+<p>运行程序后产生一个异常，同时，查看 IAT，发现断点之后的同一个 DLL 中的数据没有被加密，而其它 DLL 中却还有加密数据，那么 IAT 起始地址应该不是外壳写入的第 1 个地址；</p>
+<p><code>Shift + F9</code>忽略异常后，程序终止运行，应该是外壳有检测机制，检测是否修改了代码，且检测机制位于外壳处理IAT之后，因为之前没有修改过代码；</p>
+</li>
+<li><p>重载程序，给 IAT 所有内存地址设置内存写入断点：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go25gk56cuj31e20u0adn.jpg" alt="设置内存写入断点"></p>
+<p>然后运行程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go25kyfvsjj31dt0u0n1n.jpg" alt="460E8C"></p>
+<p>程序中断后，通过查看提示信息发现，00460E8C 才是外壳写入的第 1 个地址；</p>
+</li>
+<li><p>找到并修改关键指令：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go25mhjlrbj31e00u078c.jpg" alt="找到并修改关键指令"></p>
+<p>取消 IAT 的内存写入断点并给代码段设置内存访问断点，然后运行程序；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go25qqeq6wj31e40u0n1k.jpg" alt="还是弹窗"></p>
+<p>依然有异常弹窗，不过查看 IAT 已经全部正常了，那还等什么？</p>
+</li>
+<li><p>使用 ImportREC 获取输入表：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go25t9lt7hj30wk0oqabe.jpg" alt="ImportREC"></p>
+<p>获取的输入全部有效，然后修复程序；</p>
+</li>
+<li><p>程序可以运行，将程序导入 OD，检查 IAT：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go269k3fw5j31dz0u0jv9.jpg" alt="检查 IAT"></p>
+<p>IAT 正常，脱壳完成！</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>脱壳技术</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>IAT</tag>
+        <tag>Yodas Crypter</tag>
       </tags>
   </entry>
   <entry>
@@ -4915,83 +4992,6 @@
       </tags>
   </entry>
   <entry>
-    <title>修复 IAT 重定向（二）</title>
-    <url>/posts/3434170335/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/UnPackMe-6">UnPackMe</a>来自互联网，仅供学习使用；</li>
-<li>Dump 工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-3">PETools</a>，来自互联网；</li>
-<li>IAT 重建工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-4">ImportREC</a>，来自互联网；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
-</ul>
-<h4 id="操作流程"><a href="#操作流程" class="headerlink" title="操作流程"></a>操作流程</h4><ol>
-<li><p>将 CM 导入 OD，使用<code>内存访问定位法</code>到达 OEP；</p>
-</li>
-<li><p>到达 OEP 后跟随任意 CALL 定位 IAT，发现 IAT 中有部分未知数据：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go23yjs5xnj31ds0u0aed.jpg" alt="加密了"></p>
-<p>通过跟随部分地址后确定不是无效数据，而是被部分 IAT 被重定向了；</p>
-</li>
-<li><p>记录 OEP 的 RVA，IAT 起始地址 RVA 和结束地址 RVA，计算 Size：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go245belssj31e70u0gq6.jpg" alt="记录 RVA"></p>
-<p>OEP 的 RVA 为 271B0；<br>IAT 的起始 RVA 为：60818；<br>IAT 的结束 RVA 为：60F28；<br>IAT 的 Size &#x3D; 60F28 - 60818 &#x3D; 710；</p>
-</li>
-<li><p>使用 PETools 将内存数据 Dump 并保存为可执行文件；</p>
-</li>
-<li><p>重载程序，给 IAT 的起始地址 00460818 设置内存写入断点，运行程序：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go24d39nuyj31dq0u0gq1.jpg" alt="元数据写入"></p>
-<p>程序中断后，可以看到当前写入 IAT 起始地址的数据与到达 OEP 后 IAT 中的数据不一致；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go24l458usj31dw0u0qai.jpg" alt="执行 1 行"></p>
-<p>执行当前指令后，查看相关数据，发现当前写入的是函数字符串指针，而到达 OEP 后却是重定向数据，说明外壳在加载过程中对 IAT 进行了处理；</p>
-</li>
-<li><p>继续向下执行指令：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go24sy4g8ej31e20u0gqa.jpg" alt="加密了"></p>
-<p>执行当前指令后，00460818 中存放的函数字符串指针被替换为 Hook API 数据，所以当前位置是关键代码；</p>
-</li>
-<li><p>找到关键代码后，为了不让外壳处理 IAT，需要跳过，上面的跳转是关键跳转：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go24wacrjwj31dt0u0tch.jpg" alt="关键跳转"></p>
-<p>多个跳转嵌套，弯弯绕，如果只是为了不让外壳加密程序，是否可以修改当前指令为无用指令（花指令）呢？</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go252malcjj31dy0u0wiu.jpg" alt="修改关键指令"></p>
-<p>既然要重定向部分 IAT，加密操作肯定是循环，So，单步执行代码重新来到关键位置，修改指令；</p>
-</li>
-<li><p>修改完成后，取消内存断点，并且给代码段设置断点（为了到达 OEP），然后运行程序：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go25cgldhcj31du0u0jwg.jpg" alt="错误弹窗"></p>
-<p>运行程序后产生一个异常，同时，查看 IAT，发现断点之后的同一个 DLL 中的数据没有被加密，而其它 DLL 中却还有加密数据，那么 IAT 起始地址应该不是外壳写入的第 1 个地址；</p>
-<p><code>Shift + F9</code>忽略异常后，程序终止运行，应该是外壳有检测机制，检测是否修改了代码，且检测机制位于外壳处理IAT之后，因为之前没有修改过代码；</p>
-</li>
-<li><p>重载程序，给 IAT 所有内存地址设置内存写入断点：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go25gk56cuj31e20u0adn.jpg" alt="设置内存写入断点"></p>
-<p>然后运行程序：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go25kyfvsjj31dt0u0n1n.jpg" alt="460E8C"></p>
-<p>程序中断后，通过查看提示信息发现，00460E8C 才是外壳写入的第 1 个地址；</p>
-</li>
-<li><p>找到并修改关键指令：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go25mhjlrbj31e00u078c.jpg" alt="找到并修改关键指令"></p>
-<p>取消 IAT 的内存写入断点并给代码段设置内存访问断点，然后运行程序；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go25qqeq6wj31e40u0n1k.jpg" alt="还是弹窗"></p>
-<p>依然有异常弹窗，不过查看 IAT 已经全部正常了，那还等什么？</p>
-</li>
-<li><p>使用 ImportREC 获取输入表：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go25t9lt7hj30wk0oqabe.jpg" alt="ImportREC"></p>
-<p>获取的输入全部有效，然后修复程序；</p>
-</li>
-<li><p>程序可以运行，将程序导入 OD，检查 IAT：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go269k3fw5j31dz0u0jv9.jpg" alt="检查 IAT"></p>
-<p>IAT 正常，脱壳完成！</p>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>脱壳技术</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>IAT</tag>
-        <tag>Yodas Crypter</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>内存访问定位 OEP</title>
     <url>/posts/3449356463/</url>
     <content><![CDATA[<blockquote>
@@ -5057,69 +5057,6 @@
       </categories>
       <tags>
         <tag>OEP</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>壳常用函数定位 OEP</title>
-    <url>/posts/1066637783/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-5">OllyDbg</a>修改版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/UnPackMe-2">UnPackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
-</ul>
-<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><h5 id="GetProcAddress"><a href="#GetProcAddress" class="headerlink" title="GetProcAddress"></a>GetProcAddress</h5><ol>
-<li><p>将程序导入 OD，goto 到 GetProcAddress 函数的行首，设置 F2 断点，然后运行程序；</p>
-</li>
-<li><p>程序中断在函数的行首，使用<code>shift + F4</code>设置条件记录断点：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnx8nzo52ej319x0u041z.jpg" alt="设置条件记录断点"></p>
-<p>表达式的值填写<code>[esp]</code>，表示获取 ESP 中的数据，同时勾选记录表达式的值以及函数参数选项；</p>
-</li>
-<li><p>清空 log 窗口，然后运行程序，条件记录断点会在 log 窗口记录每次调用 GetProcAddress 函数的调用地址及参数：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnx8ws8qugj31aa0u0acs.jpg" alt="记录每次调用"></p>
-<p>通过查看内存窗口得知，外壳程序对 GetProcAddress 的最后一次调用位于：0047009A：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnx939o7ifj31a80u0gou.jpg" alt="外壳程序的最后一次调用"></p>
-</li>
-<li><p>重载程序，编辑条件记录断点：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnx9ag1b3uj31a00u00vx.jpg" alt="编辑条件记录断点"></p>
-<p>勾选<code>按条件中断</code>选项，同时将条件设置为<code>[ESP] == 0047009A</code>，表示当 ESP 的值为 0047009A 时中断；</p>
-</li>
-<li><p>运行程序后，程序中断在条件记录断点位置，来到内存窗口，给代码段设置内存执行断点：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnx9euqak5j31ok0e2jrz.jpg" alt="内存执行断点"></p>
-</li>
-<li><p>多次运行程序后，程序到达 OEP：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnx9k811k6j31a50u0tby.jpg" alt="程序到达 OEP"></p>
-<p>这里需要运行太多次了，所以这种方法因程序而异，灵活使用；</p>
-<p>其实，设置了内存执行断点后，就可以将条件访问断点取消了，取消之后就和异常法大同小异了，好处是可以绕过部分反调试；</p>
-</li>
-</ol>
-<h4 id="ExitThread"><a href="#ExitThread" class="headerlink" title="ExitThread"></a>ExitThread</h4><p>因为本例中有终止线程的动作，且位于代码段之外，可以使用 ExitThread；</p>
-<ol>
-<li><p>将程序导入 OD，<code>F9</code>运行程序后，打开日志窗口：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnx9vj0yquj30sa0eoaaj.jpg" alt="打开日志窗口"></p>
-<p>可以看到，在一堆异常中，有一个线程结束日志，位于最后一次异常之前；</p>
-</li>
-<li><p>打开 OD 调试设置菜单，事件选项卡，选中<code>中断于线程结束</code>选项：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnx9z0mfyhj30q20lgdgc.jpg" alt="中断于线程结束"></p>
-</li>
-<li><p>重载并运行程序，程序中断：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnxa1y4w6uj319v0u0tcr.jpg" alt="提示信息"></p>
-<p>看提示信息可以得知，中断原因是某个线程结束了；</p>
-</li>
-<li><p>在内存窗口，给代码段设置内存执行断点，然后运行程序：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnx9k811k6j31a50u0tby.jpg" alt="程序中断在 OEP"></p>
-<p>程序到达 OEP；</p>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>脱壳技术</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>OEP</tag>
-        <tag>Crunch</tag>
       </tags>
   </entry>
   <entry>
@@ -5233,6 +5170,155 @@
       </categories>
       <tags>
         <tag>PE</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>壳的加载过程</title>
+    <url>/posts/1754370069/</url>
+    <content><![CDATA[<blockquote>
+<p>记录<a href="https://bbs.pediy.com/forum-99.htm">加密解密</a>一书中对<code>壳的加载过程</code>的描述，第 16 章：16.1；</p>
+<p>眼过千遍，不如手过一遍；</p>
+</blockquote>
+<span id="more"></span>
+
+<h4 id="壳的加载过程"><a href="#壳的加载过程" class="headerlink" title="壳的加载过程"></a>壳的加载过程</h4><p>加壳软件通过修改原程序执行文件的组织结构，从而使壳比原程序代码更早获得控制权，且不影响原程序的正常运行，以下是壳的常见加载过程:</p>
+<ol>
+<li><p>保存入口参数</p>
+<p>加壳程序在初始化时会保存各寄存器的值，待外壳执行完毕，再恢复各寄存器的内容，最后跳到原程序执行，通常使用 PUSHAD&#x2F;PUSHFD、POPAD&#x2F;POPFD 指令来保存与恢复现场；</p>
+</li>
+<li><p>获取壳本身需要使用的 API 地址</p>
+<p>在一般情况下，外壳的输入表中只有 GetProcAddress、GetModuleHandle 和 LoadLibrary 这 3 个 API 函数，甚至只有 Kernel32.dll 及 GetProcAddress；</p>
+<p>如果需要使用其它 API 函数，可以通过函数 LoadLibraryA（W）或 LoadLibraryExA（W）将 DLL 文件映像映射到调用进程的地址空间中，函数返回的 HINSTANCE 值用于标识文件映像所映射的虚拟内存地址；</p>
+<p>LoadLibrary 函数原型：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">HINSTANCE LoadLibrary(</span><br><span class="line">    LPCTSTR lpLibFileName    // DLL 文件名地址</span><br><span class="line">     );</span><br></pre></td></tr></table></figure>
+
+<p>返回值：成功则返回模块的句柄，失败返回 NULL；</p>
+<p>如果 DLL 文件已经被映射到调用进程的地址空间中，可以调用 GetModuleHandleA（W）函数获取 DLL 模块的句柄；</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">HMODULE GetModuleHandle(</span><br><span class="line">    LPCTSTR lpModuleName    // DLL 文件名地址</span><br><span class="line">     );</span><br></pre></td></tr></table></figure>
+
+<p>返回值：成功则返回模块的句柄，失败返回 NULL；</p>
+<p>一旦 DLL 模块被加载，线程就可以调用 GetProcAddress 函数获取输入函数的地址了；</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">FARPROC GetProcAddress(</span><br><span class="line">    HMODULE hModule,        // DLl 模块句柄</span><br><span class="line">    LPCSTR  lpProcName      // 函数名</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
+<p>参数 hModule 是 DLL 模块的句柄，是调用 LoadLibrary（Ex） 或 GetModuleHandle 函数的返回值；</p>
+<p>参数 lpProcName 是函数名或函数序数值，如果此参数是序数值，则必须使用低位字；高位必须为零；</p>
+<p>返回值：成功则返回函数地址，失败返回 NULL；</p>
+<p>在外壳中使用的其他函数都是由这 3 个函数调用的；</p>
+<p>有些壳为了提高强度，连系统提供的 GetProcAddress 函数都不使用，而是自己实现一个相同功能的函数来代替 GetProcAddress，从而增加函数调用的隐蔽性；</p>
+</li>
+<li><p>解密原程序各区块的数据</p>
+<p>出于保护原程序代码和数据的目的，壳一般会加密原程序文件的各个区段；</p>
+<p>在程序执行时，外壳将解密这些区段数据，从而使程序能够正常运行；</p>
+<p>壳一般是按区块加密的，所以解密时也按区块解密，并把解密的区块数据按照区块的定义放入内存中合适的位置；</p>
+</li>
+<li><p>IAT 的初始化</p>
+<p>IAT 的填写本来应该由 PE 装载器实现，但由于在加壳时构造了一个自建输入表，并让 PE 文件头数据目录表中的输入表指针指向自建输入表，PE 装载器会对自建输入表进行填写；</p>
+<p>程序的原始输入表会被外壳变形后存储，IAT 的填写会由外壳程序实现；</p>
+<p>外壳程序要做的就是将这个变形输入表的结构从头到尾扫描一遍，重新获取每个 DLL 引入的所有函数的地址，并将其填写在 IAT 中；</p>
+</li>
+<li><p>重定位项的处理</p>
+<p>文件执行时将被映射到指定内存地址中，这个初始内存地址称为基址，当然，这只是程序文件中声明的，当程序运行时，操作系统一定会满足其要求吗？</p>
+<p>对 EXE 文件来说，操作系统会尽量满足其要求，如：程序声明的基址是 400000，操作系统提供的基址也是 400000，在这种情况下就不需要基址重定位了；</p>
+<p>由于不需要对 EXE 文件进行重定位，加壳软件会删除原程序文件中用于保存重定位信息的区块，使加壳后的程序更小巧；</p>
+<p>对 DLL 的动态链接库文件来说，操作系统无法保证 DLL 每次运行时都提供相同的基址，所以重定位就很重要了；</p>
+<p>此时，壳中也要有用于重定位的代码，否则原程序将无法正常运行；</p>
+<p>所以，加壳的 DLL 比加壳的 EXE 在修正时多了一个重定位表；</p>
+</li>
+<li><p>Hook API<br>在程序文件中，输入表的作用是让 Windows 操作系统在程序运行时将 API 的实际地址提供给程序使用，在程序的第 1 行代码执行前，Windows 操作系统就完成了这项工作；</p>
+<p>壳大都在修改原程序的输入表后，自己模仿 Windows 操作系统的工作流程，向输入表中填充相关的数据，在填充过程中，外壳可以填充 Hook API 代码的地址，从而间接获得程序的控制权；</p>
+</li>
+<li><p>跳转到程序原始入口点（OEP）</p>
+<p>从这个时候起，壳就把控制权还给原程序了，一般的壳在这里会有一条明显的分界线；</p>
+<p>现在越来越多的加密壳先将 OEP 代码段搬到外壳的地址空间里，再将这段代码清除（这种技术称为“Stolen Bytes”），这样，OEP 与外壳之间那条明显的分界线就消失了，脱壳的难度也增加了；</p>
+</li>
+</ol>
+<h4 id="脱壳机"><a href="#脱壳机" class="headerlink" title="脱壳机"></a>脱壳机</h4><p>针对特定的壳开发出来的脱壳软件称为“脱壳机”；</p>
+<p>脱壳就是将加壳后的程序恢复到原来的状态，脱壳成功的标志是文件能正常运行；</p>
+<p>由于脱壳时可能没有将壳本身的代码去除，脱壳后程序的体积通常会比原程序的体积大；</p>
+<p>脱壳机一般分为专用脱壳机和通用脱壳机；</p>
+<p>专用脱壳机是针对某种壳专门编写的，只能脱特定的壳，虽然使用范围小，但效果好；</p>
+<p>通用脱壳机具有通用性，可以脱多种不同类型的壳（主要是压缩壳）；</p>
+<p>在分析一个软件前，可以使用 PEiD 确定壳的种类，再选择合适的脱壳机；</p>
+<h4 id="手动脱壳"><a href="#手动脱壳" class="headerlink" title="手动脱壳"></a>手动脱壳</h4><p>对一些加密壳或修改的壳，没有脱壳机，因此必须要分析外壳并手动脱壳；</p>
+<p>手动脱壳过程一般分为 3 步：</p>
+<ol>
+<li>查找真正的程序入口点（OEP）；</li>
+<li>抓取内存映像文件；</li>
+<li>重建 PE 文件；</li>
+</ol>
+<p>当程序执行时，外壳代码首先获得控制权，模拟 Windows 加载器，将原程序恢复到内存中，这时，内存中的数据就是加壳前的映像文件了，适时将其抓取并修改，即可还原到加壳前的状态；</p>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>脱壳技术</category>
+        <category>Windows</category>
+        <category>文章资料</category>
+      </categories>
+      <tags>
+        <tag>壳基础</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>壳常用函数定位 OEP</title>
+    <url>/posts/1066637783/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-5">OllyDbg</a>修改版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/UnPackMe-2">UnPackMe</a>来自互联网，仅供学习使用；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
+</ul>
+<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><h5 id="GetProcAddress"><a href="#GetProcAddress" class="headerlink" title="GetProcAddress"></a>GetProcAddress</h5><ol>
+<li><p>将程序导入 OD，goto 到 GetProcAddress 函数的行首，设置 F2 断点，然后运行程序；</p>
+</li>
+<li><p>程序中断在函数的行首，使用<code>shift + F4</code>设置条件记录断点：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnx8nzo52ej319x0u041z.jpg" alt="设置条件记录断点"></p>
+<p>表达式的值填写<code>[esp]</code>，表示获取 ESP 中的数据，同时勾选记录表达式的值以及函数参数选项；</p>
+</li>
+<li><p>清空 log 窗口，然后运行程序，条件记录断点会在 log 窗口记录每次调用 GetProcAddress 函数的调用地址及参数：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnx8ws8qugj31aa0u0acs.jpg" alt="记录每次调用"></p>
+<p>通过查看内存窗口得知，外壳程序对 GetProcAddress 的最后一次调用位于：0047009A：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnx939o7ifj31a80u0gou.jpg" alt="外壳程序的最后一次调用"></p>
+</li>
+<li><p>重载程序，编辑条件记录断点：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnx9ag1b3uj31a00u00vx.jpg" alt="编辑条件记录断点"></p>
+<p>勾选<code>按条件中断</code>选项，同时将条件设置为<code>[ESP] == 0047009A</code>，表示当 ESP 的值为 0047009A 时中断；</p>
+</li>
+<li><p>运行程序后，程序中断在条件记录断点位置，来到内存窗口，给代码段设置内存执行断点：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnx9euqak5j31ok0e2jrz.jpg" alt="内存执行断点"></p>
+</li>
+<li><p>多次运行程序后，程序到达 OEP：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnx9k811k6j31a50u0tby.jpg" alt="程序到达 OEP"></p>
+<p>这里需要运行太多次了，所以这种方法因程序而异，灵活使用；</p>
+<p>其实，设置了内存执行断点后，就可以将条件访问断点取消了，取消之后就和异常法大同小异了，好处是可以绕过部分反调试；</p>
+</li>
+</ol>
+<h4 id="ExitThread"><a href="#ExitThread" class="headerlink" title="ExitThread"></a>ExitThread</h4><p>因为本例中有终止线程的动作，且位于代码段之外，可以使用 ExitThread；</p>
+<ol>
+<li><p>将程序导入 OD，<code>F9</code>运行程序后，打开日志窗口：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnx9vj0yquj30sa0eoaaj.jpg" alt="打开日志窗口"></p>
+<p>可以看到，在一堆异常中，有一个线程结束日志，位于最后一次异常之前；</p>
+</li>
+<li><p>打开 OD 调试设置菜单，事件选项卡，选中<code>中断于线程结束</code>选项：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnx9z0mfyhj30q20lgdgc.jpg" alt="中断于线程结束"></p>
+</li>
+<li><p>重载并运行程序，程序中断：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnxa1y4w6uj319v0u0tcr.jpg" alt="提示信息"></p>
+<p>看提示信息可以得知，中断原因是某个线程结束了；</p>
+</li>
+<li><p>在内存窗口，给代码段设置内存执行断点，然后运行程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnx9k811k6j31a50u0tby.jpg" alt="程序中断在 OEP"></p>
+<p>程序到达 OEP；</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>脱壳技术</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>OEP</tag>
+        <tag>Crunch</tag>
       </tags>
   </entry>
   <entry>
@@ -6077,92 +6163,6 @@
       </categories>
       <tags>
         <tag>异常处理</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>壳的加载过程</title>
-    <url>/posts/1754370069/</url>
-    <content><![CDATA[<blockquote>
-<p>记录<a href="https://bbs.pediy.com/forum-99.htm">加密解密</a>一书中对<code>壳的加载过程</code>的描述，第 16 章：16.1；</p>
-<p>眼过千遍，不如手过一遍；</p>
-</blockquote>
-<span id="more"></span>
-
-<h4 id="壳的加载过程"><a href="#壳的加载过程" class="headerlink" title="壳的加载过程"></a>壳的加载过程</h4><p>加壳软件通过修改原程序执行文件的组织结构，从而使壳比原程序代码更早获得控制权，且不影响原程序的正常运行，以下是壳的常见加载过程:</p>
-<ol>
-<li><p>保存入口参数</p>
-<p>加壳程序在初始化时会保存各寄存器的值，待外壳执行完毕，再恢复各寄存器的内容，最后跳到原程序执行，通常使用 PUSHAD&#x2F;PUSHFD、POPAD&#x2F;POPFD 指令来保存与恢复现场；</p>
-</li>
-<li><p>获取壳本身需要使用的 API 地址</p>
-<p>在一般情况下，外壳的输入表中只有 GetProcAddress、GetModuleHandle 和 LoadLibrary 这 3 个 API 函数，甚至只有 Kernel32.dll 及 GetProcAddress；</p>
-<p>如果需要使用其它 API 函数，可以通过函数 LoadLibraryA（W）或 LoadLibraryExA（W）将 DLL 文件映像映射到调用进程的地址空间中，函数返回的 HINSTANCE 值用于标识文件映像所映射的虚拟内存地址；</p>
-<p>LoadLibrary 函数原型：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">HINSTANCE LoadLibrary(</span><br><span class="line">    LPCTSTR lpLibFileName    // DLL 文件名地址</span><br><span class="line">     );</span><br></pre></td></tr></table></figure>
-
-<p>返回值：成功则返回模块的句柄，失败返回 NULL；</p>
-<p>如果 DLL 文件已经被映射到调用进程的地址空间中，可以调用 GetModuleHandleA（W）函数获取 DLL 模块的句柄；</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">HMODULE GetModuleHandle(</span><br><span class="line">    LPCTSTR lpModuleName    // DLL 文件名地址</span><br><span class="line">     );</span><br></pre></td></tr></table></figure>
-
-<p>返回值：成功则返回模块的句柄，失败返回 NULL；</p>
-<p>一旦 DLL 模块被加载，线程就可以调用 GetProcAddress 函数获取输入函数的地址了；</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">FARPROC GetProcAddress(</span><br><span class="line">    HMODULE hModule,        // DLl 模块句柄</span><br><span class="line">    LPCSTR  lpProcName      // 函数名</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
-
-<p>参数 hModule 是 DLL 模块的句柄，是调用 LoadLibrary（Ex） 或 GetModuleHandle 函数的返回值；</p>
-<p>参数 lpProcName 是函数名或函数序数值，如果此参数是序数值，则必须使用低位字；高位必须为零；</p>
-<p>返回值：成功则返回函数地址，失败返回 NULL；</p>
-<p>在外壳中使用的其他函数都是由这 3 个函数调用的；</p>
-<p>有些壳为了提高强度，连系统提供的 GetProcAddress 函数都不使用，而是自己实现一个相同功能的函数来代替 GetProcAddress，从而增加函数调用的隐蔽性；</p>
-</li>
-<li><p>解密原程序各区块的数据</p>
-<p>出于保护原程序代码和数据的目的，壳一般会加密原程序文件的各个区段；</p>
-<p>在程序执行时，外壳将解密这些区段数据，从而使程序能够正常运行；</p>
-<p>壳一般是按区块加密的，所以解密时也按区块解密，并把解密的区块数据按照区块的定义放入内存中合适的位置；</p>
-</li>
-<li><p>IAT 的初始化</p>
-<p>IAT 的填写本来应该由 PE 装载器实现，但由于在加壳时构造了一个自建输入表，并让 PE 文件头数据目录表中的输入表指针指向自建输入表，PE 装载器会对自建输入表进行填写；</p>
-<p>程序的原始输入表会被外壳变形后存储，IAT 的填写会由外壳程序实现；</p>
-<p>外壳程序要做的就是将这个变形输入表的结构从头到尾扫描一遍，重新获取每个 DLL 引入的所有函数的地址，并将其填写在 IAT 中；</p>
-</li>
-<li><p>重定位项的处理</p>
-<p>文件执行时将被映射到指定内存地址中，这个初始内存地址称为基址，当然，这只是程序文件中声明的，当程序运行时，操作系统一定会满足其要求吗？</p>
-<p>对 EXE 文件来说，操作系统会尽量满足其要求，如：程序声明的基址是 400000，操作系统提供的基址也是 400000，在这种情况下就不需要基址重定位了；</p>
-<p>由于不需要对 EXE 文件进行重定位，加壳软件会删除原程序文件中用于保存重定位信息的区块，使加壳后的程序更小巧；</p>
-<p>对 DLL 的动态链接库文件来说，操作系统无法保证 DLL 每次运行时都提供相同的基址，所以重定位就很重要了；</p>
-<p>此时，壳中也要有用于重定位的代码，否则原程序将无法正常运行；</p>
-<p>所以，加壳的 DLL 比加壳的 EXE 在修正时多了一个重定位表；</p>
-</li>
-<li><p>Hook API<br>在程序文件中，输入表的作用是让 Windows 操作系统在程序运行时将 API 的实际地址提供给程序使用，在程序的第 1 行代码执行前，Windows 操作系统就完成了这项工作；</p>
-<p>壳大都在修改原程序的输入表后，自己模仿 Windows 操作系统的工作流程，向输入表中填充相关的数据，在填充过程中，外壳可以填充 Hook API 代码的地址，从而间接获得程序的控制权；</p>
-</li>
-<li><p>跳转到程序原始入口点（OEP）</p>
-<p>从这个时候起，壳就把控制权还给原程序了，一般的壳在这里会有一条明显的分界线；</p>
-<p>现在越来越多的加密壳先将 OEP 代码段搬到外壳的地址空间里，再将这段代码清除（这种技术称为“Stolen Bytes”），这样，OEP 与外壳之间那条明显的分界线就消失了，脱壳的难度也增加了；</p>
-</li>
-</ol>
-<h4 id="脱壳机"><a href="#脱壳机" class="headerlink" title="脱壳机"></a>脱壳机</h4><p>针对特定的壳开发出来的脱壳软件称为“脱壳机”；</p>
-<p>脱壳就是将加壳后的程序恢复到原来的状态，脱壳成功的标志是文件能正常运行；</p>
-<p>由于脱壳时可能没有将壳本身的代码去除，脱壳后程序的体积通常会比原程序的体积大；</p>
-<p>脱壳机一般分为专用脱壳机和通用脱壳机；</p>
-<p>专用脱壳机是针对某种壳专门编写的，只能脱特定的壳，虽然使用范围小，但效果好；</p>
-<p>通用脱壳机具有通用性，可以脱多种不同类型的壳（主要是压缩壳）；</p>
-<p>在分析一个软件前，可以使用 PEiD 确定壳的种类，再选择合适的脱壳机；</p>
-<h4 id="手动脱壳"><a href="#手动脱壳" class="headerlink" title="手动脱壳"></a>手动脱壳</h4><p>对一些加密壳或修改的壳，没有脱壳机，因此必须要分析外壳并手动脱壳；</p>
-<p>手动脱壳过程一般分为 3 步：</p>
-<ol>
-<li>查找真正的程序入口点（OEP）；</li>
-<li>抓取内存映像文件；</li>
-<li>重建 PE 文件；</li>
-</ol>
-<p>当程序执行时，外壳代码首先获得控制权，模拟 Windows 加载器，将原程序恢复到内存中，这时，内存中的数据就是加壳前的映像文件了，适时将其抓取并修改，即可还原到加壳前的状态；</p>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>脱壳技术</category>
-        <category>Windows</category>
-        <category>文章资料</category>
-      </categories>
-      <tags>
-        <tag>壳基础</tag>
       </tags>
   </entry>
   <entry>
@@ -7161,6 +7161,74 @@ E --&gt; |&quot;否，未解决&quot;| G
       </tags>
   </entry>
   <entry>
+    <title>文件共享服务器 CIFS</title>
+    <url>/posts/1791418955/</url>
+    <content><![CDATA[<h4 id="CIFS"><a href="#CIFS" class="headerlink" title="CIFS"></a>CIFS</h4><ol>
+<li><p>CIFS（Common Internet File System），是 Windows 上的一个文件共享协议；</p>
+</li>
+<li><p>所有 Windows 系统默认含有 CIFS；</p>
+</li>
+<li><p>Windows 系统可以在开始运行或文件管理器地址栏输入 UNC 地址（以<code>\\</code>开头），即可访问 CIFS 文件共享服务；<span id="more"></span></p>
+</li>
+<li><p>其他系统可以使用<code>smb://x.x.x.x</code>访问 CIFS 服务器；</p>
+<p>例如 macOS：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gsiir7qshoj31ag0u0afw.jpg" alt="macOS"></p>
+</li>
+<li><p>在本地登录时，共享的文件只受 NTFS 权限影响；</p>
+</li>
+<li><p>在远程登录时，共享的文件将受 NTFS 权限以及共享权限的共同影响，且取最严格的部分（交集）；</p>
+</li>
+<li><p>如需便捷的设置权限，可以将共享权限设置为完全控制，然后具体的权限需求在 NTFS 权限中设置，毕竟共享权限的设置太简陋；</p>
+</li>
+<li><p>在共享文件名后加美元符号<code>$</code>可以隐藏共享，访问隐藏共享需要具体的共享文件名；</p>
+</li>
+<li><p><code>net share</code>：查看本机所有共享的项目；</p>
+</li>
+<li><p><code>net share xxx /del</code>：删除指定共享；</p>
+<p>WINXP 的隐藏共享：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gsij2kkg99j30ij0c3t9n.jpg" alt="net share"></p>
+<p><code>IPC$</code>：空链接，访问<code>IPC$</code>就可以访问目标计算机上的所有文件，<code>IPC$</code>无法删除，但可以指向空；</p>
+<p>隐藏的共享项目开机自动生成，所以<code>net share</code>只能暂时删除；</p>
+<p>可以使用批处理在开机时删除隐藏共享，并将<code>IPC$</code>指向空；</p>
+</li>
+<li><p>屏蔽系统隐藏共享自动生成：</p>
+<ol>
+<li>按下<code>Windows + R</code>键，输入<code>regedit</code>并回车，打开注册表编辑器；</li>
+<li>定位共享注册表位置：<code>HKEY_Local_MACHINE\System\CurrentControlSet\Services\LanmanServer\Paramenters\</code>；</li>
+<li>新建 DWORD 类型的 <code>AutoShareServer</code> 键，值为 0；</li>
+</ol>
+</li>
+<li><p>关闭 445 共享端口：</p>
+<ol>
+<li><p>按下<code>Windows + R</code>键，输入<code>services.msc</code>并回车，打开服务管理；</p>
+</li>
+<li><p>停止并禁用 server 服务；</p>
+</li>
+<li><p>修改恢复选项为无操作；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gsijlqwepoj61re0u0ajl02.jpg" alt="关闭 445 端口"></p>
+</li>
+<li><p>勒索病毒就是通过 445 端口入侵的；</p>
+</li>
+</ol>
+</li>
+</ol>
+<h4 id="题外话"><a href="#题外话" class="headerlink" title="题外话"></a>题外话</h4><ol>
+<li><code>whoami</code>：可以查看当前用户；</li>
+<li><code>whoami /user</code>：可以查看用户的 SID；</li>
+<li><code>dxdiag</code>可以查看系统信息，包括 bios 版本，查看机器配置再也不用娱乐大师了；</li>
+</ol>
+]]></content>
+      <categories>
+        <category>网络安全</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>DOS 命令</tag>
+        <tag>CIFS</tag>
+        <tag>文件共享</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>扫雷游戏</title>
     <url>/posts/2610596285/</url>
     <content><![CDATA[<p>从上微机课开始，在没有网而且啥也不会的情况下，扫雷成了打发时间的唯一乐趣，玩过没写过，今天来试试；</p>
@@ -7248,74 +7316,6 @@ E --&gt; |&quot;否，未解决&quot;| G
       </tags>
   </entry>
   <entry>
-    <title>文件共享服务器 CIFS</title>
-    <url>/posts/1791418955/</url>
-    <content><![CDATA[<h4 id="CIFS"><a href="#CIFS" class="headerlink" title="CIFS"></a>CIFS</h4><ol>
-<li><p>CIFS（Common Internet File System），是 Windows 上的一个文件共享协议；</p>
-</li>
-<li><p>所有 Windows 系统默认含有 CIFS；</p>
-</li>
-<li><p>Windows 系统可以在开始运行或文件管理器地址栏输入 UNC 地址（以<code>\\</code>开头），即可访问 CIFS 文件共享服务；<span id="more"></span></p>
-</li>
-<li><p>其他系统可以使用<code>smb://x.x.x.x</code>访问 CIFS 服务器；</p>
-<p>例如 macOS：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gsiir7qshoj31ag0u0afw.jpg" alt="macOS"></p>
-</li>
-<li><p>在本地登录时，共享的文件只受 NTFS 权限影响；</p>
-</li>
-<li><p>在远程登录时，共享的文件将受 NTFS 权限以及共享权限的共同影响，且取最严格的部分（交集）；</p>
-</li>
-<li><p>如需便捷的设置权限，可以将共享权限设置为完全控制，然后具体的权限需求在 NTFS 权限中设置，毕竟共享权限的设置太简陋；</p>
-</li>
-<li><p>在共享文件名后加美元符号<code>$</code>可以隐藏共享，访问隐藏共享需要具体的共享文件名；</p>
-</li>
-<li><p><code>net share</code>：查看本机所有共享的项目；</p>
-</li>
-<li><p><code>net share xxx /del</code>：删除指定共享；</p>
-<p>WINXP 的隐藏共享：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gsij2kkg99j30ij0c3t9n.jpg" alt="net share"></p>
-<p><code>IPC$</code>：空链接，访问<code>IPC$</code>就可以访问目标计算机上的所有文件，<code>IPC$</code>无法删除，但可以指向空；</p>
-<p>隐藏的共享项目开机自动生成，所以<code>net share</code>只能暂时删除；</p>
-<p>可以使用批处理在开机时删除隐藏共享，并将<code>IPC$</code>指向空；</p>
-</li>
-<li><p>屏蔽系统隐藏共享自动生成：</p>
-<ol>
-<li>按下<code>Windows + R</code>键，输入<code>regedit</code>并回车，打开注册表编辑器；</li>
-<li>定位共享注册表位置：<code>HKEY_Local_MACHINE\System\CurrentControlSet\Services\LanmanServer\Paramenters\</code>；</li>
-<li>新建 DWORD 类型的 <code>AutoShareServer</code> 键，值为 0；</li>
-</ol>
-</li>
-<li><p>关闭 445 共享端口：</p>
-<ol>
-<li><p>按下<code>Windows + R</code>键，输入<code>services.msc</code>并回车，打开服务管理；</p>
-</li>
-<li><p>停止并禁用 server 服务；</p>
-</li>
-<li><p>修改恢复选项为无操作；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gsijlqwepoj61re0u0ajl02.jpg" alt="关闭 445 端口"></p>
-</li>
-<li><p>勒索病毒就是通过 445 端口入侵的；</p>
-</li>
-</ol>
-</li>
-</ol>
-<h4 id="题外话"><a href="#题外话" class="headerlink" title="题外话"></a>题外话</h4><ol>
-<li><code>whoami</code>：可以查看当前用户；</li>
-<li><code>whoami /user</code>：可以查看用户的 SID；</li>
-<li><code>dxdiag</code>可以查看系统信息，包括 bios 版本，查看机器配置再也不用娱乐大师了；</li>
-</ol>
-]]></content>
-      <categories>
-        <category>网络安全</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>DOS 命令</tag>
-        <tag>CIFS</tag>
-        <tag>文件共享</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>最后一次异常法定位 OEP</title>
     <url>/posts/2614075303/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -7370,6 +7370,100 @@ E --&gt; |&quot;否，未解决&quot;| G
       </categories>
       <tags>
         <tag>OEP</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>用 CSS 实现元素水平垂直居中</title>
+    <url>/posts/4290690234/</url>
+    <content><![CDATA[<blockquote>
+<p>突然顿悟了“书读百遍，其义自现。”当然，还需要配合“好记性不如烂笔头”，整理总结一下常见的元素水平垂直居中的方法。</p>
+</blockquote>
+<p>起因是有童鞋问我让元素垂直居中的方法，我突然懵了，居然一时没有描述出来，吓得赶紧抽空总结了一下，最后引出了元素水平且垂直居中。</p>
+<h4 id="方法一"><a href="#方法一" class="headerlink" title="方法一"></a>方法一</h4><p>最常用的方法：<code>父元素 position: relative; 元素自身 position: absolute; top: 0; bottom: 0; margin: auto;</code></p>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.outer</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#000</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">position</span>: relative;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.inner</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#f00</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">position</span>: absolute;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">top</span>: <span class="number">0</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">bottom</span>: <span class="number">0</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">margin</span>: auto;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;outer&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;inner&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<span id="more"></span>
+
+<p><code>margin: auto;</code>很重要，只有设置了它，浏览器才会自动分配可用空间，根据规范的描述，如果“margin-top”和“margin-bottom”都是 auto，则在额外约束下，让两边得到相等的值；</p>
+<p>其实大家都知道，这种方法通常是用来设置元素<code>绝对居中</code>（也就是水平垂直居中）的，规范的描述同样适用于“margin-left”和“margin-right”，所以可以达到元素绝对居中的作用，如下 👇：</p>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.outer</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#000</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">position</span>: relative;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.inner</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#f00</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">position</span>: absolute;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">top</span>: <span class="number">0</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">bottom</span>: <span class="number">0</span>;</span></span><br><span class="line"><span class="language-css">    <span class="comment">/* 添加以下设置 */</span></span></span><br><span class="line"><span class="language-css">    <span class="attribute">right</span>: <span class="number">0</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">left</span>: <span class="number">0</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">margin</span>: auto;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;outer&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;inner&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>再来聊聊<code>margin: auto;</code>这个神奇的属性，通常情况下，让一个元素水平居中很简单<code>margin: 0 auto;</code>，而如果要让一个元素垂直居中，则需要很多的步骤，为什么？</p>
+<p>因为浏览器的宽度是有限的，从一开始就知道父元素的宽度，然后<code>margin: 0 auto;</code>来分配父元素 X 轴上的可用空间，想想也很合理；</p>
+<p>虽然浏览器的高度也是有限的，但内容的高度却是未知的，像现在的流式布局，一直滚动一直有内容，所以很难确定父元素 Y 轴到底有多长，那么<code>margin: auto;</code>就无法分配父元素 Y 轴上的可用空间，居中就更无从谈起了；</p>
+<p>有人抬杠说， X 轴上的内容也可以是无限的呀，对，你说的对，反正我没见过哪家公司的站点还有横向滚动条的（特殊需求除外）；</p>
+<p>那么这里的绝对定位就好理解了：因为要分配父元素的可用空间，当然要知道父元素的边界了，所以首先父元素<code>position: relative;</code>，然后元素自身<code>position: absolute;</code>，接着定义所有边界<code>top: 0; right: 0; bottom: 0; left: 0;</code>，既然距离所有边界的距离都是一样的，那<code>margin: auto;</code>就只能给轴的两边分配相同的值，绝对居中也就成了；</p>
+<h4 id="方法二"><a href="#方法二" class="headerlink" title="方法二"></a>方法二</h4><p>也是常用方法的一种：<code>父元素 position: relative; 元素自身 position: absolute; margin-top: -(元素自身高度的一半);</code></p>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.outer</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#000</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">position</span>: relative;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.inner</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#f00</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">position</span>: absolute;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">top</span>: <span class="number">50%</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">margin-top</span>: -<span class="number">50px</span>;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;outer&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;inner&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>绝对定位相对于最近的且 position 不是 static 的父元素，而且，定位原点位于父元素内容区域（content）的左上角，但也有例外，如果设置了<code>left: 0; 和 top: 0;</code>，那么，定位原点则位于父元素的实际占用区域（content + padding）的左上角，不过，这种情况并不多见；</p>
+<p>这里的<code>top: 50%;</code>让元素左上角位于父元素高度一半的位置，这里是父元素高度的中心点，但元素自身是有高度的，所以还需要让元素再向上移动自身高度的一半<code>margin-top: -50px;</code>，来达到居中的目的；</p>
+<p>那元素绝对居中则很简单了：</p>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.outer</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#000</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">position</span>: relative;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.inner</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#f00</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">position</span>: absolute;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">top</span>: <span class="number">50%</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">margin-top</span>: -<span class="number">50px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="comment">/* 添加如下设置 */</span></span></span><br><span class="line"><span class="language-css">    <span class="attribute">left</span>: <span class="number">50%</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">margin-left</span>: -<span class="number">50px</span>;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;outer&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;inner&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="方法三"><a href="#方法三" class="headerlink" title="方法三"></a>方法三</h4><p>还是最常用的方法之一：<code>父元素 position: relative; 元素自身 position: absolute; transform: translateY(-50%);</code></p>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.outer</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#000</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">position</span>: relative;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.inner</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#f00</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">position</span>: absolute;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">top</span>: <span class="number">50%</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">transform</span>: <span class="built_in">translateY</span>(-<span class="number">50%</span>);</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;outer&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;inner&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>与上一种方法大同小异，让元素左上角位于父元素高度一半的位置，然后让元素在 Y 轴上向上移动自身高度的一半；</p>
+<p>既然能在 Y 轴上移动，当然也可以在 X 轴上移动，所以绝对居中如下 👇：</p>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.outer</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#000</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">position</span>: relative;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.inner</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#f00</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">position</span>: absolute;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">top</span>: <span class="number">50%</span>;</span></span><br><span class="line"><span class="language-css">    <span class="comment">/* 添加 left 属性设置，同时设置 X Y 轴移动 */</span></span></span><br><span class="line"><span class="language-css">    <span class="comment">/* transform: translateY(-50%); */</span></span></span><br><span class="line"><span class="language-css">    <span class="attribute">left</span>: <span class="number">50%</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">transform</span>: <span class="built_in">translate</span>(-<span class="number">50%</span>, -<span class="number">50%</span>);</span></span><br><span class="line"><span class="language-css"></span></span><br><span class="line"><span class="language-css">    <span class="comment">/* 下面的设置无效 */</span></span></span><br><span class="line"><span class="language-css">    <span class="comment">/* transform: translateY(-50%);</span></span></span><br><span class="line"><span class="comment"><span class="language-css">    transform: translateX(-50%); */</span></span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;outer&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;inner&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>需要注意的是，transform 属性只能设置一次，后面设置的会自动覆盖前面的，所以需要使用组合属性<code>translate(-50%, -50%);</code>且需要设置两个值，不能像 margin 或 padding 一样省略其他值，当然，也可以使用<code>translate3d(-50%, -50%, 0);</code>，看起来高大上，但没有实际意义；</p>
+<h4 id="方法四"><a href="#方法四" class="headerlink" title="方法四"></a>方法四</h4><p>日常很少使用，由方法三演变而来<code>元素自身 position: relative; top: 50%; transform: translateY(-50%);</code>；</p>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.outer</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#000</span>;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.inner</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#f00</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">position</span>: relative;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">top</span>: <span class="number">50%</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">transform</span>: <span class="built_in">translateY</span>(-<span class="number">50%</span>);</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;outer&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;inner&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>咦，<code>position: absolute;</code>还能理解，毕竟父元素设置了<code>position: relative;</code>，所以相对于父元素定位，给自身设置<code>position: relative;</code>是什么鬼？那么它相对于什么定位？<code>top: 50%;</code>又如何理解呢？</p>
+<p>上面的方法中已经提到了，绝对定位相对于父元素 content 区域的原点定位，而相对定位则相对于父元素边框（border）最内侧定位，注意 ⚠️：不是相对于父元素的原点（左上角），而是边框内侧，这里差别很大，测试一下：</p>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.outer</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#000</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">position</span>: relative;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.test</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#00f</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">position</span>: absolute;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">top</span>: <span class="number">50%</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">transform</span>: <span class="built_in">translateY</span>(-<span class="number">50%</span>);</span></span><br><span class="line"><span class="language-css">    <span class="attribute">float</span>: left;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.inner</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#f00</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">position</span>: absolute;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">top</span>: <span class="number">50%</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">transform</span>: <span class="built_in">translateY</span>(-<span class="number">50%</span>);</span></span><br><span class="line"><span class="language-css">    <span class="attribute">float</span>: left;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;outer&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;test&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;inner&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>添加一个<code>.test</code>元素，同时，让两个元素设置相同（除了背景色），可以看到元素重叠了，只能看到<code>.inner</code>元素，说明它们定位的原点相同，所以才发生了重叠现象；</p>
+<p>是不是<code>float</code>属性影响了<code>position</code>呢？将<code>float</code>替换成<code>display: inline-block;</code>后，结果一样；</p>
+<p>接着测试将元素自身设置为<code>position: relative;</code>：</p>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.outer</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#000</span>;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.test</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#00f</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">position</span>: relative;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">top</span>: <span class="number">50%</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">transform</span>: <span class="built_in">translateY</span>(-<span class="number">50%</span>);</span></span><br><span class="line"><span class="language-css">    <span class="attribute">float</span>: left;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.inner</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#f00</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">position</span>: relative;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">top</span>: <span class="number">50%</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">transform</span>: <span class="built_in">translateY</span>(-<span class="number">50%</span>);</span></span><br><span class="line"><span class="language-css">    <span class="attribute">float</span>: left;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;outer&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;test&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;inner&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>这次，两个元素位置相同，但没有重叠，而是依次排列，已经说明问题了吧；</p>
+<p>引出绝对居中，如下 👇：</p>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.outer</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#000</span>;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.inner</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#f00</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">position</span>: relative;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">top</span>: <span class="number">50%</span>;</span></span><br><span class="line"><span class="language-css">    <span class="comment">/* 添加 left 属性设置，同时设置 X Y 轴移动 */</span></span></span><br><span class="line"><span class="language-css">    <span class="comment">/* transform: translateY(-50%); */</span></span></span><br><span class="line"><span class="language-css">    <span class="attribute">left</span>: <span class="number">50%</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">transform</span>: <span class="built_in">translate</span>(-<span class="number">50%</span>, -<span class="number">50%</span>);</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;outer&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;inner&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="方法五"><a href="#方法五" class="headerlink" title="方法五"></a>方法五</h4><p>还是常用方法之一，使用了 CSS3 新属性：<code>父元素 display: flex; align-items: center;</code>;</p>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.outer</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#000</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">display</span>: flex;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">align-items</span>: center;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.inner</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#f00</span>;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;outer&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;inner&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>没啥好说的，不熟悉 flex 属性的去 <a href="https://developer.mozilla.org/zh-CN/docs/Web/CSS/CSS_Flexible_Box_Layout/Basic_Concepts_of_Flexbox">MDN</a> 查看文档，<code>align-items</code>属性描述了元素在交叉轴上的对齐方式；</p>
+<p>至于绝对中，<code>justify-content</code>则描述如何分配主轴元素之间及其周围的空间：</p>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.outer</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#000</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">display</span>: flex;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">align-items</span>: center;</span></span><br><span class="line"><span class="language-css">    <span class="comment">/* 添加以下设置 */</span></span></span><br><span class="line"><span class="language-css">    <span class="attribute">justify-content</span>: center;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.inner</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#f00</span>;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;outer&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;inner&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="方法六"><a href="#方法六" class="headerlink" title="方法六"></a>方法六</h4><p>由方法五演变而来，没怎么使用过：<code>父元素 display: flex; 元素自身 align-self: center;</code>；</p>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.outer</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#000</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">display</span>: flex;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.inner</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#f00</span>;</span></span><br><span class="line"><span class="language-css">    <span class="comment">/* 区别在这里 */</span></span></span><br><span class="line"><span class="language-css">    <span class="attribute">align-self</span>: center;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;outer&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;inner&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>还是 CSS3 的新特性，<code>align-self</code>会对齐 grid 或 flex 行中的元素，并覆盖已有的<code>align-items</code>的值；</p>
+<p>绝对居中：</p>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.outer</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#000</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">display</span>: flex;</span></span><br><span class="line"><span class="language-css">    <span class="comment">/* 添加以下设置 */</span></span></span><br><span class="line"><span class="language-css">    <span class="attribute">justify-content</span>: center;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.inner</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#f00</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">align-self</span>: center;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;outer&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;inner&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="方法七"><a href="#方法七" class="headerlink" title="方法七"></a>方法七</h4><p>CSS3 新特性，网格布局<code>display: grid;</code>，示例就不写了， 把方法五和方法六中的<code>display: flex;</code>换成<code>display: grid;</code>就 OK 了；</p>
+<h4 id="方法八"><a href="#方法八" class="headerlink" title="方法八"></a>方法八</h4><p>终于要到<code>display: table-cell;</code>了，一个古老的 CSS 特性；</p>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.outer</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#000</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">display</span>: table-cell;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">vertical-align</span>: middle;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.inner</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#f00</span>;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;outer&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;inner&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>呃，不知道咋说，<code>display: table-cell;</code>属性让元素以表格单元格的形式呈现，类似于 td 标签，而<code>vertical-align</code>则用来指定行内元素（inline）或表格单元格（table-cell）元素的垂直对齐方式；</p>
+<p>绝对居中：</p>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.outer</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#000</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">display</span>: table-cell;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">vertical-align</span>: middle;</span></span><br><span class="line"><span class="language-css">    <span class="comment">/* 添加设置 1 */</span></span></span><br><span class="line"><span class="language-css">    <span class="attribute">text-align</span>: center;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.inner</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="comment">/* 添加设置 2 */</span></span></span><br><span class="line"><span class="language-css">    <span class="attribute">display</span>: inline-block;</span></span><br><span class="line"><span class="language-css"></span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#f00</span>;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;outer&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;inner&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>是的，这里需要将元素转为行内（块）元素，因为<code>text-align</code>属性只能定义行内内容（例如文字）如何相对它的块父元素对齐，却并不能控制块元素自己的对齐；</p>
+<h4 id="方法九"><a href="#方法九" class="headerlink" title="方法九"></a>方法九</h4><p>一种障眼法，基本没有使用场景，添加一个隐藏元素，将要显示的元素挤到中间位置：</p>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.out</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#000</span>;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.hidden</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">200px</span>; <span class="comment">/* (out - in) / 2*/</span></span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.in</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#00f</span>;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;out&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;hidden&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;in&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>这玩意儿就不必说绝对居中了吧？😂</p>
+<h4 id="结束"><a href="#结束" class="headerlink" title="结束"></a>结束</h4><p>暂时就想到这么多，以后学到了新知识再做补充；</p>
+<p>以上～</p>
+]]></content>
+      <categories>
+        <category>Web</category>
+        <category>CSS</category>
+      </categories>
+      <tags>
+        <tag>CSS</tag>
+        <tag>垂直居中</tag>
+        <tag>水平居中</tag>
+        <tag>绝对居中</tag>
       </tags>
   </entry>
   <entry>
@@ -7443,6 +7537,72 @@ E --&gt; |&quot;否，未解决&quot;| G
       <tags>
         <tag>OEP</tag>
         <tag>UPX</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>硬编码寻找序列号（一）</title>
+    <url>/posts/2293324257/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-1">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
+</ul>
+<span id="more"></span>
+
+<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
+<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
+</li>
+<li><p>倒入<code>OD</code>开始分析：</p>
+<ul>
+<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
+</li>
+<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，咦，发现可疑函数：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy1j9yekwj30oc065t9q.jpg" alt="分析"></p>
+<p>就是它了，选中它并右键<code>在输入函数上切换断点</code>，然后去<code>断点窗口（B 窗口）</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
+</li>
+<li><p>然后运行程序，“随便输入”一些字符后点击验证，可以随便输入，但请记住它；</p>
+</li>
+<li><p>程序停在了设置断点的<code>API</code>的行首，在堆栈窗口可以看到<code>API</code>的各种参数，而参数<code>Buffer</code>里存放着函数返回的数据，选中<code>Buffer</code>右键<code>数据窗口中跟随</code>，可以看到，由于断点中断在了函数的第一行，所以这个地址里什么也没有：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy267st5oj30t00drq4u.jpg" alt="Buffer"></p>
+</li>
+<li><p>接着按下<code>Ctrl + F9</code>或点击菜单栏的调试选项并选择<code>执行到返回</code>，然后发现<code>Buffer</code>对应的地址里有数据了，并且是我们输入的字符串；</p>
+</li>
+<li><p>在上一步中，我们<code>执行到返回</code>，那就意味着接下来登场的将会是<code>RETN</code>了，按下<code>F7 或 F8</code>，返回到调用<code>API</code>的程序，发现接下来将要执行的代码很可疑：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy2kqa9a0j30sz0dt0uo.jpg" alt="程序"></p>
+<p>一个比较，一个跳转，并且文字显示和序列号有关；</p>
+</li>
+<li><p>分析一下这几行可疑的代码：</p>
+<ul>
+<li><p><code>MOV EDX,CrackMe.00403008</code>将<code>00403008</code>这个地址拷贝到<code>EDX</code>，执行一下这行代码：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy2xlpyn3j308805374d.jpg" alt="EDX"></p>
+<p>在<code>EDX</code>存放的地址中发现一串可疑字符串，选中<code>EDX</code>右键<code>数据窗口中跟随</code>，原来可疑字符串只是前面几位，而后面那几个字符是我们输入的字符；</p>
+</li>
+<li><p><code>MOV EBX,DWORD PTR DS:[403010]</code>将<code>00403010</code>这个地址中的数据的前四个字节拷贝到<code>EBX</code>，执行一下这行代码：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy3ehrs27j30as0ay3zf.jpg" alt="EBX"></p>
+<p>既然<code>EBX</code>中存放的是数据，而数据又看不懂，怎么知道是什么呢？<code>OD</code>很强大，选择那行代码并右键<code>数据窗口中跟随，然后选择内存地址</code>或者在数据窗口选中那行代码的数据并选择<code>数据窗口中跟随地址</code>就可以看到<code>EBX</code>中存放的内容了，原来是我们输入的“序列号”；</p>
+</li>
+<li><p><code>CMP EBX,DWORD PTR DS:[403008]</code>这行代码就没什么好说的了，减法比较是否相等，还使用了一个障眼法，<code>EDX</code>放地址，<code>EBX</code>放数据，在这里再取出<code>EDX</code>的数据进行比较；</p>
+</li>
+<li><p><code>JE SHORT CrackMe.00401087</code>这行也没啥说的，<code>JE</code>根据<code>ZF 标志位</code>进行跳转，而如果上一步的计算结果为<code>0</code>，则<code>ZF</code>为<code>1</code>，<code>JE</code>跳转成立，也就是说，如果<code>EDX</code>和<code>EBX</code>中的数据相同，那么序列号就是对的，<code>JE</code>跳转并向下执行，最后弹出<code>正确！</code>，反之则不跳转向下执行，弹出<code>序列号错误！</code>，看来第一步中发现的可疑字符串就是真正的序列号了；</p>
+</li>
+<li><p>如果想要输入啥都能通过验证，那么可以将<code>JE</code>改为<code>JMP</code>无条件跳转，保存修改到文件就获得了一个新的程序；</p>
+</li>
+<li><p>但我们的目的是找出真正的序列号，所以嘛，复制那串字符去试一下，果然，一切如我们所料！</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>Windows</category>
+        <category>逆向分析</category>
+      </categories>
+      <tags>
+        <tag>硬编码</tag>
       </tags>
   </entry>
   <entry>
@@ -7542,166 +7702,6 @@ E --&gt; |&quot;否，未解决&quot;| G
       </categories>
       <tags>
         <tag>DOS 命令</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>用 CSS 实现元素水平垂直居中</title>
-    <url>/posts/4290690234/</url>
-    <content><![CDATA[<blockquote>
-<p>突然顿悟了“书读百遍，其义自现。”当然，还需要配合“好记性不如烂笔头”，整理总结一下常见的元素水平垂直居中的方法。</p>
-</blockquote>
-<p>起因是有童鞋问我让元素垂直居中的方法，我突然懵了，居然一时没有描述出来，吓得赶紧抽空总结了一下，最后引出了元素水平且垂直居中。</p>
-<h4 id="方法一"><a href="#方法一" class="headerlink" title="方法一"></a>方法一</h4><p>最常用的方法：<code>父元素 position: relative; 元素自身 position: absolute; top: 0; bottom: 0; margin: auto;</code></p>
-<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.outer</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#000</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">position</span>: relative;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.inner</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#f00</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">position</span>: absolute;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">top</span>: <span class="number">0</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">bottom</span>: <span class="number">0</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">margin</span>: auto;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;outer&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;inner&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
-
-<span id="more"></span>
-
-<p><code>margin: auto;</code>很重要，只有设置了它，浏览器才会自动分配可用空间，根据规范的描述，如果“margin-top”和“margin-bottom”都是 auto，则在额外约束下，让两边得到相等的值；</p>
-<p>其实大家都知道，这种方法通常是用来设置元素<code>绝对居中</code>（也就是水平垂直居中）的，规范的描述同样适用于“margin-left”和“margin-right”，所以可以达到元素绝对居中的作用，如下 👇：</p>
-<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.outer</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#000</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">position</span>: relative;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.inner</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#f00</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">position</span>: absolute;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">top</span>: <span class="number">0</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">bottom</span>: <span class="number">0</span>;</span></span><br><span class="line"><span class="language-css">    <span class="comment">/* 添加以下设置 */</span></span></span><br><span class="line"><span class="language-css">    <span class="attribute">right</span>: <span class="number">0</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">left</span>: <span class="number">0</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">margin</span>: auto;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;outer&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;inner&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
-
-<p>再来聊聊<code>margin: auto;</code>这个神奇的属性，通常情况下，让一个元素水平居中很简单<code>margin: 0 auto;</code>，而如果要让一个元素垂直居中，则需要很多的步骤，为什么？</p>
-<p>因为浏览器的宽度是有限的，从一开始就知道父元素的宽度，然后<code>margin: 0 auto;</code>来分配父元素 X 轴上的可用空间，想想也很合理；</p>
-<p>虽然浏览器的高度也是有限的，但内容的高度却是未知的，像现在的流式布局，一直滚动一直有内容，所以很难确定父元素 Y 轴到底有多长，那么<code>margin: auto;</code>就无法分配父元素 Y 轴上的可用空间，居中就更无从谈起了；</p>
-<p>有人抬杠说， X 轴上的内容也可以是无限的呀，对，你说的对，反正我没见过哪家公司的站点还有横向滚动条的（特殊需求除外）；</p>
-<p>那么这里的绝对定位就好理解了：因为要分配父元素的可用空间，当然要知道父元素的边界了，所以首先父元素<code>position: relative;</code>，然后元素自身<code>position: absolute;</code>，接着定义所有边界<code>top: 0; right: 0; bottom: 0; left: 0;</code>，既然距离所有边界的距离都是一样的，那<code>margin: auto;</code>就只能给轴的两边分配相同的值，绝对居中也就成了；</p>
-<h4 id="方法二"><a href="#方法二" class="headerlink" title="方法二"></a>方法二</h4><p>也是常用方法的一种：<code>父元素 position: relative; 元素自身 position: absolute; margin-top: -(元素自身高度的一半);</code></p>
-<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.outer</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#000</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">position</span>: relative;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.inner</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#f00</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">position</span>: absolute;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">top</span>: <span class="number">50%</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">margin-top</span>: -<span class="number">50px</span>;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;outer&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;inner&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
-
-<p>绝对定位相对于最近的且 position 不是 static 的父元素，而且，定位原点位于父元素内容区域（content）的左上角，但也有例外，如果设置了<code>left: 0; 和 top: 0;</code>，那么，定位原点则位于父元素的实际占用区域（content + padding）的左上角，不过，这种情况并不多见；</p>
-<p>这里的<code>top: 50%;</code>让元素左上角位于父元素高度一半的位置，这里是父元素高度的中心点，但元素自身是有高度的，所以还需要让元素再向上移动自身高度的一半<code>margin-top: -50px;</code>，来达到居中的目的；</p>
-<p>那元素绝对居中则很简单了：</p>
-<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.outer</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#000</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">position</span>: relative;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.inner</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#f00</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">position</span>: absolute;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">top</span>: <span class="number">50%</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">margin-top</span>: -<span class="number">50px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="comment">/* 添加如下设置 */</span></span></span><br><span class="line"><span class="language-css">    <span class="attribute">left</span>: <span class="number">50%</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">margin-left</span>: -<span class="number">50px</span>;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;outer&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;inner&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
-
-<h4 id="方法三"><a href="#方法三" class="headerlink" title="方法三"></a>方法三</h4><p>还是最常用的方法之一：<code>父元素 position: relative; 元素自身 position: absolute; transform: translateY(-50%);</code></p>
-<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.outer</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#000</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">position</span>: relative;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.inner</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#f00</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">position</span>: absolute;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">top</span>: <span class="number">50%</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">transform</span>: <span class="built_in">translateY</span>(-<span class="number">50%</span>);</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;outer&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;inner&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
-
-<p>与上一种方法大同小异，让元素左上角位于父元素高度一半的位置，然后让元素在 Y 轴上向上移动自身高度的一半；</p>
-<p>既然能在 Y 轴上移动，当然也可以在 X 轴上移动，所以绝对居中如下 👇：</p>
-<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.outer</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#000</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">position</span>: relative;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.inner</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#f00</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">position</span>: absolute;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">top</span>: <span class="number">50%</span>;</span></span><br><span class="line"><span class="language-css">    <span class="comment">/* 添加 left 属性设置，同时设置 X Y 轴移动 */</span></span></span><br><span class="line"><span class="language-css">    <span class="comment">/* transform: translateY(-50%); */</span></span></span><br><span class="line"><span class="language-css">    <span class="attribute">left</span>: <span class="number">50%</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">transform</span>: <span class="built_in">translate</span>(-<span class="number">50%</span>, -<span class="number">50%</span>);</span></span><br><span class="line"><span class="language-css"></span></span><br><span class="line"><span class="language-css">    <span class="comment">/* 下面的设置无效 */</span></span></span><br><span class="line"><span class="language-css">    <span class="comment">/* transform: translateY(-50%);</span></span></span><br><span class="line"><span class="comment"><span class="language-css">    transform: translateX(-50%); */</span></span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;outer&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;inner&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
-
-<p>需要注意的是，transform 属性只能设置一次，后面设置的会自动覆盖前面的，所以需要使用组合属性<code>translate(-50%, -50%);</code>且需要设置两个值，不能像 margin 或 padding 一样省略其他值，当然，也可以使用<code>translate3d(-50%, -50%, 0);</code>，看起来高大上，但没有实际意义；</p>
-<h4 id="方法四"><a href="#方法四" class="headerlink" title="方法四"></a>方法四</h4><p>日常很少使用，由方法三演变而来<code>元素自身 position: relative; top: 50%; transform: translateY(-50%);</code>；</p>
-<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.outer</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#000</span>;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.inner</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#f00</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">position</span>: relative;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">top</span>: <span class="number">50%</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">transform</span>: <span class="built_in">translateY</span>(-<span class="number">50%</span>);</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;outer&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;inner&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
-
-<p>咦，<code>position: absolute;</code>还能理解，毕竟父元素设置了<code>position: relative;</code>，所以相对于父元素定位，给自身设置<code>position: relative;</code>是什么鬼？那么它相对于什么定位？<code>top: 50%;</code>又如何理解呢？</p>
-<p>上面的方法中已经提到了，绝对定位相对于父元素 content 区域的原点定位，而相对定位则相对于父元素边框（border）最内侧定位，注意 ⚠️：不是相对于父元素的原点（左上角），而是边框内侧，这里差别很大，测试一下：</p>
-<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.outer</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#000</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">position</span>: relative;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.test</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#00f</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">position</span>: absolute;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">top</span>: <span class="number">50%</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">transform</span>: <span class="built_in">translateY</span>(-<span class="number">50%</span>);</span></span><br><span class="line"><span class="language-css">    <span class="attribute">float</span>: left;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.inner</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#f00</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">position</span>: absolute;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">top</span>: <span class="number">50%</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">transform</span>: <span class="built_in">translateY</span>(-<span class="number">50%</span>);</span></span><br><span class="line"><span class="language-css">    <span class="attribute">float</span>: left;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;outer&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;test&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;inner&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
-
-<p>添加一个<code>.test</code>元素，同时，让两个元素设置相同（除了背景色），可以看到元素重叠了，只能看到<code>.inner</code>元素，说明它们定位的原点相同，所以才发生了重叠现象；</p>
-<p>是不是<code>float</code>属性影响了<code>position</code>呢？将<code>float</code>替换成<code>display: inline-block;</code>后，结果一样；</p>
-<p>接着测试将元素自身设置为<code>position: relative;</code>：</p>
-<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.outer</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#000</span>;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.test</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#00f</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">position</span>: relative;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">top</span>: <span class="number">50%</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">transform</span>: <span class="built_in">translateY</span>(-<span class="number">50%</span>);</span></span><br><span class="line"><span class="language-css">    <span class="attribute">float</span>: left;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.inner</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#f00</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">position</span>: relative;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">top</span>: <span class="number">50%</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">transform</span>: <span class="built_in">translateY</span>(-<span class="number">50%</span>);</span></span><br><span class="line"><span class="language-css">    <span class="attribute">float</span>: left;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;outer&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;test&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;inner&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
-
-<p>这次，两个元素位置相同，但没有重叠，而是依次排列，已经说明问题了吧；</p>
-<p>引出绝对居中，如下 👇：</p>
-<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.outer</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#000</span>;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.inner</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#f00</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">position</span>: relative;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">top</span>: <span class="number">50%</span>;</span></span><br><span class="line"><span class="language-css">    <span class="comment">/* 添加 left 属性设置，同时设置 X Y 轴移动 */</span></span></span><br><span class="line"><span class="language-css">    <span class="comment">/* transform: translateY(-50%); */</span></span></span><br><span class="line"><span class="language-css">    <span class="attribute">left</span>: <span class="number">50%</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">transform</span>: <span class="built_in">translate</span>(-<span class="number">50%</span>, -<span class="number">50%</span>);</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;outer&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;inner&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
-
-<h4 id="方法五"><a href="#方法五" class="headerlink" title="方法五"></a>方法五</h4><p>还是常用方法之一，使用了 CSS3 新属性：<code>父元素 display: flex; align-items: center;</code>;</p>
-<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.outer</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#000</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">display</span>: flex;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">align-items</span>: center;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.inner</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#f00</span>;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;outer&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;inner&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
-
-<p>没啥好说的，不熟悉 flex 属性的去 <a href="https://developer.mozilla.org/zh-CN/docs/Web/CSS/CSS_Flexible_Box_Layout/Basic_Concepts_of_Flexbox">MDN</a> 查看文档，<code>align-items</code>属性描述了元素在交叉轴上的对齐方式；</p>
-<p>至于绝对中，<code>justify-content</code>则描述如何分配主轴元素之间及其周围的空间：</p>
-<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.outer</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#000</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">display</span>: flex;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">align-items</span>: center;</span></span><br><span class="line"><span class="language-css">    <span class="comment">/* 添加以下设置 */</span></span></span><br><span class="line"><span class="language-css">    <span class="attribute">justify-content</span>: center;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.inner</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#f00</span>;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;outer&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;inner&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
-
-<h4 id="方法六"><a href="#方法六" class="headerlink" title="方法六"></a>方法六</h4><p>由方法五演变而来，没怎么使用过：<code>父元素 display: flex; 元素自身 align-self: center;</code>；</p>
-<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.outer</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#000</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">display</span>: flex;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.inner</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#f00</span>;</span></span><br><span class="line"><span class="language-css">    <span class="comment">/* 区别在这里 */</span></span></span><br><span class="line"><span class="language-css">    <span class="attribute">align-self</span>: center;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;outer&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;inner&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
-
-<p>还是 CSS3 的新特性，<code>align-self</code>会对齐 grid 或 flex 行中的元素，并覆盖已有的<code>align-items</code>的值；</p>
-<p>绝对居中：</p>
-<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.outer</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#000</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">display</span>: flex;</span></span><br><span class="line"><span class="language-css">    <span class="comment">/* 添加以下设置 */</span></span></span><br><span class="line"><span class="language-css">    <span class="attribute">justify-content</span>: center;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.inner</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#f00</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">align-self</span>: center;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;outer&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;inner&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
-
-<h4 id="方法七"><a href="#方法七" class="headerlink" title="方法七"></a>方法七</h4><p>CSS3 新特性，网格布局<code>display: grid;</code>，示例就不写了， 把方法五和方法六中的<code>display: flex;</code>换成<code>display: grid;</code>就 OK 了；</p>
-<h4 id="方法八"><a href="#方法八" class="headerlink" title="方法八"></a>方法八</h4><p>终于要到<code>display: table-cell;</code>了，一个古老的 CSS 特性；</p>
-<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.outer</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#000</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">display</span>: table-cell;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">vertical-align</span>: middle;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.inner</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#f00</span>;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;outer&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;inner&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
-
-<p>呃，不知道咋说，<code>display: table-cell;</code>属性让元素以表格单元格的形式呈现，类似于 td 标签，而<code>vertical-align</code>则用来指定行内元素（inline）或表格单元格（table-cell）元素的垂直对齐方式；</p>
-<p>绝对居中：</p>
-<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.outer</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#000</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">display</span>: table-cell;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">vertical-align</span>: middle;</span></span><br><span class="line"><span class="language-css">    <span class="comment">/* 添加设置 1 */</span></span></span><br><span class="line"><span class="language-css">    <span class="attribute">text-align</span>: center;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.inner</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="comment">/* 添加设置 2 */</span></span></span><br><span class="line"><span class="language-css">    <span class="attribute">display</span>: inline-block;</span></span><br><span class="line"><span class="language-css"></span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#f00</span>;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;outer&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;inner&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
-
-<p>是的，这里需要将元素转为行内（块）元素，因为<code>text-align</code>属性只能定义行内内容（例如文字）如何相对它的块父元素对齐，却并不能控制块元素自己的对齐；</p>
-<h4 id="方法九"><a href="#方法九" class="headerlink" title="方法九"></a>方法九</h4><p>一种障眼法，基本没有使用场景，添加一个隐藏元素，将要显示的元素挤到中间位置：</p>
-<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span><span class="language-css"></span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.out</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">500px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#000</span>;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.hidden</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">200px</span>; <span class="comment">/* (out - in) / 2*/</span></span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css">  <span class="selector-class">.in</span> &#123;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">width</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">height</span>: <span class="number">100px</span>;</span></span><br><span class="line"><span class="language-css">    <span class="attribute">background-color</span>: <span class="number">#00f</span>;</span></span><br><span class="line"><span class="language-css">  &#125;</span></span><br><span class="line"><span class="language-css"></span><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;out&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;hidden&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;in&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
-
-<p>这玩意儿就不必说绝对居中了吧？😂</p>
-<h4 id="结束"><a href="#结束" class="headerlink" title="结束"></a>结束</h4><p>暂时就想到这么多，以后学到了新知识再做补充；</p>
-<p>以上～</p>
-]]></content>
-      <categories>
-        <category>Web</category>
-        <category>CSS</category>
-      </categories>
-      <tags>
-        <tag>CSS</tag>
-        <tag>垂直居中</tag>
-        <tag>水平居中</tag>
-        <tag>绝对居中</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>硬编码寻找序列号（一）</title>
-    <url>/posts/2293324257/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-1">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
-</ul>
-<span id="more"></span>
-
-<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
-<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
-</li>
-<li><p>倒入<code>OD</code>开始分析：</p>
-<ul>
-<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
-</li>
-<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，咦，发现可疑函数：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy1j9yekwj30oc065t9q.jpg" alt="分析"></p>
-<p>就是它了，选中它并右键<code>在输入函数上切换断点</code>，然后去<code>断点窗口（B 窗口）</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
-</li>
-<li><p>然后运行程序，“随便输入”一些字符后点击验证，可以随便输入，但请记住它；</p>
-</li>
-<li><p>程序停在了设置断点的<code>API</code>的行首，在堆栈窗口可以看到<code>API</code>的各种参数，而参数<code>Buffer</code>里存放着函数返回的数据，选中<code>Buffer</code>右键<code>数据窗口中跟随</code>，可以看到，由于断点中断在了函数的第一行，所以这个地址里什么也没有：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy267st5oj30t00drq4u.jpg" alt="Buffer"></p>
-</li>
-<li><p>接着按下<code>Ctrl + F9</code>或点击菜单栏的调试选项并选择<code>执行到返回</code>，然后发现<code>Buffer</code>对应的地址里有数据了，并且是我们输入的字符串；</p>
-</li>
-<li><p>在上一步中，我们<code>执行到返回</code>，那就意味着接下来登场的将会是<code>RETN</code>了，按下<code>F7 或 F8</code>，返回到调用<code>API</code>的程序，发现接下来将要执行的代码很可疑：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy2kqa9a0j30sz0dt0uo.jpg" alt="程序"></p>
-<p>一个比较，一个跳转，并且文字显示和序列号有关；</p>
-</li>
-<li><p>分析一下这几行可疑的代码：</p>
-<ul>
-<li><p><code>MOV EDX,CrackMe.00403008</code>将<code>00403008</code>这个地址拷贝到<code>EDX</code>，执行一下这行代码：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy2xlpyn3j308805374d.jpg" alt="EDX"></p>
-<p>在<code>EDX</code>存放的地址中发现一串可疑字符串，选中<code>EDX</code>右键<code>数据窗口中跟随</code>，原来可疑字符串只是前面几位，而后面那几个字符是我们输入的字符；</p>
-</li>
-<li><p><code>MOV EBX,DWORD PTR DS:[403010]</code>将<code>00403010</code>这个地址中的数据的前四个字节拷贝到<code>EBX</code>，执行一下这行代码：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giy3ehrs27j30as0ay3zf.jpg" alt="EBX"></p>
-<p>既然<code>EBX</code>中存放的是数据，而数据又看不懂，怎么知道是什么呢？<code>OD</code>很强大，选择那行代码并右键<code>数据窗口中跟随，然后选择内存地址</code>或者在数据窗口选中那行代码的数据并选择<code>数据窗口中跟随地址</code>就可以看到<code>EBX</code>中存放的内容了，原来是我们输入的“序列号”；</p>
-</li>
-<li><p><code>CMP EBX,DWORD PTR DS:[403008]</code>这行代码就没什么好说的了，减法比较是否相等，还使用了一个障眼法，<code>EDX</code>放地址，<code>EBX</code>放数据，在这里再取出<code>EDX</code>的数据进行比较；</p>
-</li>
-<li><p><code>JE SHORT CrackMe.00401087</code>这行也没啥说的，<code>JE</code>根据<code>ZF 标志位</code>进行跳转，而如果上一步的计算结果为<code>0</code>，则<code>ZF</code>为<code>1</code>，<code>JE</code>跳转成立，也就是说，如果<code>EDX</code>和<code>EBX</code>中的数据相同，那么序列号就是对的，<code>JE</code>跳转并向下执行，最后弹出<code>正确！</code>，反之则不跳转向下执行，弹出<code>序列号错误！</code>，看来第一步中发现的可疑字符串就是真正的序列号了；</p>
-</li>
-<li><p>如果想要输入啥都能通过验证，那么可以将<code>JE</code>改为<code>JMP</code>无条件跳转，保存修改到文件就获得了一个新的程序；</p>
-</li>
-<li><p>但我们的目的是找出真正的序列号，所以嘛，复制那串字符去试一下，果然，一切如我们所料！</p>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>Windows</category>
-        <category>逆向分析</category>
-      </categories>
-      <tags>
-        <tag>硬编码</tag>
       </tags>
   </entry>
   <entry>
@@ -8081,6 +8081,73 @@ E --&gt; |&quot;否，未解决&quot;| G
       </tags>
   </entry>
   <entry>
+    <title>硬编码寻找序列号（四）</title>
+    <url>/posts/1116999438/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code>插件：<a href="https://github.com/Undeio/undeio.github.io/releases/tag/Plugin-3">中文搜索引擎</a>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-4">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
+</ul>
+<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><p>事实证明：不能“以貌取人”。</p>
+<p>刚打开软件的时候，心里还想着，这么简陋？分分钟就逆向完毕了，结果，“啪啪啪”实力打脸，针扎的疼。</p>
+<ol>
+<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
+</li>
+<li><p>倒入<code>OD</code>开始分析：</p>
+<ul>
+<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
+</li>
+<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，翻了翻，呀呵，看着简陋，用的<code>API</code>还真不少，那就搜索吧，没有<code>GetDlgItemTextA</code>？那就拿<code>GetWindowTextA</code>下手吧：在<code>GetWindowTextA</code>函数上设置断点，然后去<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
+</li>
+<li><p>然后<code>F9</code>运行程序，“随便输入” 一些字符后点击验证，可以随便输入，但请记住它；</p>
+</li>
+<li><p>居然没有断下来，也没有弹窗，这让我很尴尬：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giz8frx378j305905zglj.jpg" alt="尴尬"></p>
+</li>
+<li><p>嗯，界面有按钮，那就试试消息断点，熟练的设置好<code>消息断点</code>，运行程序，输入，点击按钮，还是没有断下来；</p>
+</li>
+<li><p>不怕，还有<code>内存断点</code>、<code>硬件断点</code>，挨个试了一遍之后，没有一个成功的，灰心丧气呀，怎么像刺猬 🦔 一样无从下手？</p>
+</li>
+<li><p>等等，看了看程序的界面，猛的想起了大佬说的一个工具：</p>
+<p><code>中文搜索引擎</code>：这玩意儿可以参考，但不要过分依赖，友好的开发者可能只是关闭你的程序不让你调试，至于不友好的，知道为啥要用虚拟机吗？</p>
+</li>
+<li><p>重载程序，在<code>反汇编窗口</code>右键选择<code>中文搜索引擎</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giz8ldzoguj311o0njq5w.jpg" alt="中文搜索引擎"></p>
+<p>然后<code>Ctrl + F</code>搜索熟悉的字眼儿<code>Wrong Code DUDE</code>，果然有，双击来到<code>反汇编窗口</code>，嘿嘿，这里看起来很重要嘛：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giz8xso4qtj30m90by402.jpg" alt="关键"></p>
+<ul>
+<li>一个失败的字样；</li>
+<li>一个成功的字样；</li>
+<li>紧挨着上面有一个跳转：可以猜测，如果跳转的话，可能就显示成功了；</li>
+<li>跳转上面是一个<code>CALL</code>，那它很可能是比较的<code>CALL</code>；</li>
+<li>至于更上面的代码，那肯定是获取用的呗，瞎猜的；</li>
+</ul>
+</li>
+<li><p>既然找到了可疑的代码，那就双击<code>CALL</code>给它下一个<code>CC断点</code>，然后运行程序，输入序列号点击验证后，程序暂停在了<code>CALL</code>的位置，那就<code>F7</code>进<code>CALL</code>看看，验证一下猜测；</p>
+</li>
+<li><p>刚一进<code>CALL</code>，就在寄存器窗口发现了熟悉的字样：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giz99kl1svj311n0nlgoq.jpg" alt="call"></p>
+<p>既然把“序列号”都传进来了，那应该就是比较了，开始分析：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizaftudazj30xb0u0n15.jpg" alt="分析"></p>
+</li>
+<li><p>分析完成，比较的部分是常规方法，就是中断程序有点麻烦！</p>
+</li>
+</ul>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>Windows</category>
+        <category>逆向分析</category>
+      </categories>
+      <tags>
+        <tag>硬编码</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>简单的 DOS 命令与批处理</title>
     <url>/posts/1220899652/</url>
     <content><![CDATA[<h4 id="DOS-命令"><a href="#DOS-命令" class="headerlink" title="DOS 命令"></a>DOS 命令</h4><ol>
@@ -8189,73 +8256,6 @@ E --&gt; |&quot;否，未解决&quot;| G
       <tags>
         <tag>OEP</tag>
         <tag>UPX</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>硬编码寻找序列号（四）</title>
-    <url>/posts/1116999438/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
-<li><code>OD</code>插件：<a href="https://github.com/Undeio/undeio.github.io/releases/tag/Plugin-3">中文搜索引擎</a>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-4">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
-</ul>
-<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><p>事实证明：不能“以貌取人”。</p>
-<p>刚打开软件的时候，心里还想着，这么简陋？分分钟就逆向完毕了，结果，“啪啪啪”实力打脸，针扎的疼。</p>
-<ol>
-<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
-</li>
-<li><p>倒入<code>OD</code>开始分析：</p>
-<ul>
-<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
-</li>
-<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，翻了翻，呀呵，看着简陋，用的<code>API</code>还真不少，那就搜索吧，没有<code>GetDlgItemTextA</code>？那就拿<code>GetWindowTextA</code>下手吧：在<code>GetWindowTextA</code>函数上设置断点，然后去<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
-</li>
-<li><p>然后<code>F9</code>运行程序，“随便输入” 一些字符后点击验证，可以随便输入，但请记住它；</p>
-</li>
-<li><p>居然没有断下来，也没有弹窗，这让我很尴尬：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giz8frx378j305905zglj.jpg" alt="尴尬"></p>
-</li>
-<li><p>嗯，界面有按钮，那就试试消息断点，熟练的设置好<code>消息断点</code>，运行程序，输入，点击按钮，还是没有断下来；</p>
-</li>
-<li><p>不怕，还有<code>内存断点</code>、<code>硬件断点</code>，挨个试了一遍之后，没有一个成功的，灰心丧气呀，怎么像刺猬 🦔 一样无从下手？</p>
-</li>
-<li><p>等等，看了看程序的界面，猛的想起了大佬说的一个工具：</p>
-<p><code>中文搜索引擎</code>：这玩意儿可以参考，但不要过分依赖，友好的开发者可能只是关闭你的程序不让你调试，至于不友好的，知道为啥要用虚拟机吗？</p>
-</li>
-<li><p>重载程序，在<code>反汇编窗口</code>右键选择<code>中文搜索引擎</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giz8ldzoguj311o0njq5w.jpg" alt="中文搜索引擎"></p>
-<p>然后<code>Ctrl + F</code>搜索熟悉的字眼儿<code>Wrong Code DUDE</code>，果然有，双击来到<code>反汇编窗口</code>，嘿嘿，这里看起来很重要嘛：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giz8xso4qtj30m90by402.jpg" alt="关键"></p>
-<ul>
-<li>一个失败的字样；</li>
-<li>一个成功的字样；</li>
-<li>紧挨着上面有一个跳转：可以猜测，如果跳转的话，可能就显示成功了；</li>
-<li>跳转上面是一个<code>CALL</code>，那它很可能是比较的<code>CALL</code>；</li>
-<li>至于更上面的代码，那肯定是获取用的呗，瞎猜的；</li>
-</ul>
-</li>
-<li><p>既然找到了可疑的代码，那就双击<code>CALL</code>给它下一个<code>CC断点</code>，然后运行程序，输入序列号点击验证后，程序暂停在了<code>CALL</code>的位置，那就<code>F7</code>进<code>CALL</code>看看，验证一下猜测；</p>
-</li>
-<li><p>刚一进<code>CALL</code>，就在寄存器窗口发现了熟悉的字样：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giz99kl1svj311n0nlgoq.jpg" alt="call"></p>
-<p>既然把“序列号”都传进来了，那应该就是比较了，开始分析：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizaftudazj30xb0u0n15.jpg" alt="分析"></p>
-</li>
-<li><p>分析完成，比较的部分是常规方法，就是中断程序有点麻烦！</p>
-</li>
-</ul>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>Windows</category>
-        <category>逆向分析</category>
-      </categories>
-      <tags>
-        <tag>硬编码</tag>
       </tags>
   </entry>
   <entry>
