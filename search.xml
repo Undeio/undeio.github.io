@@ -1,6 +1,103 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>Anti-Attach 与修正镜像大小</title>
+    <url>/posts/2914862446/</url>
+    <content><![CDATA[<blockquote>
+<p>在不方便使用调试器启动程序的时候，可以先运行目标程序，再使用调试器附加到目标进程；</p>
+<p>Ring3 调试器附加使用 DebugActiveProcess 函数，在附加相关进程时，会先执行 ntdll.dll 下的 ZwContinue 函数，最后停留在 ntdll.dll 的 DgbBreakPoint 处；</p>
+<p>事实上，调试器会在此处设置一个 INT3 断点，然后由调试器自己来捕获；</p>
+</blockquote>
+<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/UnPackMe-9">UnPackMe</a>来自互联网，仅供学习使用；</li>
+<li>OEP 检索工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-12">PEiD</a>，来自互联网；</li>
+<li>进程管理工具为<a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-11">Estricnina</a>，来自互联网；</li>
+<li>反 Anti-Attach 工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-13">POKEMON_AntiAttach</a>；</li>
+<li>Dump 工具为 OD 插件 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Plugin-1">OllyDump</a>，来自互联网；</li>
+<li>IAT 重建工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-4">ImportREC</a>，来自互联网；</li>
+<li>PE 重建工具为<a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-2">LoadPE</a>，来自互联网；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
+</ul>
+<h4 id="操作流程"><a href="#操作流程" class="headerlink" title="操作流程"></a>操作流程</h4><ol>
+<li><p>运行 CM 后虚拟机变得非常卡，打开任务管理器会发现当前 CM 的 CPU 占用率为 99%；</p>
+</li>
+<li><p>打开 OD，在文件菜单选择附加 CM 后，会提示无法附加：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gohdorzjcrj31dr0u0wkd.jpg" alt="在文件菜单选择附加"></p>
+<p>不过这个 CM 的 Anti-Attach 好像不够完善，在弹出所有异常弹窗后，还是会附加成功；</p>
+</li>
+<li><p>同时查看堆栈窗口，可以看到调用来自 DgbBreakPoint：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gohdy8e3lxj31do0u077b.jpg" alt="DgbBreakPoint"></p>
+<p>并且函数的首行指令被替换为 INT3；</p>
+</li>
+<li><p>F7 单步执行，程序返回到调用的下一行：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1goi013tc3fj31220k20ua.jpg" alt="程序返回到调用的下一行"></p>
+<p>这里是 DbgUiRemoteBreakin 函数内部，为了使运行中进程能够即时中断到调试器中，操作系统提供了函数 DbgUiRemoteBreakin，其内部通过调用 DbgBreakPoint 产生一个中断异常从而被调试器捕获；</p>
+<p>为了实现及时中断，需要在运行中的进程中创建远程线程，线程回调函数就是 DbgUiRemoteBreakin 函数，最后的 RtlExitUserThread 就是结束远程线程；</p>
+</li>
+<li><p>使用 LoadPE 的 PE 编辑器打开程序，收集程序的重要信息：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1goi1aat81ej30te0diwez.jpg" alt="LoadPE"></p>
+<p>基址是：00400000，镜像大小是：6000，代码段 RVA：10000，数据段 RVA 是：2000，不过 NumberOfRvaAndSize 肯定是不对的，应该是 10（10 进制的 16）；</p>
+</li>
+<li><p>接着使用 PEiD 自带的插件 GenOEP 获取程序的 OEP：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1goi1n3cj1fj307205odfs.jpg" alt="GenOEP"></p>
+<p>OEP 为 401000，处于 LoadPE 获取的代码段区间，应该是正确的；</p>
+</li>
+<li><p>信息收集完成，运行 CM，然后使用 Estricnina 挂起 CM 的所有线程：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/e6c9d24ely1gokei0mukhj20rk0dcdgc.jpg" alt="Estricnina"></p>
+<p>暂停 CM 的线程只是为了让 CPU 占用率降低，使虚拟机用起来不是那么的卡；</p>
+</li>
+<li><p>接着，使用 POKEMON_AntiAttach 绕过程序的反附加：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gomvgefpl5j30re0y075v.jpg" alt="POKEMON_AntiAttach"></p>
+</li>
+<li><p>使用 LoadPE 定位到 CM 的进程，修正进程的映像尺寸：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gomvlz209ij30xe0u0juo.jpg" alt="修正进程的镜像尺寸"></p>
+<p>PE 的 IMAGE_OPTIONAL_HEADER 结构体中有个字段叫 SizeOfImage，作用是指出 PE 文件在载入内存后的总尺寸，还有个字段叫 ImageBase，表示 PE 文件在内存中的首选载入地址；</p>
+<p>在 Dump 文件时，一些关键参数是通过 MODULEENTRY32 结构的快照获取的，因此可以通过在 modBaseSize 和 modBaseAddr 字段中填入错误的值，让 Dump 软件无法正确读取进程中的数据，但由于修改 modBaseAddr 会使系统出现问题，因此只能修改 modBaseSize 的值；</p>
+<p>某些壳在做 Anti-Dump 的时候，会对内存中的 SizeOfImage 大小进行修改，通常是改得很小，这样，Dump 工具读取当前值后获取的就会是一个映像尺寸不对的无用文件；</p>
+<p>所以，所谓的修复镜像大小，就是读取磁盘文件的 SizeOfImage 与内存中的 SizeOfImage 进行大小比对，然后利用文件中的值进行修正；</p>
+</li>
+<li><p>接着，使用 OD 附加当前进程，程序中断在 ntdll.DbgBreakPoint 函数中，然后 goto 到 OEP：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gomwnj75c1j31dr0u0q6y.jpg" alt="OEP"></p>
+<p>可以看到，由于当前程序处于运行状态，所以代码段已经解码了；</p>
+<p>设置 EIP 为 OEP，即让 CPU 即将执行的指令指向 OEP：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gomwrwqqzkj31dm0u0q7v.jpg" alt="设置 EIP 为 OEP"></p>
+<p>然后跟随任意调用，获取 IAT 相关信息：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gomwv8fhqhj31dm0u0jul.jpg" alt="获取IAT相关信息"></p>
+<p>IAT 起始 RVA 为：2000，Size 为：1C；</p>
+</li>
+<li><p>使用 OllyDump 将内存数据 Dump 下来：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gomwyygosgj30p80jwt9e.jpg" alt="OllyDump"></p>
+</li>
+<li><p>使用 ImportREC 获取并重建 IAT：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gomx1e69tej30wk0oodgu.jpg" alt="ImportREC"></p>
+</li>
+<li><p>直接运行修复后的程序，弹出错误弹窗：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gomxckkw6ij31ji0u0tb8.jpg" alt="直接运行修复后的程序"></p>
+</li>
+<li><p>将修复后的程序拖入 LoadPE，重建 PE：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gomx7wlxblj30tg0qawft.jpg" alt="重建 PE"></p>
+</li>
+<li><p>导入 OD 并运行程序，完美运行：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gomxef1j81j31dl0u0tci.jpg" alt="完美运行"></p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>脱壳技术</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>OEP</tag>
+        <tag>PE</tag>
+        <tag>ReCrypt</tag>
+        <tag>Anti-Dump</tag>
+        <tag>Anti-Attach</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>DHCP 服务器</title>
     <url>/posts/1498644050/</url>
     <content><![CDATA[<h4 id="DHCP-服务器"><a href="#DHCP-服务器" class="headerlink" title="DHCP 服务器"></a>DHCP 服务器</h4><ol>
@@ -122,103 +219,6 @@
       <tags>
         <tag>DOS 命令</tag>
         <tag>DNS</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Anti-Attach 与修正镜像大小</title>
-    <url>/posts/2914862446/</url>
-    <content><![CDATA[<blockquote>
-<p>在不方便使用调试器启动程序的时候，可以先运行目标程序，再使用调试器附加到目标进程；</p>
-<p>Ring3 调试器附加使用 DebugActiveProcess 函数，在附加相关进程时，会先执行 ntdll.dll 下的 ZwContinue 函数，最后停留在 ntdll.dll 的 DgbBreakPoint 处；</p>
-<p>事实上，调试器会在此处设置一个 INT3 断点，然后由调试器自己来捕获；</p>
-</blockquote>
-<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/UnPackMe-9">UnPackMe</a>来自互联网，仅供学习使用；</li>
-<li>OEP 检索工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-12">PEiD</a>，来自互联网；</li>
-<li>进程管理工具为<a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-11">Estricnina</a>，来自互联网；</li>
-<li>反 Anti-Attach 工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-13">POKEMON_AntiAttach</a>；</li>
-<li>Dump 工具为 OD 插件 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Plugin-1">OllyDump</a>，来自互联网；</li>
-<li>IAT 重建工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-4">ImportREC</a>，来自互联网；</li>
-<li>PE 重建工具为<a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-2">LoadPE</a>，来自互联网；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
-</ul>
-<h4 id="操作流程"><a href="#操作流程" class="headerlink" title="操作流程"></a>操作流程</h4><ol>
-<li><p>运行 CM 后虚拟机变得非常卡，打开任务管理器会发现当前 CM 的 CPU 占用率为 99%；</p>
-</li>
-<li><p>打开 OD，在文件菜单选择附加 CM 后，会提示无法附加：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gohdorzjcrj31dr0u0wkd.jpg" alt="在文件菜单选择附加"></p>
-<p>不过这个 CM 的 Anti-Attach 好像不够完善，在弹出所有异常弹窗后，还是会附加成功；</p>
-</li>
-<li><p>同时查看堆栈窗口，可以看到调用来自 DgbBreakPoint：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gohdy8e3lxj31do0u077b.jpg" alt="DgbBreakPoint"></p>
-<p>并且函数的首行指令被替换为 INT3；</p>
-</li>
-<li><p>F7 单步执行，程序返回到调用的下一行：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1goi013tc3fj31220k20ua.jpg" alt="程序返回到调用的下一行"></p>
-<p>这里是 DbgUiRemoteBreakin 函数内部，为了使运行中进程能够即时中断到调试器中，操作系统提供了函数 DbgUiRemoteBreakin，其内部通过调用 DbgBreakPoint 产生一个中断异常从而被调试器捕获；</p>
-<p>为了实现及时中断，需要在运行中的进程中创建远程线程，线程回调函数就是 DbgUiRemoteBreakin 函数，最后的 RtlExitUserThread 就是结束远程线程；</p>
-</li>
-<li><p>使用 LoadPE 的 PE 编辑器打开程序，收集程序的重要信息：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1goi1aat81ej30te0diwez.jpg" alt="LoadPE"></p>
-<p>基址是：00400000，镜像大小是：6000，代码段 RVA：10000，数据段 RVA 是：2000，不过 NumberOfRvaAndSize 肯定是不对的，应该是 10（10 进制的 16）；</p>
-</li>
-<li><p>接着使用 PEiD 自带的插件 GenOEP 获取程序的 OEP：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1goi1n3cj1fj307205odfs.jpg" alt="GenOEP"></p>
-<p>OEP 为 401000，处于 LoadPE 获取的代码段区间，应该是正确的；</p>
-</li>
-<li><p>信息收集完成，运行 CM，然后使用 Estricnina 挂起 CM 的所有线程：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/e6c9d24ely1gokei0mukhj20rk0dcdgc.jpg" alt="Estricnina"></p>
-<p>暂停 CM 的线程只是为了让 CPU 占用率降低，使虚拟机用起来不是那么的卡；</p>
-</li>
-<li><p>接着，使用 POKEMON_AntiAttach 绕过程序的反附加：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gomvgefpl5j30re0y075v.jpg" alt="POKEMON_AntiAttach"></p>
-</li>
-<li><p>使用 LoadPE 定位到 CM 的进程，修正进程的映像尺寸：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gomvlz209ij30xe0u0juo.jpg" alt="修正进程的镜像尺寸"></p>
-<p>PE 的 IMAGE_OPTIONAL_HEADER 结构体中有个字段叫 SizeOfImage，作用是指出 PE 文件在载入内存后的总尺寸，还有个字段叫 ImageBase，表示 PE 文件在内存中的首选载入地址；</p>
-<p>在 Dump 文件时，一些关键参数是通过 MODULEENTRY32 结构的快照获取的，因此可以通过在 modBaseSize 和 modBaseAddr 字段中填入错误的值，让 Dump 软件无法正确读取进程中的数据，但由于修改 modBaseAddr 会使系统出现问题，因此只能修改 modBaseSize 的值；</p>
-<p>某些壳在做 Anti-Dump 的时候，会对内存中的 SizeOfImage 大小进行修改，通常是改得很小，这样，Dump 工具读取当前值后获取的就会是一个映像尺寸不对的无用文件；</p>
-<p>所以，所谓的修复镜像大小，就是读取磁盘文件的 SizeOfImage 与内存中的 SizeOfImage 进行大小比对，然后利用文件中的值进行修正；</p>
-</li>
-<li><p>接着，使用 OD 附加当前进程，程序中断在 ntdll.DbgBreakPoint 函数中，然后 goto 到 OEP：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gomwnj75c1j31dr0u0q6y.jpg" alt="OEP"></p>
-<p>可以看到，由于当前程序处于运行状态，所以代码段已经解码了；</p>
-<p>设置 EIP 为 OEP，即让 CPU 即将执行的指令指向 OEP：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gomwrwqqzkj31dm0u0q7v.jpg" alt="设置 EIP 为 OEP"></p>
-<p>然后跟随任意调用，获取 IAT 相关信息：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gomwv8fhqhj31dm0u0jul.jpg" alt="获取IAT相关信息"></p>
-<p>IAT 起始 RVA 为：2000，Size 为：1C；</p>
-</li>
-<li><p>使用 OllyDump 将内存数据 Dump 下来：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gomwyygosgj30p80jwt9e.jpg" alt="OllyDump"></p>
-</li>
-<li><p>使用 ImportREC 获取并重建 IAT：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gomx1e69tej30wk0oodgu.jpg" alt="ImportREC"></p>
-</li>
-<li><p>直接运行修复后的程序，弹出错误弹窗：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gomxckkw6ij31ji0u0tb8.jpg" alt="直接运行修复后的程序"></p>
-</li>
-<li><p>将修复后的程序拖入 LoadPE，重建 PE：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gomx7wlxblj30tg0qawft.jpg" alt="重建 PE"></p>
-</li>
-<li><p>导入 OD 并运行程序，完美运行：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gomxef1j81j31dl0u0tci.jpg" alt="完美运行"></p>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>Windows</category>
-        <category>脱壳技术</category>
-      </categories>
-      <tags>
-        <tag>OEP</tag>
-        <tag>PE</tag>
-        <tag>ReCrypt</tag>
-        <tag>Anti-Dump</tag>
-        <tag>Anti-Attach</tag>
       </tags>
   </entry>
   <entry>
@@ -878,6 +878,527 @@
       </tags>
   </entry>
   <entry>
+    <title>JS 作用域考点汇总</title>
+    <url>/posts/301184742/</url>
+    <content><![CDATA[<h2 id="this-的不同应用场景"><a href="#this-的不同应用场景" class="headerlink" title="this 的不同应用场景"></a>this 的不同应用场景</h2><h3 id="什么是-this"><a href="#什么是-this" class="headerlink" title="什么是 this"></a>什么是 this</h3><p>this 是执行上下文的一个属性，执行上下文是函数在被调用时创建的活动记录，包含函数调用的位置（调用栈）、调用方式、传入参数等信息，而 this 就是其中的一个属性，在函数执行时会使用，所以 this 的取值（指向）是在函数执行时确定的；</p>
+<p>严格的说，调用栈包含调用位置，调用栈也可以称作调用链，是指为了到达当前执行位置所经过（调用）的所有函数，而调用位置只是当前执行函数的前一个调用；</p>
+<span id="more"></span>
+
+<h3 id="调用栈"><a href="#调用栈" class="headerlink" title="调用栈"></a>调用栈</h3><p>栈是一种数据结构，规则是“<code>F</code>irst-<code>I</code>n-<code>L</code>ast-<code>O</code>ut”，JS 在调用函数前，会把函数所需的环境压入栈顶，等函数执行完毕，就会把环境弹出，然后返回上一个执行上下文，继续向下执行，这样一层一层的入栈、执行、返回就可以称为调用栈；</p>
+<p>概念很抽象，要想看到调用栈，方法很多，这里说一下常见的两种方法：</p>
+<p>示例代码 👇 来自《你不知道的 JavaScript 上卷》第二部分第 2 章；</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">fn1</span>(<span class="params"></span>) &#123;</span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&quot;fn1&quot;</span>);</span><br><span class="line">  <span class="title function_">fn2</span>();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">fn2</span>(<span class="params"></span>) &#123;</span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&quot;fn2&quot;</span>);</span><br><span class="line">  <span class="title function_">fn3</span>();</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">function</span> <span class="title function_">fn3</span>(<span class="params"></span>) &#123;</span><br><span class="line">  <span class="comment">//1. 故意写错</span></span><br><span class="line">  <span class="comment">// consol0e.log(&quot;fn3&quot;);</span></span><br><span class="line">  <span class="comment">//添加 debugger</span></span><br><span class="line">  <span class="comment">//2. debugger;</span></span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&quot;fn3&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="title function_">fn1</span>();</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li><p>触发一个错误；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/e6c9d24ely1h1lowgmckwj20f4040glt.jpg" alt="触发一个错误"></p>
+<p>触发错误后，可以清晰的看到调用栈的情况，请注意，调用栈是自下向上的；</p>
+</li>
+<li><p>在代码中添加<code>debugger;</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/e6c9d24ely1h1lp0f78djj20ji0a53zj.jpg" alt="debugger"></p>
+<p>运行到<code>debugger;</code>时，浏览器的调试器会中断，同时展示当前位置的函数的调用列表，这就是调用栈；</p>
+</li>
+</ol>
+<p>无论通过何种方法得到调用栈，栈中的第 2 个元素（自上向下）就是真正的调用位置；</p>
+<h3 id="绑定规则"><a href="#绑定规则" class="headerlink" title="绑定规则"></a>绑定规则</h3><ol>
+<li>普通函数调用，严格模式绑定到 undefined，否则绑定到 window；</li>
+<li>对象方法调用，绑定当前对象；</li>
+<li>class 方法调用，绑定到实例对象；</li>
+<li>call, bind, apply 绑定到指定对象（传入的对象）；</li>
+<li>箭头函数，绑定到上级作用域的 this；</li>
+</ol>
+<h2 id="手写-bind-函数"><a href="#手写-bind-函数" class="headerlink" title="手写 bind 函数"></a>手写 bind 函数</h2><p>提到 bind 就不得不提 call 和 apply，它们三个都可以改变函数的上下文，也就是 this 的指向；</p>
+<h3 id="bind、call、apply-的区别"><a href="#bind、call、apply-的区别" class="headerlink" title="bind、call、apply 的区别"></a>bind、call、apply 的区别</h3><ol>
+<li>call 和 apply 会使用调用者提供的 this 和参数，立即调用函数，并返回值，如果调用者没有返回值，则返回 undefined；</li>
+<li>bind 会使用调用者提供的 this 和参数，返回一个新函数，新函数的 this 就是调用者提供的 this，而其余的参数则作为新函数的参数，供新函数被调用时使用；</li>
+<li>apply 只能有两个参数，第 1 个是提供的 this，第二个是数组或类数组对象形式的参数列表；</li>
+<li>bind 和 call 可以有多个参数，第 1 个参数和 apply 一样，都是提供的 this，其余的是参数列表；</li>
+</ol>
+<h3 id="手写-bind"><a href="#手写-bind" class="headerlink" title="手写 bind"></a>手写 bind</h3><p>语法<code>function.bind(thisArg[, arg1[, arg2[, ...]]])</code></p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="comment">//1. 首先是只有函数才能调用 bind，所以需要定义在 Function.prototype 上，再一个就是不能和原生方法同名</span></span><br><span class="line"><span class="title class_">Function</span>.<span class="property"><span class="keyword">prototype</span></span>.<span class="property">myBind</span> = <span class="keyword">function</span> <span class="title function_">myBind</span>(<span class="params">context, ...params</span>) &#123;</span><br><span class="line">  <span class="comment">// function myBind(context, ...params) &#123;&#125; 此处具名匿名皆可</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">//2. 获取当前上下文，也就是调用 bind 的函数</span></span><br><span class="line">  <span class="keyword">const</span> fn = <span class="variable language_">this</span>;</span><br><span class="line">  <span class="comment">//3. bind 不立即执行，返回一个函数，同时，bind 可以作为偏函数使用</span></span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">function</span> (<span class="params">...args</span>) &#123;</span><br><span class="line">    <span class="comment">//4. 返回的函数使用绑定的上下文以及所有参数</span></span><br><span class="line">    <span class="keyword">return</span> fn.<span class="title function_">apply</span>(context, [...params, ...args]);</span><br><span class="line">  &#125;;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>使用测试</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> name = <span class="string">&quot;global_name&quot;</span>;</span><br><span class="line"><span class="keyword">let</span> obj = &#123;</span><br><span class="line">  <span class="attr">name</span>: <span class="string">&quot;obj_name&quot;</span>,</span><br><span class="line">&#125;;</span><br><span class="line"><span class="keyword">function</span> <span class="title function_">print</span>(<span class="params">x, y</span>) &#123;</span><br><span class="line">  <span class="variable language_">this</span>.<span class="property">x</span> = x;</span><br><span class="line">  <span class="variable language_">this</span>.<span class="property">y</span> = y;</span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="variable language_">this</span>.<span class="property">name</span>, x, y);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//1. 正常使用</span></span><br><span class="line"><span class="keyword">let</span> fn = print.<span class="title function_">myBind</span>(obj, <span class="number">1</span>, <span class="number">2</span>);</span><br><span class="line"><span class="title function_">fn</span>(); <span class="comment">// obj_name, 1, 2</span></span><br><span class="line"><span class="comment">//2. 偏函数</span></span><br><span class="line"><span class="keyword">let</span> fn = print.<span class="title function_">myBind</span>(obj, <span class="number">1</span>);</span><br><span class="line"><span class="title function_">fn</span>(<span class="number">2</span>); <span class="comment">// obj_name, 1, 2</span></span><br></pre></td></tr></table></figure>
+
+<p>原生的 bind 还可以用于构造函数，但 MDN 好像不推荐使用；</p>
+<h3 id="手写-call"><a href="#手写-call" class="headerlink" title="手写 call"></a>手写 call</h3><p>语法<code>function.call(thisArg, arg1, arg2, ...)</code></p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="comment">//1. 与 bind 一样，call 同样只能由函数调用，同时还要防止覆盖原生方法</span></span><br><span class="line"><span class="title class_">Function</span>.<span class="property"><span class="keyword">prototype</span></span>.<span class="property">myCall</span> = <span class="keyword">function</span> <span class="title function_">myCall</span>(<span class="params">context = <span class="variable language_">window</span>, ...params</span>) &#123;</span><br><span class="line">  <span class="comment">//2. 防止属性覆盖</span></span><br><span class="line">  <span class="keyword">const</span> fn = <span class="title class_">Symbol</span>();</span><br><span class="line">  <span class="comment">//3. 获取当前上下文，也就是调用 call 的函数，同时也是执行时上下文，因为 call 会立即执行</span></span><br><span class="line">  context[fn] = <span class="variable language_">this</span>;</span><br><span class="line">  <span class="comment">//4. 存储结果，使用绑定上下文执行函数后的结果</span></span><br><span class="line">  <span class="keyword">const</span> result = context[fn](...params);</span><br><span class="line">  <span class="comment">//5. 删除添加的属性，否则属性会越来越多</span></span><br><span class="line">  <span class="keyword">delete</span> context[fn];</span><br><span class="line">  <span class="comment">//6. 返回结果</span></span><br><span class="line">  <span class="keyword">return</span> result;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>使用测试</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> name = <span class="string">&quot;global_name&quot;</span>;</span><br><span class="line"><span class="keyword">let</span> obj = &#123;</span><br><span class="line">  <span class="attr">name</span>: <span class="string">&quot;obj_name&quot;</span>,</span><br><span class="line">&#125;;</span><br><span class="line"><span class="keyword">function</span> <span class="title function_">print</span>(<span class="params">x, y</span>) &#123;</span><br><span class="line">  <span class="variable language_">this</span>.<span class="property">x</span> = x;</span><br><span class="line">  <span class="variable language_">this</span>.<span class="property">y</span> = y;</span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="variable language_">this</span>.<span class="property">name</span>, x, y);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//1. 直接使用，this 默认绑定 window</span></span><br><span class="line"><span class="title function_">print</span>(<span class="number">1</span>, <span class="number">2</span>); <span class="comment">// global_name, 1, 2</span></span><br><span class="line"><span class="comment">//2. 使用 call 改变 this</span></span><br><span class="line">print.<span class="title function_">myCall</span>(obj, <span class="number">1</span>, <span class="number">2</span>); <span class="comment">// obj_name, 1, 2</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="手写-apply"><a href="#手写-apply" class="headerlink" title="手写 apply"></a>手写 apply</h3><p>apply 和 call 类似，唯一的不同在 apply 要求参数列表是数组或类数组；</p>
+<p>但有了扩展运算符<code>...</code>后，它俩的不同就消失了，可以完全相同；</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="comment">//1. 与 bind 一样，apply 同样只能由函数调用，同时还要防止覆盖原生方法</span></span><br><span class="line"><span class="comment">//唯一的不同是形参列表的形式不同，但本质相同</span></span><br><span class="line"><span class="title class_">Function</span>.<span class="property"><span class="keyword">prototype</span></span>.<span class="property">myApply</span> = <span class="keyword">function</span> <span class="title function_">myApply</span>(<span class="params">context = <span class="variable language_">window</span>, params = []</span>) &#123;</span><br><span class="line">  <span class="comment">//2. 防止属性覆盖</span></span><br><span class="line">  <span class="keyword">const</span> fn = <span class="title class_">Symbol</span>();</span><br><span class="line">  <span class="comment">//3. 获取当前上下文，也就是调用 call 的函数，同时也是执行时上下文，因为 call 会立即执行</span></span><br><span class="line">  context[fn] = <span class="variable language_">this</span>;</span><br><span class="line">  <span class="comment">//4. 存储结果，使用绑定上下文执行函数后的结果</span></span><br><span class="line">  <span class="keyword">const</span> result = context[fn](...params);</span><br><span class="line">  <span class="comment">//5. 删除添加的属性，否则属性会越来越多</span></span><br><span class="line">  <span class="keyword">delete</span> context[fn];</span><br><span class="line">  <span class="comment">//6. 返回结果</span></span><br><span class="line">  <span class="keyword">return</span> result;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h2 id="闭包"><a href="#闭包" class="headerlink" title="闭包"></a>闭包</h2><p>引用《你不知道的 JavaScript 上卷》第一部分第 5 章对闭包的定义：</p>
+<blockquote>
+<p>当函数可以记住并访问所在的词法作用域，即使函数是在当前词法作用域之外执行，这时就产生了闭包。</p>
+</blockquote>
+<p>这句话好理解又不好理解：</p>
+<ol>
+<li><p>因为<code>当函数可以记住并访问所在的词法作用域</code>后面使用了<code>即使</code>，所以可以理解为有另外一种情况，函数没有在当前词法作用域之外执行，经典的代表就是 IIFE（立即执行表达式） 模式；</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> a = <span class="number">2</span>;</span><br><span class="line">(<span class="keyword">function</span> <span class="title function_">IIFE</span>(<span class="params"></span>) &#123;</span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(a);</span><br><span class="line">&#125;)();</span><br></pre></td></tr></table></figure>
+
+<p>这段代码来自书中，同时作者认为这不是闭包，因为函数是在它定义时所在的作用域中执行的，而其中的 a 是通过普通的词法作用域查找而非被闭包发现的；</p>
+</li>
+<li><p>但单纯从代码层面来看，它确实产生了闭包的效果；</p>
+</li>
+</ol>
+<p>从个人理解出发，在开发过程中更多的是合适的场景使用合适的方式，所以，私以为下面这句话对闭包的描述更贴切：</p>
+<blockquote>
+<p>存在自由变量的函数就是闭包；</p>
+</blockquote>
+<p>真的很精练，越品越贴切；</p>
+<h3 id="常见的闭包"><a href="#常见的闭包" class="headerlink" title="常见的闭包"></a>常见的闭包</h3><ol>
+<li>函数作为参数被传递</li>
+<li>函数作为返回值被返回</li>
+</ol>
+<p>例 1，IIFE：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> a = <span class="number">20</span>;</span><br><span class="line">(<span class="keyword">function</span> <span class="title function_">IIFE</span>(<span class="params"></span>) &#123;</span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(a); <span class="comment">// 20</span></span><br><span class="line">&#125;)();</span><br></pre></td></tr></table></figure>
+
+<p>例 2，函数作为返回值：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">fn1</span>(<span class="params"></span>) &#123;</span><br><span class="line">  <span class="keyword">let</span> a = <span class="number">20</span>;</span><br><span class="line">  <span class="keyword">function</span> <span class="title function_">fn2</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(a);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> fn2;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> fn = <span class="title function_">fn1</span>();</span><br><span class="line"><span class="keyword">const</span> a = <span class="number">10</span>;</span><br><span class="line"><span class="title function_">fn</span>(); <span class="comment">// 20</span></span><br></pre></td></tr></table></figure>
+
+<p>例 3，函数作为参数：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">fn1</span>(<span class="params">fn</span>) &#123;</span><br><span class="line">  <span class="keyword">const</span> a = <span class="number">10</span>;</span><br><span class="line">  <span class="title function_">fn</span>();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> a = <span class="number">20</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">fn2</span>(<span class="params"></span>) &#123;</span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(a);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="title function_">fn1</span>(fn2); <span class="comment">// 20</span></span><br></pre></td></tr></table></figure>
+
+<p>结果是否和你想象的一致呢？这里就要引入<code>自由变量</code>；</p>
+<h3 id="自由变量"><a href="#自由变量" class="headerlink" title="自由变量"></a>自由变量</h3><p>自由变量是一个变量在当前作用域没有被定义，但被使用了；</p>
+<p>所有自由变量的查找，是在定义的位置向上查找，而不是在执行的位置；</p>
+<p>看完自由变量的定义及查找规则，是否对上面的例子有了不同的理解？</p>
+<h3 id="作用域"><a href="#作用域" class="headerlink" title="作用域"></a>作用域</h3><p>要谈闭包就不得不提作用域；</p>
+<p>作用域就是变量的合法使用范围；</p>
+<p>作用域又分为：</p>
+<ol>
+<li>全局作用域：任何位置都可以访问；</li>
+<li>函数作用域：函数内部的任何位置可以访问；</li>
+<li>块级作用域：任何含有大括号（<code>&#123;&#125;</code>）的代码块，不包含对象，函数，需要配合 let、const 一起使用，如 for、if、try…catch 等或独立的<code>&#123;&#125;</code>；</li>
+</ol>
+<h3 id="闭包的使用场景"><a href="#闭包的使用场景" class="headerlink" title="闭包的使用场景"></a>闭包的使用场景</h3><ol>
+<li><p>私有方法和变量（属性）- 隐藏内部实现</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 缓存函数</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">createCache</span>(<span class="params"></span>) &#123;</span><br><span class="line">  <span class="keyword">const</span> data = &#123;&#125;;</span><br><span class="line">  <span class="keyword">return</span> &#123;</span><br><span class="line">    <span class="attr">set</span>: <span class="keyword">function</span> (<span class="params">key, val</span>) &#123;</span><br><span class="line">      data[key] = val;</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">get</span>: <span class="keyword">function</span> (<span class="params">key</span>) &#123;</span><br><span class="line">      <span class="keyword">return</span> data[key];</span><br><span class="line">    &#125;,</span><br><span class="line">  &#125;;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> cached = <span class="title function_">createCache</span>();</span><br><span class="line">cached.<span class="title function_">set</span>(<span class="string">&quot;name&quot;</span>, <span class="string">&quot;John&quot;</span>);</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(cached.<span class="title function_">get</span>(<span class="string">&quot;name&quot;</span>)); <span class="comment">// John</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>构建命名空间 - 规避变量名冲突</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> a = <span class="number">10</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">print</span>(<span class="params"></span>) &#123;</span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(a);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="title function_">print</span>(); <span class="comment">// 10</span></span><br><span class="line"></span><br><span class="line">(<span class="keyword">function</span> <span class="title function_">IIFE</span>(<span class="params"></span>) &#123;</span><br><span class="line">  <span class="keyword">let</span> a = <span class="number">20</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">function</span> <span class="title function_">print</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(a);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="title function_">print</span>(a); <span class="comment">// 20</span></span><br><span class="line">&#125;)();</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>函数柯里化</p>
+<blockquote>
+<p>Currying - 只传递给函数一部分参数来调用它，让它返回一个函数去处理剩下的参数。</p>
+</blockquote>
+<p>先来道开胃小菜 👇：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 柯里化求和函数</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 普通函数</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">add</span>(<span class="params">a, b, c</span>) &#123;</span><br><span class="line">  <span class="keyword">return</span> a + b + c;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 调用</span></span><br><span class="line"><span class="title function_">add</span>(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 柯里化</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">add</span>(<span class="params">a</span>) &#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">function</span> (<span class="params">b</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">function</span> (<span class="params">c</span>) &#123;</span><br><span class="line">      <span class="keyword">return</span> a + b + c;</span><br><span class="line">    &#125;;</span><br><span class="line">  &#125;;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 调用 - 这就是柯里化</span></span><br><span class="line"><span class="title function_">add</span>(<span class="number">1</span>)(<span class="number">2</span>)(<span class="number">3</span>);</span><br></pre></td></tr></table></figure>
+
+<p>很简单吧，再来看一道经典的题目 👇：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 实现一个add方法，使计算结果能够满足如下预期：</span></span><br><span class="line"><span class="comment">// add(1)(2)(3) = 6;</span></span><br><span class="line"><span class="comment">// add(1, 2, 3)(4) = 10;</span></span><br><span class="line"><span class="comment">// add(1)(2)(3)(4)(5) = 15;</span></span><br></pre></td></tr></table></figure>
+
+<p>先不看第 3 个要求，前两个都是 4 个参数，由易到难实现一下：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">add</span>(<span class="params"></span>) &#123;</span><br><span class="line">  <span class="comment">// 1. 获取第 1 次调用时的参数</span></span><br><span class="line">  <span class="keyword">let</span> args = [...<span class="variable language_">arguments</span>];</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 2. 如果初始参数不足 4 个，则返回一个闭包保存参数</span></span><br><span class="line">  <span class="keyword">if</span> (args.<span class="property">length</span> &lt; <span class="number">4</span>) &#123;</span><br><span class="line">    <span class="comment">// 4. 返回闭包保存初始参数</span></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">function</span> <span class="title function_">adder</span>(<span class="params">...params</span>) &#123;</span><br><span class="line">      <span class="comment">// 5. 将新传入的参数和原有参数合并</span></span><br><span class="line">      args = [...args, ...params];</span><br><span class="line">      <span class="comment">// 6. 再次判断，如果参数还是不够 4 个，继续返回闭包</span></span><br><span class="line">      <span class="keyword">if</span> (args.<span class="property">length</span> &lt; <span class="number">4</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> adder;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="comment">// 4. 参数够 4 个则返回它们的和</span></span><br><span class="line">      <span class="keyword">return</span> args.<span class="title function_">reduce</span>(<span class="keyword">function</span> (<span class="params">a, b</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> a + b;</span><br><span class="line">      &#125;);</span><br><span class="line">    &#125;;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// 3. 如果初始参数大于 4 个，则直接返回它们的和</span></span><br><span class="line">  <span class="keyword">return</span> args.<span class="title function_">reduce</span>(<span class="keyword">function</span> (<span class="params">a, b</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> a + b;</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 测试一下</span></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">add</span>(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>));</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">add</span>(<span class="number">1</span>, <span class="number">2</span>)(<span class="number">3</span>, <span class="number">4</span>));</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">add</span>(<span class="number">1</span>)(<span class="number">2</span>, <span class="number">3</span>)(<span class="number">4</span>));</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">add</span>(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>)(<span class="number">4</span>));</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">add</span>(<span class="number">1</span>)(<span class="number">2</span>)(<span class="number">3</span>)(<span class="number">4</span>));</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">add</span>(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>));</span><br></pre></td></tr></table></figure>
+
+<p>结果如下：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/e6c9d24ely1h26w2ucaqwj20g006wweg.jpg" alt="结果如下"></p>
+<p>嗯，看着很 OK，甚至还能满足<code>console.log(add(1, 2, 3, 4, 5, 6, 7, 8));</code>这种不限参数的调用，但也只能这么调用，不能像题目中第 3 个要求那样柯里化调用；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/e6c9d24ely1h26w74n7ctj20v40a8dgr.jpg" alt="柯里化调用"></p>
+<p>出错的原因在于 add 中参数限制为 4 个，然后就返回它们的和了，对一个数字进行函数调用当然会出错；</p>
+<p>如何能让函数自己判断参数的结尾呢？延迟执行，何为延迟执行，就是在使用函数时，手动通知函数，参数传完了，返回结果吧；</p>
+<p>暂停好奇心，先来完善一下上面的代码，不能每次参数的数量变了就改函数的参数吧，这次是 4，下次是 5，下下次是 6 呢？</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">toCurry</span>(<span class="params">fn</span>) &#123;</span><br><span class="line">  <span class="comment">// 获取函数形参的数量</span></span><br><span class="line">  <span class="keyword">const</span> length = fn.<span class="property">length</span>;</span><br><span class="line">  <span class="comment">// 保存实参</span></span><br><span class="line">  <span class="keyword">let</span> args = [];</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">function</span> <span class="title function_">curry</span>(<span class="params">...params</span>) &#123;</span><br><span class="line">    <span class="comment">// 存储参数</span></span><br><span class="line">    args = [...args, ...params];</span><br><span class="line">    <span class="comment">// 参数符合要求则返回 fn 计算后的结果</span></span><br><span class="line">    <span class="keyword">if</span> (args.<span class="property">length</span> &gt;= length) &#123;</span><br><span class="line">      <span class="comment">// ？？  return fn.apply(fn, args);</span></span><br><span class="line">      <span class="keyword">const</span> res = fn.<span class="title function_">apply</span>(<span class="literal">null</span>, args);</span><br><span class="line">      <span class="comment">// ？？</span></span><br><span class="line">      args = [];</span><br><span class="line">      <span class="keyword">return</span> res;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 参数不符合要求则返回闭包继续获取参数</span></span><br><span class="line">    <span class="keyword">return</span> curry;</span><br><span class="line">  &#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>解释一下代码中的<code>??</code>，为啥不用<code>return fn.apply(fn, args);</code>而是弯弯绕先存储结果然后清空<code>args</code>呢？因为<code>args</code>的作用域在 toCurry 函数内，每次计算结束后如果不清空，上一次的参数会保留下来作为下一次的计算参数，这可就出问题了；</p>
+<p>测试一下：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">add</span>(<span class="params">a, b, c</span>) &#123;</span><br><span class="line">  <span class="keyword">return</span> a + b + c;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> sum = <span class="title function_">toCurry</span>(add);</span><br><span class="line"></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">sum</span>(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>));</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">sum</span>(<span class="number">1</span>, <span class="number">2</span>)(<span class="number">3</span>));</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">sum</span>(<span class="number">1</span>)(<span class="number">2</span>, <span class="number">3</span>));</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">sum</span>(<span class="number">1</span>)(<span class="number">2</span>)(<span class="number">3</span>));</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">mul</span>(<span class="params">a, b, c, d</span>) &#123;</span><br><span class="line">  <span class="keyword">return</span> a * b * c * d;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> rst = <span class="title function_">toCurry</span>(mul);</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">rst</span>(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>));</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">rst</span>(<span class="number">1</span>, <span class="number">2</span>)(<span class="number">3</span>, <span class="number">4</span>));</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">rst</span>(<span class="number">1</span>)(<span class="number">2</span>, <span class="number">3</span>)(<span class="number">4</span>));</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">rst</span>(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>)(<span class="number">4</span>));</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">rst</span>(<span class="number">1</span>)(<span class="number">2</span>)(<span class="number">3</span>)(<span class="number">4</span>));</span><br></pre></td></tr></table></figure>
+
+<p>结果如下：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/e6c9d24ely1h26yij33h7j20gc0a2jrf.jpg" alt="结果如下"></p>
+<p>优化一下弯弯绕：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">toCurry</span>(<span class="params">fn</span>) &#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">function</span> (<span class="params">...initParams</span>) &#123;</span><br><span class="line">    <span class="comment">// 每次调用都重置参数</span></span><br><span class="line">    <span class="comment">// 这里的每次调用是指链式调用的第 1 次，如 sum(1)(2)(3) 中的 sum(1)</span></span><br><span class="line">    <span class="keyword">let</span> args = initParams;</span><br><span class="line">    <span class="comment">// 获取参数的长度</span></span><br><span class="line">    <span class="keyword">let</span> argsLength = args.<span class="property">length</span>;</span><br><span class="line">    <span class="comment">// 如果参数符合要求，直接返回计算结果</span></span><br><span class="line">    <span class="keyword">if</span> (argsLength &gt;= fn.<span class="property">length</span>) &#123;</span><br><span class="line">      <span class="keyword">return</span> fn.<span class="title function_">apply</span>(<span class="literal">null</span>, args);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 如果参数不符合要求，继续获取参数</span></span><br><span class="line">    <span class="keyword">function</span> <span class="title function_">curry</span>(<span class="params">...params</span>) &#123;</span><br><span class="line">      args = [...args, ...params];</span><br><span class="line">      <span class="keyword">if</span> (args.<span class="property">length</span> &gt;= fn.<span class="property">length</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> fn.<span class="title function_">apply</span>(<span class="literal">null</span>, args);</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="comment">// 返回闭包，继续获取参数</span></span><br><span class="line">      <span class="keyword">return</span> curry;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> curry;</span><br><span class="line">  &#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以再优雅一点：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">toCurry</span>(<span class="params">fn</span>) &#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">function</span> (<span class="params">...initParams</span>) &#123;</span><br><span class="line">    <span class="keyword">let</span> args = initParams;</span><br><span class="line">    <span class="keyword">function</span> <span class="title function_">curry</span>(<span class="params">...params</span>) &#123;</span><br><span class="line">      args = [...args, ...params];</span><br><span class="line">      <span class="keyword">if</span> (args.<span class="property">length</span> &gt;= fn.<span class="property">length</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> fn.<span class="title function_">apply</span>(<span class="literal">null</span>, args);</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">return</span> curry;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> args.<span class="property">length</span> &gt;= fn.<span class="property">length</span> ? fn.<span class="title function_">apply</span>(<span class="literal">null</span>, args) : curry;</span><br><span class="line">  &#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>现在来说一说上面提到的延迟执行：累积传入的参数，在没有参数时执行；</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">add</span>(<span class="params"></span>) &#123;</span><br><span class="line">  <span class="comment">// 获取参数</span></span><br><span class="line">  <span class="keyword">const</span> args = <span class="title class_">Array</span>.<span class="title function_">from</span>(<span class="variable language_">arguments</span>);</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">function</span> <span class="title function_">inner</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="comment">// 参数为空则计算并返回结果</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="variable language_">arguments</span>.<span class="property">length</span> === <span class="number">0</span>) &#123;</span><br><span class="line">      <span class="keyword">return</span> args.<span class="title function_">reduce</span>(<span class="keyword">function</span> (<span class="params">a, b</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> a + b;</span><br><span class="line">      &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 参数不为空则继续获取参数</span></span><br><span class="line">    args.<span class="title function_">push</span>(...<span class="variable language_">arguments</span>);</span><br><span class="line">    <span class="keyword">return</span> inner;</span><br><span class="line">  &#125;;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">add</span>(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>)());</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">add</span>(<span class="number">1</span>, <span class="number">2</span>)(<span class="number">3</span>, <span class="number">4</span>)());</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">add</span>(<span class="number">1</span>)(<span class="number">2</span>, <span class="number">3</span>)(<span class="number">4</span>)());</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">add</span>(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>)(<span class="number">4</span>)());</span><br><span class="line"></span><br><span class="line"><span class="comment">// 这应该是更为常见的使用场景</span></span><br><span class="line"><span class="title function_">add</span>(<span class="number">1</span>);</span><br><span class="line"><span class="title function_">add</span>(<span class="number">2</span>);</span><br><span class="line"><span class="title function_">add</span>(<span class="number">3</span>);</span><br><span class="line"><span class="title function_">add</span>();</span><br></pre></td></tr></table></figure>
+
+<p>提取通用函数：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">toCurry</span>(<span class="params">fn</span>) &#123;</span><br><span class="line">  <span class="keyword">let</span> args = [];</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">function</span> <span class="title function_">curry</span>(<span class="params">...params</span>) &#123;</span><br><span class="line">    <span class="comment">// 调用函数时，参数为空则执行，不为空则保存参数</span></span><br><span class="line">    <span class="keyword">if</span> (params.<span class="property">length</span>) &#123;</span><br><span class="line">      args.<span class="title function_">push</span>(...params);</span><br><span class="line">      <span class="keyword">return</span> curry;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> fn.<span class="title function_">apply</span>(<span class="literal">null</span>, args);</span><br><span class="line">  &#125;;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">adder</span>(<span class="params">a, b, c, d</span>) &#123;</span><br><span class="line">  <span class="keyword">return</span> a + b + c + d;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> add = <span class="title function_">toCurry</span>(adder);</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">add</span>(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>)());</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">add</span>(<span class="number">1</span>, <span class="number">2</span>)(<span class="number">3</span>, <span class="number">4</span>)());</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">add</span>(<span class="number">1</span>)(<span class="number">2</span>, <span class="number">3</span>)(<span class="number">4</span>)());</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">add</span>(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>)(<span class="number">4</span>)());</span><br><span class="line"></span><br><span class="line"><span class="comment">// 这应该是更为常见的使用场景</span></span><br><span class="line"><span class="title function_">add</span>(<span class="number">1</span>);</span><br><span class="line"><span class="title function_">add</span>(<span class="number">2</span>);</span><br><span class="line"><span class="title function_">add</span>(<span class="number">3</span>);</span><br><span class="line"><span class="comment">// add();</span></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">add</span>());</span><br></pre></td></tr></table></figure>
+
+<p>结果如下：<br><img data-src="https://tva1.sinaimg.cn/large/e6c9d24ely1h270jpgoz1j20ek05kdfq.jpg" alt="结果如下"></p>
+<p>柯里化的应用场景</p>
+<ol>
+<li><p>延迟执行，上面已经说过了；</p>
+</li>
+<li><p>参数复用，</p>
+<p>正则表达式验证字符串</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">check</span>(<span class="params">reg, str</span>) &#123;</span><br><span class="line">  <span class="keyword">return</span> reg.<span class="title function_">test</span>(str);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">check</span>(<span class="regexp">/\d+/g</span>, <span class="string">&quot;hello&quot;</span>)); <span class="comment">// false</span></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">check</span>(<span class="regexp">/[a-z]+/g</span>, <span class="string">&quot;hello&quot;</span>)); <span class="comment">// true</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">toCurry</span>(<span class="params">reg</span>) &#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">function</span> (<span class="params">str</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> reg.<span class="title function_">test</span>(str);</span><br><span class="line">  &#125;;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> hasNumber = <span class="title function_">toCurry</span>(<span class="regexp">/\d+/g</span>);</span><br><span class="line"><span class="keyword">let</span> hasString = <span class="title function_">toCurry</span>(<span class="regexp">/[a-z]+/g</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 复用</span></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">hasNumber</span>(<span class="string">&quot;hello&quot;</span>)); <span class="comment">// false</span></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">hasNumber</span>(<span class="string">&quot;hello1&quot;</span>)); <span class="comment">// true</span></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">hasString</span>(<span class="string">&quot;hello&quot;</span>)); <span class="comment">// true</span></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">hasString</span>(<span class="string">&quot;hello1&quot;</span>)); <span class="comment">// false</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>惰性载入</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">addEvent</span>(<span class="params"></span>) &#123;</span><br><span class="line">  <span class="keyword">if</span> (<span class="variable language_">document</span>.<span class="property">addEventListener</span>) &#123;</span><br><span class="line">    addEvent = <span class="keyword">function</span> (<span class="params">element, event, handler, capture</span>) &#123;</span><br><span class="line">      element.<span class="title function_">addEventListener</span>(event, handler, capture);</span><br><span class="line">    &#125;;</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="variable language_">document</span>.<span class="property">attachEvent</span>) &#123;</span><br><span class="line">    addEvent = <span class="keyword">function</span> (<span class="params">element, event, handler, capture</span>) &#123;</span><br><span class="line">      element.<span class="title function_">attachEvent</span>(<span class="string">&quot;on&quot;</span> + event, handler);</span><br><span class="line">    &#125;;</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    addEvent = <span class="keyword">function</span> (<span class="params">element, event, handler, capture</span>) &#123;</span><br><span class="line">      element[<span class="string">&quot;on&quot;</span> + event] = handler;</span><br><span class="line">    &#125;;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> addEvent.<span class="title function_">apply</span>(<span class="variable language_">this</span>, <span class="variable language_">arguments</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 使用</span></span><br><span class="line"><span class="title function_">addEvent</span>(</span><br><span class="line">  <span class="variable language_">window</span>,</span><br><span class="line">  <span class="string">&quot;DOMContentLoaded&quot;</span>,</span><br><span class="line">  <span class="keyword">function</span> (<span class="params"></span>) &#123;</span><br><span class="line">    <span class="title function_">alert</span>(<span class="string">&quot;hello&quot;</span>);</span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="literal">false</span></span><br><span class="line">);</span><br></pre></td></tr></table></figure></li>
+</ol>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>Web</category>
+        <category>JavaScript</category>
+      </categories>
+      <tags>
+        <tag>JavaScript</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>JS 原型和原型链考点汇总</title>
+    <url>/posts/2393664447/</url>
+    <content><![CDATA[<blockquote>
+<p>JavaScript 基于原型继承，class 实际上是函数，是一种语法糖；</p>
+</blockquote>
+<h2 id="隐式原型和显式原型"><a href="#隐式原型和显式原型" class="headerlink" title="隐式原型和显式原型"></a>隐式原型和显式原型</h2><p><code>.__proto__</code>是隐式原型；<br><code>.prototype</code>是显式原型；</p>
+<p>每个实例都有隐式原型；<br>每个 class 都有显式原型；<br>每个实例的<code>.__proto__</code>都指向 class 的<code>.prototype</code>；<br>实例会先在自身的属性和方法上寻找，如果找不到则自动顺着<code>.__proto__</code>链查找；</p>
+<span id="more"></span>
+
+<h2 id="instanceof-判断数据类型"><a href="#instanceof-判断数据类型" class="headerlink" title="instanceof 判断数据类型"></a>instanceof 判断数据类型</h2><p><code>instanceof</code>只能用于判断引用类型；</p>
+<p><code>instanceof</code>通过左操作数的<code>隐式原型链</code>（__proto__）向上查找，如果在某一刻与右操作数的<code>显式原型</code>（prototype）重合，则返回 true，否则返回 false；（注意 ⚠️：左边是原型链，右边是原型）；</p>
+<p>也就是说，<code>instanceof</code>根据对象（左操作数）是否是某个构造函数（右操作数）的实例来返回布尔值（判断对象的类型）；</p>
+<p>引用《你不知道的 JavaScript 上卷》第二部分第五章的一句话，可以很形象的描述<code>instanceof</code>工作的原理：<code>a instanceof Foo</code></p>
+<blockquote>
+<p>instanceof 回答的问题是：在 a 的整条<code>[[Prototype]]</code>链中是否有 Foo.prototype 指向的对象？</p>
+</blockquote>
+<p><code>[[Prototype]]</code>属性是对象的一个特殊的内置属性，其实就是对于其他对象的引用，几乎所有对象在创建时<code>[[Prototype]]</code>属性都会被赋予一个非空的值；</p>
+<p>当试图引用对象的属性时，会触发<code>[[Get]]</code>操作，如果对象自身有这个属性，则使用它，否则沿着<code>[[Prototype]]</code>链向上查找，这个过程中如果找到匹配项则返回值，如果找完整条<code>[[Prototype]]</code>链都没有匹配项，则返回 undefined；</p>
+<p>规则很眼熟吧，没错，<code>[[Prototype]]</code>链就是原型链；</p>
+<h3 id="简单实现-instanceof"><a href="#简单实现-instanceof" class="headerlink" title="简单实现 instanceof"></a>简单实现 instanceof</h3><figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> &#123;<span class="type">object</span>&#125; target 对象</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> &#123;<span class="type">constructor</span>&#125; origin 构造函数</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@returns</span> true 或 false</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">myInstanceOf</span>(<span class="params">target, origin</span>) &#123;</span><br><span class="line">  <span class="comment">// 1. 非引用类型或 null 返回 false</span></span><br><span class="line">  <span class="keyword">if</span> (</span><br><span class="line">    (<span class="keyword">typeof</span> target != <span class="string">&quot;function&quot;</span> &amp;&amp; <span class="keyword">typeof</span> target != <span class="string">&quot;object&quot;</span>) ||</span><br><span class="line">    target === <span class="literal">null</span></span><br><span class="line">  ) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">//2. 沿着 target 的原型链向上查找</span></span><br><span class="line">  <span class="keyword">while</span> (target) &#123;</span><br><span class="line">    <span class="keyword">if</span> (target.<span class="property">__proto__</span> === origin.<span class="property"><span class="keyword">prototype</span></span>) &#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    target = target.<span class="property">__proto__</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Object-prototype-toString-call"><a href="#Object-prototype-toString-call" class="headerlink" title="Object.prototype.toString.call()"></a>Object.prototype.toString.call()</h2><p><code>Object.prototype.toString()</code>是 Object 原型对象上的方法，返回表示该对象类型的字符串；</p>
+<h3 id="为什么不直接调用对象自身的-toString-方法"><a href="#为什么不直接调用对象自身的-toString-方法" class="headerlink" title="为什么不直接调用对象自身的 toString() 方法"></a>为什么不直接调用对象自身的 toString() 方法</h3><p>不直接调用是因为大部分类型都重写了 toString() 方法，代表各自不同的逻辑，所以需要调用 Object 原型对象上的 toString() 方法，才能返回表示对象类型的字符串；</p>
+<p>例如：</p>
+<ol>
+<li>Array 的 toString() 方法返回数组元素的字符串表示；</li>
+<li>String 的 toString() 方法返回字符串的字面量表示；</li>
+<li>Number 的 toString() 方法返回数值对应的字符串表示；</li>
+<li>Boolean 的 toString() 方法返回布尔值对应的字符串表示</li>
+</ol>
+<h2 id="Object-getPrototypeOf"><a href="#Object-getPrototypeOf" class="headerlink" title="Object.getPrototypeOf()"></a>Object.getPrototypeOf()</h2><p><code>Object.getPrototypeOf()</code>返回指定对象的原型（内部<code>[[Prototype]]</code>属性的值）;</p>
+<p>在 ES5 中，如果传递给方法的参数不是对象，则会抛出 TypeError 异常；</p>
+<p>在 ES6 中，如果传递给方法的参数不是对象，则会强制类型转换为对象；</p>
+<h2 id="isPrototypeOf-NaN"><a href="#isPrototypeOf-NaN" class="headerlink" title="isPrototypeOf()"></a>isPrototypeOf()</h2><p>还是引用《你不知道的 JavaScript 上卷》第二部分第五章的一句话，可以很形象的描述<code>isPrototypeOf()</code>工作的原理：<code>Foo.prototype.isPrototypeOf(a)</code></p>
+<blockquote>
+<p>isPrototypeOf() 回答的问题是：在 a 的整条<code>[[Prototype]]</code>链中是否出现过 Foo.prototype？</p>
+</blockquote>
+<p><code>isPrototypeOf()</code>并不一定需要间接引用构造函数，只需要两个对象也可以判断它们之间的关系，它们的<code>.prototype</code>或<code>__proto__</code>属性会被自动访问；</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="comment">//问：b 是否出现在 c 的原型链中？</span></span><br><span class="line">b.<span class="title function_">isPrototypeOf</span>(c);</span><br></pre></td></tr></table></figure>
+
+<p><strong>特殊情况</strong>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/e6c9d24ely1h1jmnxqeknj20q905oq4k.jpg" alt="Object.getPrototypeOf(`包装器（构造函数）`)"></p>
+<p><code>Object.getPrototypeOf(包装器（构造函数）)</code>会把创建对象的包装器（构造函数）当作对象，返回的是函数对象的原型<code>Function.prototype</code>;</p>
+<h2 id="简单实现-jQuery，考虑插件和扩展性"><a href="#简单实现-jQuery，考虑插件和扩展性" class="headerlink" title="简单实现 jQuery，考虑插件和扩展性"></a>简单实现 jQuery，考虑插件和扩展性</h2><figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">jQuery</span> &#123;</span><br><span class="line">  <span class="title function_">constructor</span>(<span class="params">selector</span>) &#123;</span><br><span class="line">    <span class="keyword">let</span> elements = <span class="variable language_">document</span>.<span class="title function_">querySelectorAll</span>(selector);</span><br><span class="line">    <span class="keyword">let</span> length = elements.<span class="property">length</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">let</span> i = <span class="number">0</span>; i &lt; length; i++) &#123;</span><br><span class="line">      <span class="variable language_">this</span>[i] = elements[i];</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">length</span> = length;</span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">selector</span> = selector;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="title function_">forEach</span>(<span class="params">fn</span>) &#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">let</span> i = <span class="number">0</span>; i &lt; <span class="variable language_">this</span>.<span class="property">length</span>; i++) &#123;</span><br><span class="line">      <span class="keyword">let</span> ele = <span class="variable language_">this</span>[i];</span><br><span class="line">      <span class="title function_">fn</span>(ele);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="title function_">on</span>(<span class="params">type, fn</span>) &#123;</span><br><span class="line">    <span class="variable language_">this</span>.<span class="title function_">forEach</span>(<span class="function">(<span class="params">ele</span>) =&gt;</span> &#123;</span><br><span class="line">      ele.<span class="title function_">addEventListener</span>(type, fn, <span class="literal">false</span>);</span><br><span class="line">    &#125;);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>插件 - 使用<code>prototype</code>属性添加；</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line">jQuery.<span class="property"><span class="keyword">prototype</span></span>.<span class="property">addClass</span> = <span class="keyword">function</span> <span class="title function_">addClass</span>(<span class="params">className</span>) &#123;</span><br><span class="line">  <span class="variable language_">this</span>.<span class="title function_">forEach</span>(<span class="function">(<span class="params">ele</span>) =&gt;</span> &#123;</span><br><span class="line">    ele.<span class="title function_">setAttribute</span>(<span class="string">&quot;class&quot;</span>, className);</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">jQuery.<span class="property"><span class="keyword">prototype</span></span>.<span class="property">removeClass</span> = <span class="keyword">function</span> <span class="title function_">removeClass</span>(<span class="params"></span>) &#123;&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>扩展性 &#x3D; 造轮子</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">myQuery</span> <span class="keyword">extends</span> <span class="title class_ inherited__">jQuery</span> &#123;</span><br><span class="line">  <span class="title function_">constructor</span>(<span class="params">selector</span>) &#123;</span><br><span class="line">    <span class="variable language_">super</span>(selector);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="title function_">style</span>(<span class="params">attr, value</span>) &#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="画图理解原型链"><a href="#画图理解原型链" class="headerlink" title="画图理解原型链"></a>画图理解原型链</h2><p>下面代码的原型链是怎样的？</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">Foo</span>(<span class="params"></span>) &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> fn = <span class="keyword">new</span> <span class="title class_">Foo</span>();</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li><code>fn.__proto__ === Foo.prototype</code>，实例的隐式原型指向（构造）函数的显式原型，这是毋庸置疑的；</li>
+<li><code>Foo.prototype.constructor === Foo</code>，函数原型的构造函数指向函数自身（废话）；</li>
+<li><code>Foo.__proto__ === Function.prototype</code>，Foo 是函数，所以 Foo 的隐式原型指向 Function 的显式原型；</li>
+<li><code>Foo.prototype.__proto__ === Object.prototype</code>，一切皆对象，所以函数原型的隐式原型最终指向 Object.prototype；</li>
+<li><code>Object.prototype.__proto__ === null</code>，原型链的终点，1、4、5 组成了一条原型链；</li>
+<li><code>Function.__proto__ === Function.prototype</code>，后面解释；</li>
+<li><code>Function.prototype.constructor === Function</code>，同 2；</li>
+<li><code>Function.prototype.__proto__ === Object.prototype</code>，同 4；</li>
+<li><code>Object.__proto__ === Function.prototype</code>，同 6；</li>
+<li><code>Object.prototype.constructor === Object</code>，同 2；</li>
+</ol>
+<p>解释一下 6 和 9，Function 和 Object 都是（构造）函数，因为可以使用 new 操作符，既然是函数，所以原型是 Function.prototype 就合情合理了；</p>
+<p>如图：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/e6c9d24ely1h1ki41mg7vj20wg0hdgmt.jpg" alt="画图理解原型链"></p>
+]]></content>
+      <categories>
+        <category>Web</category>
+        <category>JavaScript</category>
+      </categories>
+      <tags>
+        <tag>JavaScript</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>JS 变量与数据类型考点汇总</title>
+    <url>/posts/2617276859/</url>
+    <content><![CDATA[<h2 id="JavaScript-数据类型"><a href="#JavaScript-数据类型" class="headerlink" title="JavaScript 数据类型"></a>JavaScript 数据类型</h2><p><code>值类型</code>：number、string、null、boolean、undefined、BigInt、Symbol<br><code>引用类型</code>：object，包含 object、array、date、function 等</p>
+<h2 id="JavaScript-中的真假值"><a href="#JavaScript-中的真假值" class="headerlink" title="JavaScript 中的真假值"></a>JavaScript 中的真假值</h2><p><code>truly 值</code>：两次取反(非运算)等于 true 的值，<code>!!x === true</code></p>
+<p><code>falsely 值</code>：两次取反(非运算)等于 false 的值，<code>!!x === false</code></p>
+<p>假值如下：</p>
+<ol>
+<li>null</li>
+<li>undefined</li>
+<li>‘’ 空字符串</li>
+<li>+0、-0</li>
+<li>NaN (Not a Number)</li>
+<li>false</li>
+</ol>
+<p>除了以上的假值外，其他值都可以认为是<code>truly</code>；</p>
+<span id="more"></span>
+
+<h2 id="typeof-可以判断哪些类型"><a href="#typeof-可以判断哪些类型" class="headerlink" title="typeof 可以判断哪些类型"></a>typeof 可以判断哪些类型</h2><p>typeof 可以判断除了 null 以外的所有<code>值类型</code>，以及<code>引用类型</code>中的 function 和 object；</p>
+<ol>
+<li>number</li>
+<li>string</li>
+<li>undefined</li>
+<li>boolean</li>
+<li>bigInt</li>
+<li>symbol</li>
+<li>function</li>
+<li>object</li>
+</ol>
+<p>要判断引用类型，可以使用 <a href="https://undeio.com/posts/2393664447/">instanceof</a>;</p>
+<h3 id="为什么-typeof-null-返回的是-object"><a href="#为什么-typeof-null-返回的是-object" class="headerlink" title="为什么 typeof null 返回的是 object"></a>为什么 typeof null 返回的是 object</h3><p>JavaScript 底层存储变量时，使用变量机器码的低 1 ～ 3 位存储其类型信息；</p>
+<table>
+<thead>
+<tr>
+<th align="center">类型标签</th>
+<th align="center">类型</th>
+<th align="center">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">000</td>
+<td align="center">对象</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">1</td>
+<td align="center">整数</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">010</td>
+<td align="center">浮点数</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">100</td>
+<td align="center">字符串</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">110</td>
+<td align="center">布尔值</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"></td>
+<td align="center">undefined</td>
+<td align="center">用 -2^30 整数表示</td>
+</tr>
+<tr>
+<td align="center"></td>
+<td align="center">null</td>
+<td align="center">所有机器码为 0</td>
+</tr>
+</tbody></table>
+<p>上表可以看到，对象的类型标签是 0，而由于 null 的所有机器码均为 0，因此，null 的类型标签也可以认为是 0，所以 typeof 在判断类型时，就把 null 当作了对象；</p>
+<blockquote>
+<p>原文 - <a href="https://2ality.com/2013/10/typeof-null.html">The history of “typeof null”</a></p>
+</blockquote>
+<h2 id="值类型和引用类型的区别"><a href="#值类型和引用类型的区别" class="headerlink" title="值类型和引用类型的区别"></a>值类型和引用类型的区别</h2><ol>
+<li>存储位置不一样<ol>
+<li>值类型的变量保存在栈内存中，通常，在代码段执行结束后，值类型的变量会被销毁；</li>
+<li>引用类型的变量名保存在栈内存中，但变量的值会存储在堆内存中，引用类型的变量不会自动销毁，而是在没有被引用时，由垃圾回收机制释放；</li>
+</ol>
+</li>
+<li>复制方式不一样<ol>
+<li>值类型的变量之间复制是深拷贝，修改不会相互影响；</li>
+<li>引用类型的变量之间直接赋值实际上是引用传递，只是浅拷贝，修改会互相影响；</li>
+</ol>
+</li>
+<li>值类型的变量无法添加属性和方法，而引用类型则可以；</li>
+<li>比较方式不一样<ol>
+<li>值类型的比较是值的比较，值相等则相等，&#x3D;&#x3D; 在比较时可能会隐式类型转换，&#x3D;&#x3D;&#x3D; 则需要类型与值完全相等；</li>
+<li>引用类型的比较是引用地址的比较，即使内容相同，但地址不同，也不相等；</li>
+</ol>
+</li>
+<li>当作函数的参数时，传递方式不同<ol>
+<li>值类型作为函数参数时，实参会复制给形参，数据独立，互不影响；</li>
+<li>引用类型作为函数参数时，传递给形参的就是实参的引用地址，修改会相互影响；</li>
+</ol>
+</li>
+</ol>
+<h2 id="简单实现深拷贝"><a href="#简单实现深拷贝" class="headerlink" title="简单实现深拷贝"></a>简单实现深拷贝</h2><figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> &#123;<span class="type">object</span>&#125; obj 要拷贝的对象</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span> 拷贝好的对象</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">deepClone</span>(<span class="params">obj</span>) &#123;</span><br><span class="line">  <span class="comment">// 1. 值类型和 null 直接返回，递归停止的条件</span></span><br><span class="line">  <span class="keyword">if</span> (<span class="keyword">typeof</span> obj !== <span class="string">&quot;object&quot;</span> || obj === <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> obj;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 2. 区分数组和对象</span></span><br><span class="line">  <span class="keyword">let</span> result;</span><br><span class="line">  <span class="keyword">if</span> (obj <span class="keyword">instanceof</span> <span class="title class_">Array</span>) &#123;</span><br><span class="line">    result = [];</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    result = &#123;&#125;;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 3. 递归拷贝 obj 自有属性</span></span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">let</span> key <span class="keyword">in</span> obj) &#123;</span><br><span class="line">    <span class="keyword">if</span> (obj.<span class="title function_">hasOwnProperty</span>(key)) &#123;</span><br><span class="line">      result[key] = <span class="title function_">deepClone</span>(obj[key]);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 4. 返回结果</span></span><br><span class="line">  <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Object-assign-不是深拷贝"><a href="#Object-assign-不是深拷贝" class="headerlink" title="Object.assign 不是深拷贝"></a>Object.assign 不是深拷贝</h3><p>Object.assign 是浅拷贝，对于属性值为引用类型的值，只会拷贝其引用地址；</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> obj1 = &#123; <span class="attr">a</span>: <span class="number">10</span>, <span class="attr">b</span>: <span class="number">20</span>, <span class="attr">c</span>: &#123; <span class="attr">x</span>: <span class="number">100</span>, <span class="attr">y</span>: <span class="number">200</span> &#125; &#125;;</span><br><span class="line"><span class="keyword">const</span> obj2 = <span class="title class_">Object</span>.<span class="title function_">assign</span>(&#123;&#125;, obj1);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 修改源对象的属性</span></span><br><span class="line">obj1.<span class="property">a</span> = <span class="number">11</span>;</span><br><span class="line"><span class="comment">// 修改目标对象的属性</span></span><br><span class="line">obj2.<span class="property">c</span>.<span class="property">x</span> = <span class="number">101</span>;</span><br><span class="line"></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&quot;obj1&quot;</span>, obj1);</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&quot;obj2&quot;</span>, obj2);</span><br></pre></td></tr></table></figure>
+
+<p>结果如下：<br><img data-src="https://tva1.sinaimg.cn/large/e6c9d24ely1h25k04rbawj20s009iaav.jpg" alt="Object.assign"></p>
+<p>修改值为基本类型的属性不会互相影响，而修改值为引用类型的属性时则会相互影响；</p>
+<h2 id="何时使用-x3D-x3D-x3D-x3D-，何时使用-x3D-x3D"><a href="#何时使用-x3D-x3D-x3D-x3D-，何时使用-x3D-x3D" class="headerlink" title="何时使用 &#x3D;&#x3D;&#x3D;&#x3D;，何时使用 &#x3D;&#x3D;"></a>何时使用 &#x3D;&#x3D;&#x3D;&#x3D;，何时使用 &#x3D;&#x3D;</h2><p>除了判断是否等于 null 或 undefined，其他地方一律用 &#x3D;&#x3D;&#x3D;；</p>
+<ol>
+<li>判断对象的属性是否存在可以使用 &#x3D;&#x3D;；</li>
+<li>判断函数的参数是否存在可以使用 &#x3D;&#x3D;；</li>
+</ol>
+<h2 id="var-和-let-const-的区别"><a href="#var-和-let-const-的区别" class="headerlink" title="var 和 let const 的区别"></a>var 和 let const 的区别</h2><ol>
+<li>var 属于 es5 规范；</li>
+<li>let、const 属于 es6 规范；</li>
+<li>var 有变量提升；</li>
+<li>let、const 有块级作用域；</li>
+<li>var、let 声明的是变量，可修改，const 声明的是常量，不可修改；</li>
+</ol>
+<h2 id="列举强制类型转换和隐式类型转换"><a href="#列举强制类型转换和隐式类型转换" class="headerlink" title="列举强制类型转换和隐式类型转换"></a>列举强制类型转换和隐式类型转换</h2><ol>
+<li>强制类型转换：parseInt、parseFloat、toString、Number、String 等；</li>
+<li>隐式类型转换：if、逻辑运算、&#x3D;&#x3D;、+ 拼接字符串等；</li>
+</ol>
+<h2 id="手写深度比较，模拟-lodash-的-isEqual"><a href="#手写深度比较，模拟-lodash-的-isEqual" class="headerlink" title="手写深度比较，模拟 lodash 的 isEqual"></a>手写深度比较，模拟 lodash 的 isEqual</h2><figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 工具函数，判断参数类型是否为对象</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> &#123;<span class="type">*</span>&#125; obj 要判断的参数</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@returns</span> true 表示 obj 是对象</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">isObject</span>(<span class="params">obj</span>) &#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">typeof</span> obj === <span class="string">&quot;object&quot;</span> &amp;&amp; obj !== <span class="literal">null</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> &#123;<span class="type">*</span>&#125; obj1 要比较的参数 1</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> &#123;<span class="type">*</span>&#125; obj2 要比较的参数 2</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@returns</span> true 表示 obj1 === obj2</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">isEqual</span>(<span class="params">obj1, obj2</span>) &#123;</span><br><span class="line">  <span class="comment">// 1. 值类型，直接返回比较结果</span></span><br><span class="line">  <span class="keyword">if</span> (!<span class="title function_">isObject</span>(obj1) || !<span class="title function_">isObject</span>(obj2)) &#123;</span><br><span class="line">    <span class="keyword">return</span> obj1 === obj2;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 2. 判断两个参数是否为同一对象</span></span><br><span class="line">  <span class="keyword">if</span> (obj1 === obj2) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 3. 比较参数的元素数量</span></span><br><span class="line">  <span class="keyword">const</span> obj1Keys = <span class="title class_">Object</span>.<span class="title function_">keys</span>(obj1);</span><br><span class="line">  <span class="keyword">const</span> obj2Keys = <span class="title class_">Object</span>.<span class="title function_">keys</span>(obj2);</span><br><span class="line">  <span class="keyword">if</span> (obj1Keys.<span class="property">length</span> !== obj2Keys.<span class="property">length</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 4. 以参数 1 为基准，依次比较二者的元素</span></span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">let</span> key <span class="keyword">in</span> obj1) &#123;</span><br><span class="line">    <span class="keyword">const</span> result = <span class="title function_">isEqual</span>(obj1[key], obj2[key]);</span><br><span class="line">    <span class="keyword">if</span> (!result) &#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>Web</category>
+        <category>JavaScript</category>
+      </categories>
+      <tags>
+        <tag>JavaScript</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>JS 数组 API 考点汇总</title>
+    <url>/posts/1094913070/</url>
+    <content><![CDATA[<h2 id="数组-API"><a href="#数组-API" class="headerlink" title="数组 API"></a>数组 API</h2><h3 id="split-和-join-的区别"><a href="#split-和-join-的区别" class="headerlink" title="split 和 join 的区别"></a>split 和 join 的区别</h3><ol>
+<li>split 以指定字符分割数组；</li>
+<li>join 以指定字符连接数组元素；</li>
+<li>二者互为相反的操作；</li>
+</ol>
+<h3 id="数组的-pop、push、unshift、shift-的区别"><a href="#数组的-pop、push、unshift、shift-的区别" class="headerlink" title="数组的 pop、push、unshift、shift 的区别"></a>数组的 pop、push、unshift、shift 的区别</h3><ol>
+<li>pop，弹出数组的最后一个元素，返回值是弹出的元素；</li>
+<li>push，在数组末尾压入一个元素，返回值是数组的长度；</li>
+<li>unshift，在数组开头压入一个元素，返回值是数组的长度；</li>
+<li>shift，弹出数组的第一个元素，返回值是弹出的元素；</li>
+<li>以上 4 个操作都有副作用：会改变原数组；</li>
+</ol>
+<span id="more"></span>
+
+<h3 id="数组的纯函数-API"><a href="#数组的纯函数-API" class="headerlink" title="数组的纯函数 API"></a>数组的纯函数 API</h3><p>纯函数 API 要满足两个条件：</p>
+<ol>
+<li>不改变原数组；</li>
+<li>返回一个数组；</li>
+</ol>
+<h4 id="concat"><a href="#concat" class="headerlink" title="concat"></a>concat</h4><p>拼接数组，并返回新数组；</p>
+<h4 id="map"><a href="#map" class="headerlink" title="map"></a>map</h4><p>遍历数组，对数组中的每个元素进行指定操作，然后返回新数组；</p>
+<h4 id="filter"><a href="#filter" class="headerlink" title="filter"></a>filter</h4><p>过滤数组，以某个条件过滤数组元素，返回过滤后的新数组；</p>
+<h4 id="slice"><a href="#slice" class="headerlink" title="slice"></a>slice</h4><p>切割数组，没有参数时为浅拷贝，返回新数组；</p>
+<h3 id="非纯函数-API"><a href="#非纯函数-API" class="headerlink" title="非纯函数 API"></a>非纯函数 API</h3><ol>
+<li>pop</li>
+<li>push</li>
+<li>unshift</li>
+<li>shift</li>
+<li>forEach 对数组的每个元素执行一次指定的操作；</li>
+<li>some 对数组的每个元素执行一次测试，返回布尔值；</li>
+<li>reduce 遍历数组，对数组的每个元素执行一次操作，并将结果作为下一次操作起始参数，最后返回最终结果；</li>
+<li>splice 从指定索引开始截取指定个数的元素，并插入新的元素，返回值为截取的元素；</li>
+</ol>
+<h2 id="reduce"><a href="#reduce" class="headerlink" title="reduce"></a>reduce</h2><p>数组的累积或统计操作都可以使用 reduce；</p>
+<p>详细说明，参见<a href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Array/Reduce">MDN</a>;</p>
+<h2 id="数组-flat（拍平）"><a href="#数组-flat（拍平）" class="headerlink" title="数组 flat（拍平）"></a>数组 flat（拍平）</h2><p>将嵌套数组转换为一维数组，如下：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> arr = [<span class="number">1</span>, <span class="number">2</span>, [<span class="number">3</span>, <span class="number">4</span>, [<span class="number">5</span>, <span class="number">6</span>, [<span class="number">7</span>, <span class="number">8</span>], <span class="number">9</span>], <span class="number">10</span>], <span class="number">11</span>];</span><br><span class="line"><span class="title function_">float</span>(arr); <span class="comment">// 结果应该是 [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">flat</span>(<span class="params">arr</span>) &#123;</span><br><span class="line">  <span class="keyword">const</span> isDeep = arr.<span class="title function_">some</span>(<span class="function">(<span class="params">item</span>) =&gt;</span> item <span class="keyword">instanceof</span> <span class="title class_">Array</span>);</span><br><span class="line">  <span class="keyword">if</span> (!isDeep) &#123;</span><br><span class="line">    <span class="keyword">return</span> arr;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">const</span> res = <span class="title class_">Array</span>.<span class="property"><span class="keyword">prototype</span></span>.<span class="property">concat</span>.<span class="title function_">apply</span>([], arr);</span><br><span class="line">  <span class="keyword">return</span> <span class="title function_">flat</span>(res);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="数组去重"><a href="#数组去重" class="headerlink" title="数组去重"></a>数组去重</h2><figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 使用遍历</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">unique</span>(<span class="params">arr</span>) &#123;</span><br><span class="line">  <span class="keyword">const</span> res = [];</span><br><span class="line">  arr.<span class="title function_">forEach</span>(<span class="function">(<span class="params">item</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (res.<span class="title function_">indexOf</span>(item) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">      res.<span class="title function_">push</span>(item);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;);</span><br><span class="line">  <span class="keyword">return</span> res;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 使用 set</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">unique</span>(<span class="params">arr</span>) &#123;</span><br><span class="line">  <span class="comment">//   const set = new Set(arr);</span></span><br><span class="line">  <span class="comment">//   return [...set];</span></span><br><span class="line">  <span class="keyword">return</span> <span class="title class_">Array</span>.<span class="title function_">from</span>(<span class="keyword">new</span> <span class="title class_">Set</span>(arr));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Map-和-Set"><a href="#Map-和-Set" class="headerlink" title="Map 和 Set"></a>Map 和 Set</h2><h3 id="Map-和-Object-的区别"><a href="#Map-和-Object-的区别" class="headerlink" title="Map 和 Object 的区别"></a>Map 和 Object 的区别</h3><ol>
+<li><p>api 不同；</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> map = <span class="keyword">new</span> <span class="title class_">Map</span>();</span><br><span class="line"></span><br><span class="line">map.<span class="title function_">set</span>(<span class="string">&quot;a&quot;</span>, <span class="number">1</span>); <span class="comment">// 设置键值</span></span><br><span class="line">map.<span class="title function_">get</span>(<span class="string">&quot;a&quot;</span>); <span class="comment">// 返回指定键的值</span></span><br><span class="line">map.<span class="title function_">has</span>(<span class="string">&quot;a&quot;</span>); <span class="comment">// 是否存在指定的键值对</span></span><br><span class="line">map.<span class="title function_">delete</span>(<span class="string">&quot;a&quot;</span>); <span class="comment">// 删除指定的键值对</span></span><br><span class="line">map.<span class="title function_">size</span>(); <span class="comment">// 返回 map 中键值对的数量</span></span><br><span class="line">map.<span class="title function_">clear</span>(); <span class="comment">// 清空 map</span></span><br><span class="line">map.<span class="title function_">forEach</span>(); <span class="comment">// 迭代方法</span></span><br><span class="line">map.<span class="title function_">keys</span>(); <span class="comment">// 返回所有键</span></span><br><span class="line">map.<span class="title function_">values</span>(); <span class="comment">// 返回所有值</span></span><br><span class="line">map.<span class="title function_">entries</span>(); <span class="comment">// 返回所有键值对组成的数组</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>Map 可以以任意类型为 Object 的 key 只能是字符串；</p>
+</li>
+<li><p>Map 是有序结构，Object 是无序结构；</p>
+</li>
+<li><p>Map 操作快；</p>
+</li>
+</ol>
+<h3 id="Set-和-Array-的区别"><a href="#Set-和-Array-的区别" class="headerlink" title="Set 和 Array 的区别"></a>Set 和 Array 的区别</h3><ol>
+<li>api Set 的实例属性和方法与 Map 相同；</li>
+<li>Set 是无序结构，Array 是有序结构；</li>
+<li>Set 元素不能重复；</li>
+<li>Set 操作快；</li>
+</ol>
+<h2 id="WeakMap-和-WeakSet"><a href="#WeakMap-和-WeakSet" class="headerlink" title="WeakMap 和 WeakSet"></a>WeakMap 和 WeakSet</h2><ol>
+<li>弱引用，防止内存泄漏；</li>
+<li>WeakMap 只能用对象作为 key；</li>
+<li>WeakSet 只能用对象作为 value；</li>
+<li>WeakMap 只有 get、set、has、delete 方法；</li>
+<li>WeakSet 只有 length 属性和 add、delete、has 方法；</li>
+</ol>
+<p>WeakMap 的使用场景：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 关联两个对象，但又不想成为对象的属性</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> obj1 = &#123; <span class="attr">a</span>: <span class="number">1</span> &#125;;</span><br><span class="line"><span class="keyword">const</span> obj2 = &#123; <span class="attr">b</span>: <span class="number">2</span> &#125;;</span><br><span class="line"><span class="comment">// 强关联</span></span><br><span class="line">obj1.<span class="property">obj2</span> = obj2;</span><br><span class="line"><span class="comment">// 访问 obj2</span></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(obj1.<span class="property">obj2</span>);</span><br><span class="line"><span class="comment">// WeakMap</span></span><br><span class="line"><span class="keyword">const</span> map = <span class="keyword">new</span> <span class="title class_">WeakMap</span>();</span><br><span class="line">map.<span class="title function_">set</span>(obj1, obj2);</span><br><span class="line"><span class="comment">// 访问 obj2</span></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(map.<span class="title function_">get</span>(obj1));</span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>Web</category>
+        <category>JavaScript</category>
+      </categories>
+      <tags>
+        <tag>JavaScript</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>NTFS 权限</title>
+    <url>/posts/100817360/</url>
+    <content><![CDATA[<h4 id="NTFS-权限"><a href="#NTFS-权限" class="headerlink" title="NTFS 权限"></a>NTFS 权限</h4><ol>
+<li><p>磁盘格式为 NTFS 才能实现访问控制；</p>
+</li>
+<li><p>通过设置 NTFS 权限，实现不同用户访问不同文件或文件夹的权限；</p>
+</li>
+<li><p>分配了正确的访问权限后，用户才能访问资源；<span id="more"></span></p>
+</li>
+<li><p>NTFS 的特点：</p>
+<ol>
+<li>提高磁盘读写性能；</li>
+<li>可靠性；</li>
+<li>加密文件系统；</li>
+<li>访问控制表；</li>
+<li>磁盘利用率；</li>
+<li>压缩；</li>
+<li>磁盘配额；</li>
+<li>单文件支持大于 4G 的文件；</li>
+</ol>
+</li>
+<li><p>修改 NTFS 权限首先需要取消权限继承；</p>
+<p>WINXP 取消权限继承：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gsihelqrfmj30u00ha77k.jpg" alt="xp"></p>
+<p>WIN7 取消权限继承：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gsiherjod5j31bc0qp461.jpg" alt="win7"></p>
+<p>WIN10 取消权限继承：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gsiheunuzaj31bv0nudmj.jpg" alt="win10"></p>
+</li>
+<li><p>当用户权限与预期不一致时，可以考虑用户是否处于多个组而产生了权限累加；</p>
+</li>
+<li><p>拒绝权限优先级最高；</p>
+</li>
+<li><p>管理员可以取得所有文件的所有权；</p>
+</li>
+<li><p>强制继承可以恢复子文件的权限为父文件夹的权限状态；</p>
+<p>WINXP 强制继承：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gsihve6mhdj30pv0hk41l.jpg" alt="WINXP"></p>
+<p>WIN7&#x2F;10 以此类推；</p>
+</li>
+<li><p>文件复制和移动后对权限的影响：</p>
+<ol>
+<li>文件复制后（<code>ctrl + c</code>），文件的权限会被目标文件夹的权限覆盖；</li>
+<li>文件移动后（<code>ctrl + x</code>），同一分区的文件权限不会被覆盖，不同分区的文件权限会被覆盖；</li>
+</ol>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>网络安全</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>NTFS</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>OllyDbg 即时调试功能的强大用途</title>
     <url>/posts/1803464375/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -991,70 +1512,13 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>Windows</category>
         <category>脱壳技术</category>
+        <category>Windows</category>
       </categories>
       <tags>
         <tag>OEP</tag>
         <tag>PE</tag>
         <tag>ReCrypt</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>NTFS 权限</title>
-    <url>/posts/100817360/</url>
-    <content><![CDATA[<h4 id="NTFS-权限"><a href="#NTFS-权限" class="headerlink" title="NTFS 权限"></a>NTFS 权限</h4><ol>
-<li><p>磁盘格式为 NTFS 才能实现访问控制；</p>
-</li>
-<li><p>通过设置 NTFS 权限，实现不同用户访问不同文件或文件夹的权限；</p>
-</li>
-<li><p>分配了正确的访问权限后，用户才能访问资源；<span id="more"></span></p>
-</li>
-<li><p>NTFS 的特点：</p>
-<ol>
-<li>提高磁盘读写性能；</li>
-<li>可靠性；</li>
-<li>加密文件系统；</li>
-<li>访问控制表；</li>
-<li>磁盘利用率；</li>
-<li>压缩；</li>
-<li>磁盘配额；</li>
-<li>单文件支持大于 4G 的文件；</li>
-</ol>
-</li>
-<li><p>修改 NTFS 权限首先需要取消权限继承；</p>
-<p>WINXP 取消权限继承：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gsihelqrfmj30u00ha77k.jpg" alt="xp"></p>
-<p>WIN7 取消权限继承：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gsiherjod5j31bc0qp461.jpg" alt="win7"></p>
-<p>WIN10 取消权限继承：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gsiheunuzaj31bv0nudmj.jpg" alt="win10"></p>
-</li>
-<li><p>当用户权限与预期不一致时，可以考虑用户是否处于多个组而产生了权限累加；</p>
-</li>
-<li><p>拒绝权限优先级最高；</p>
-</li>
-<li><p>管理员可以取得所有文件的所有权；</p>
-</li>
-<li><p>强制继承可以恢复子文件的权限为父文件夹的权限状态；</p>
-<p>WINXP 强制继承：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gsihve6mhdj30pv0hk41l.jpg" alt="WINXP"></p>
-<p>WIN7&#x2F;10 以此类推；</p>
-</li>
-<li><p>文件复制和移动后对权限的影响：</p>
-<ol>
-<li>文件复制后（<code>ctrl + c</code>），文件的权限会被目标文件夹的权限覆盖；</li>
-<li>文件移动后（<code>ctrl + x</code>），同一分区的文件权限不会被覆盖，不同分区的文件权限会被覆盖；</li>
-</ol>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>网络安全</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>NTFS</tag>
       </tags>
   </entry>
   <entry>
@@ -1275,6 +1739,151 @@
       </tags>
   </entry>
   <entry>
+    <title>OllyDbg 反调试之 ZwQueryInformationProcess</title>
+    <url>/posts/3209676884/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code>插件<a href="https://github.com/Undeio/undeio.github.io/releases/tag/Plugin-2">HideDebugger</a>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-13">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
+</ul>
+<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
+<li><p>查询微软官方文档，本次使用的 API<code>ZwQueryInformationProcess</code>未来可能会弃用，所以目前暂不做深入研究，有需要之时再做深入；</p>
+</li>
+<li><p>这次使用的反调试 API 很独特：它本身的设计初衷应该是用作异常处理，但却被<code>CrackMe</code>的作者用在了验证方面，不得不说，这位高人对 API 理解的很透彻，很独到，同时也提醒了我，反向思维很重要；</p>
+</li>
+<li><p>这里就说说本次使用的 API：<code>SetUnhandledExceptionFilter</code>、<code>UnhandledExceptionFilter</code>、<code>ZwQueryInformationProcess</code>；</p>
+<ul>
+<li><p>先来说说第二个 API <code>UnhandledExceptionFilter</code>：</p>
+<p>这是官方文档的描述：</p>
+<blockquote>
+<p>An application-defined function that passes unhandled exceptions to the debugger, if the process is being debugged. Otherwise, it optionally displays an Application Error message box and causes the exception handler to be executed. This function can be called only from within the filter expression of an exception handler.</p>
+</blockquote>
+<p>对这段文档的理解：通过判断当前进程是否正在被调试，如果正在被调试，就把异常交给调试器，如果没有，就把异常交给进程的 UnhandledExceptionFilter 处理；</p>
+<p>这里就不禁产生了一个疑问：如何判断当前进程是否正在被调试？</p>
+</li>
+<li><p>再来看第三个 API <code>ZwQueryInformationProcess</code>：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ZwQueryInformationProcess</span><br><span class="line"></span><br><span class="line">作用</span><br><span class="line">    检索有关指定进程的信息</span><br><span class="line">参数</span><br><span class="line">    ProcessInformationClass：要检索的过程信息的类型</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>在官方说明的开始有这么一段话：</p>
+<blockquote>
+<p><code>[ZwQueryInformationProcess may be altered or unavailable in future versions of Windows. Applications should use the alternate functions listed in this topic.]</code></p>
+</blockquote>
+<p>意思是：这个 API 可能会在未来的 Windows 版本中被更改或弃用，若要开发应用，请使用本文列出的其他替代 API。</p>
+</li>
+<li><p>这个 API 的第二参数<code>ProcessInformationClass</code>：<code>要检索的过程信息的类型</code>，本身有很多可选的值，而<code>ProcessDebugPort，值是 7</code>是我们关注的重点：</p>
+<blockquote>
+<p>Retrieves a DWORD_PTR value that is the port number of the debugger for the process. A nonzero value indicates that the process is being run under the control of a ring 3 debugger.</p>
+</blockquote>
+<p>意思是：检索四子节长度的值，该值是该进程的调试器的端口号。非零值表示该进程正在 Ring3 调试器的控制下运行。</p>
+<p>也就是说，调用这个函数，在把第二参数设置为<code>7</code>的情况下，只要返回非零值就表示我们正在调试程序，很好很强大，同时也解释了在学习上一个 API 时留下的疑惑；</p>
+</li>
+</ul>
+</li>
+<li><p>最后来看看第一个 API <code>SetUnhandledExceptionFilter</code>：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">SetUnhandledExceptionFilter</span><br><span class="line"></span><br><span class="line">作用</span><br><span class="line">    设置异常捕获函数</span><br><span class="line">参数</span><br><span class="line">    lpTopLevelExceptionFilter：指向顶级异常处理函数的指针，只要 UnhandledExceptionFilter 函数获得控制权且未在调试过程，该指针就会被调用</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>这是官方对 API 的说明；</p>
+<blockquote>
+<p>Enables an application to supersede the top-level exception handler of each thread of a process.</p>
+<p>After calling this function, if an exception occurs in a process that is not being debugged, and the exception makes it to the unhandled exception filter, that filter will call the exception filter function specified by the lpTopLevelExceptionFilter parameter.</p>
+</blockquote>
+</li>
+<li><p>这是官方对参数<code>lpTopLevelExceptionFilter</code>的说明，请自行理解；</p>
+<blockquote>
+<p>A pointer to a top-level exception filter function that will be called whenever the UnhandledExceptionFilter function gets control, and the process is not being debugged. A value of NULL for this parameter specifies default handling within UnhandledExceptionFilter.</p>
+</blockquote>
+</li>
+</ul>
+</li>
+<li><p>学习完这三个 API，说说自己的理解：</p>
+<ol>
+<li><p><code>SetUnhandledExceptionFilter</code>可以为异常设置处理函数，参数<code>lpTopLevelExceptionFilter</code>指向自定义的异常处理函数，但要触发这个函数，必须满足一个条件：<code>UnhandledExceptionFilter</code>被调用；</p>
+</li>
+<li><p>同时，要想<code>UnhandledExceptionFilter</code>被调用，也得满足两个条件：程序没有被调试，并且这个异常没有被处理；</p>
+</li>
+<li><p>当同时满足以上条件时，就会触发自定义的异常处理函数来处理异常；</p>
+</li>
+<li><p>那么，程序是如何检测程序是否被调试呢？那就要用到<code>ZwQueryInformationProcess</code>了，也就是说，本次的反调试主角其实是<code>ZwQueryInformationProcess</code>（虽然它就要被弃用了）；</p>
+</li>
+</ol>
+</li>
+</ul>
+</li>
+<li><p>下面开始进入正题：</p>
+<ul>
+<li><p>打开<code>CrackMe</code>看看：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gljzea2h39j30h807uaa4.jpg" alt="打开软件"></p>
+<p>很常规的软件，随便输入内容并点击 Check 后，没有任何反馈；</p>
+</li>
+<li><p>倒入<code>OD</code>开始分析：</p>
+<p>既然已经学习了需要的 API，那就不用去 API 窗口看了，直接给三个函数设置断点并做好备注：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gljzq6vknpj31ff0u012b.jpg" alt="设置断点并做好备注"></p>
+<p>其实地址栏已经显示了地址对应的 API 名称，不过无法保证任何时候都会显示，况且，做备注是一个好的习惯，不是吗？</p>
+<p>同时需要先禁用<code>ZwQueryInformationProcess</code>断点，否则程序会多次中断，但不会中断在理想的位置，况且按照对 API 的理解，只有<code>UnhandledExceptionFilter</code>调用它的时候才会检测程序是否被调试，所以，在<code>UnhandledExceptionFilter</code>出现后再启用也为时不晚；</p>
+</li>
+<li><p>接着<code>F9</code>运行程序，程序会中断在<code>SetUnhandledExceptionFilter</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gljzxn8v3hj31ff0u0tkf.jpg" alt="SetUnhandledExceptionFilter"></p>
+<p>根据 API 说明，它的参数指向自定义异常处理函数，那么就在它的参数地址上设置断点，看看程序是否会触发这个自定义函数；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk01ign7fj31ff0u0484.jpg" alt="参数设置断点"></p>
+</li>
+<li><p>继续运行程序，程序主窗体弹出，输入内容并点击 Check 后，程序再次中断，这次是中断在了<code>UnhandledExceptionFilter</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk05cb5zxj31ff0u0k39.jpg" alt="UnhandledExceptionFilter"></p>
+<p>其实，细心的同学一眼就看到了它调用了另一个 API <code>ZwQueryInformationProcess</code>；</p>
+<p>既然它都要调用<code>ZwQueryInformationProcess</code>了，那我们就需要去启用<code>ZwQueryInformationProcess</code>断点了；</p>
+</li>
+<li><p>激活<code>ZwQueryInformationProcess</code>断点并运行程序，程序会再次中断：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk0bobp81j31ff0u04ag.jpg" alt="ZwQueryInformationProcess"></p>
+<p>可以看到，<code>堆栈窗口</code>中，它的第二参数<code>InfoClass=7</code>，那就说明它本次执行的目的就是检测程序是否正在被调试，而它的第三参数<code>Buffer=0012F5E4</code>则存放的是返回值，<code>数据窗口</code>中跟随一下；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk0htm7h8j31ff0u0wq1.jpg" alt="数据窗口"></p>
+<p>事实上，我们确实正在调试这个这个程序，那我们就看看它的返回值是否是非零值；</p>
+</li>
+<li><p>既然要看它的返回值，那就不能直接运行程序了，<code>Ctrl + F9</code>执行到返回，同时查看<code>数据窗口</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk0sudvwnj31ff0u0wpw.jpg" alt="执行到返回"></p>
+<p>果然，返回值是一个非零值，也就说检测到正在调试程序；</p>
+<p>既然检测到了正在调试程序，如何触发自定义的异常处理函数呢？当然是将返回值置 0；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk0xlkckij31ff0u0k2k.jpg" alt="置0"></p>
+<p>选中返回值用 00 填充，直接修改也是可以的；</p>
+</li>
+<li><p>既然已经修改了返回值，也就是绕过了检测，那么<code>ZwQueryInformationProcess</code>断点也就没用了，禁用<code>ZwQueryInformationProcess</code>断点并运行程序，程序会中断在：为<code>SetUnhandledExceptionFilter 的参数</code>设置的断点位置：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk14tbrvij31ff0u0n9e.jpg" alt="参数断点"></p>
+</li>
+<li><p>毫无悬念了，这里就是用来验证的关键代码：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk2bmg6nqj31ff0u0wqc.jpg" alt="验证"></p>
+<p>把我们输入的内容进行一系列操作之后，去和一个指定的内容做比较；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk2h1fpwqj31ff0u0n8f.jpg" alt="比较"></p>
+<p>到这里就可以理解为什么点击 Check 之后没有任何反馈了，是因为验证失败后没有任何操作；</p>
+<p>既然已经知道会跳转到失败，如何看到成功的弹窗呢？当然是修改<code>ZF</code>标志位，让<code>JNZ</code>不成立：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk2n9tg0jj31ff0u0k2k.jpg" alt="修改"></p>
+<p>继续向下执行，期待已久的成功弹窗：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk2rmsxwmj31ff0u0146.jpg" alt="成功"></p>
+</li>
+<li><p>既然已经知道了它的反调试原理，但又不想每次都手动修改，那该如何绕过能，这里需要借助插件：<code>HideDebugger</code>和<code>HideOD</code>，设置如下：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk39bp648j31ff0u0qeb.jpg" alt="插件"></p>
+<p>无图无真相：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk3e9o4irj31ff0u07g4.jpg" alt="无图无真相"></p>
+<p>插件的作用就是永远保持<code>ZwQueryInformationProcess</code>的参数为<code>7</code>时的返回值为 0；</p>
+</li>
+<li><p>总结：不得不说，能人背后有能人，这波操作很清奇，也就是说：如果从事物的多个角度去观察，去思考，可能会有不一样的理解与收获；</p>
+<p>期待自己早日变得更加强大，加油 💪💪💪❗️</p>
+</li>
+</ul>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>Windows</category>
+        <category>逆向分析</category>
+      </categories>
+      <tags>
+        <tag>反调试</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>OllyDbg 反调试之检测进程名&amp;窗口类名&amp;窗口标题名</title>
     <url>/posts/140693809/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -1416,151 +2025,6 @@
 <p>再多句嘴，插件<code>HideDebugger</code>虽然也有<code>FindWindow/EnumWindows</code>选项，但只能绕过标题名检测，无法绕过类名检测：</p>
 <p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk56vnr87j31ff0u0wqt.jpg" alt="HideDebugger"></p>
 <p>这次是真的完工了！</p>
-</li>
-</ul>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>Windows</category>
-        <category>逆向分析</category>
-      </categories>
-      <tags>
-        <tag>反调试</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>OllyDbg 反调试之 ZwQueryInformationProcess</title>
-    <url>/posts/3209676884/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
-<li><code>OD</code>插件<a href="https://github.com/Undeio/undeio.github.io/releases/tag/Plugin-2">HideDebugger</a>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-13">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
-</ul>
-<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
-<li><p>查询微软官方文档，本次使用的 API<code>ZwQueryInformationProcess</code>未来可能会弃用，所以目前暂不做深入研究，有需要之时再做深入；</p>
-</li>
-<li><p>这次使用的反调试 API 很独特：它本身的设计初衷应该是用作异常处理，但却被<code>CrackMe</code>的作者用在了验证方面，不得不说，这位高人对 API 理解的很透彻，很独到，同时也提醒了我，反向思维很重要；</p>
-</li>
-<li><p>这里就说说本次使用的 API：<code>SetUnhandledExceptionFilter</code>、<code>UnhandledExceptionFilter</code>、<code>ZwQueryInformationProcess</code>；</p>
-<ul>
-<li><p>先来说说第二个 API <code>UnhandledExceptionFilter</code>：</p>
-<p>这是官方文档的描述：</p>
-<blockquote>
-<p>An application-defined function that passes unhandled exceptions to the debugger, if the process is being debugged. Otherwise, it optionally displays an Application Error message box and causes the exception handler to be executed. This function can be called only from within the filter expression of an exception handler.</p>
-</blockquote>
-<p>对这段文档的理解：通过判断当前进程是否正在被调试，如果正在被调试，就把异常交给调试器，如果没有，就把异常交给进程的 UnhandledExceptionFilter 处理；</p>
-<p>这里就不禁产生了一个疑问：如何判断当前进程是否正在被调试？</p>
-</li>
-<li><p>再来看第三个 API <code>ZwQueryInformationProcess</code>：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ZwQueryInformationProcess</span><br><span class="line"></span><br><span class="line">作用</span><br><span class="line">    检索有关指定进程的信息</span><br><span class="line">参数</span><br><span class="line">    ProcessInformationClass：要检索的过程信息的类型</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li><p>在官方说明的开始有这么一段话：</p>
-<blockquote>
-<p><code>[ZwQueryInformationProcess may be altered or unavailable in future versions of Windows. Applications should use the alternate functions listed in this topic.]</code></p>
-</blockquote>
-<p>意思是：这个 API 可能会在未来的 Windows 版本中被更改或弃用，若要开发应用，请使用本文列出的其他替代 API。</p>
-</li>
-<li><p>这个 API 的第二参数<code>ProcessInformationClass</code>：<code>要检索的过程信息的类型</code>，本身有很多可选的值，而<code>ProcessDebugPort，值是 7</code>是我们关注的重点：</p>
-<blockquote>
-<p>Retrieves a DWORD_PTR value that is the port number of the debugger for the process. A nonzero value indicates that the process is being run under the control of a ring 3 debugger.</p>
-</blockquote>
-<p>意思是：检索四子节长度的值，该值是该进程的调试器的端口号。非零值表示该进程正在 Ring3 调试器的控制下运行。</p>
-<p>也就是说，调用这个函数，在把第二参数设置为<code>7</code>的情况下，只要返回非零值就表示我们正在调试程序，很好很强大，同时也解释了在学习上一个 API 时留下的疑惑；</p>
-</li>
-</ul>
-</li>
-<li><p>最后来看看第一个 API <code>SetUnhandledExceptionFilter</code>：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">SetUnhandledExceptionFilter</span><br><span class="line"></span><br><span class="line">作用</span><br><span class="line">    设置异常捕获函数</span><br><span class="line">参数</span><br><span class="line">    lpTopLevelExceptionFilter：指向顶级异常处理函数的指针，只要 UnhandledExceptionFilter 函数获得控制权且未在调试过程，该指针就会被调用</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li><p>这是官方对 API 的说明；</p>
-<blockquote>
-<p>Enables an application to supersede the top-level exception handler of each thread of a process.</p>
-<p>After calling this function, if an exception occurs in a process that is not being debugged, and the exception makes it to the unhandled exception filter, that filter will call the exception filter function specified by the lpTopLevelExceptionFilter parameter.</p>
-</blockquote>
-</li>
-<li><p>这是官方对参数<code>lpTopLevelExceptionFilter</code>的说明，请自行理解；</p>
-<blockquote>
-<p>A pointer to a top-level exception filter function that will be called whenever the UnhandledExceptionFilter function gets control, and the process is not being debugged. A value of NULL for this parameter specifies default handling within UnhandledExceptionFilter.</p>
-</blockquote>
-</li>
-</ul>
-</li>
-<li><p>学习完这三个 API，说说自己的理解：</p>
-<ol>
-<li><p><code>SetUnhandledExceptionFilter</code>可以为异常设置处理函数，参数<code>lpTopLevelExceptionFilter</code>指向自定义的异常处理函数，但要触发这个函数，必须满足一个条件：<code>UnhandledExceptionFilter</code>被调用；</p>
-</li>
-<li><p>同时，要想<code>UnhandledExceptionFilter</code>被调用，也得满足两个条件：程序没有被调试，并且这个异常没有被处理；</p>
-</li>
-<li><p>当同时满足以上条件时，就会触发自定义的异常处理函数来处理异常；</p>
-</li>
-<li><p>那么，程序是如何检测程序是否被调试呢？那就要用到<code>ZwQueryInformationProcess</code>了，也就是说，本次的反调试主角其实是<code>ZwQueryInformationProcess</code>（虽然它就要被弃用了）；</p>
-</li>
-</ol>
-</li>
-</ul>
-</li>
-<li><p>下面开始进入正题：</p>
-<ul>
-<li><p>打开<code>CrackMe</code>看看：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gljzea2h39j30h807uaa4.jpg" alt="打开软件"></p>
-<p>很常规的软件，随便输入内容并点击 Check 后，没有任何反馈；</p>
-</li>
-<li><p>倒入<code>OD</code>开始分析：</p>
-<p>既然已经学习了需要的 API，那就不用去 API 窗口看了，直接给三个函数设置断点并做好备注：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gljzq6vknpj31ff0u012b.jpg" alt="设置断点并做好备注"></p>
-<p>其实地址栏已经显示了地址对应的 API 名称，不过无法保证任何时候都会显示，况且，做备注是一个好的习惯，不是吗？</p>
-<p>同时需要先禁用<code>ZwQueryInformationProcess</code>断点，否则程序会多次中断，但不会中断在理想的位置，况且按照对 API 的理解，只有<code>UnhandledExceptionFilter</code>调用它的时候才会检测程序是否被调试，所以，在<code>UnhandledExceptionFilter</code>出现后再启用也为时不晚；</p>
-</li>
-<li><p>接着<code>F9</code>运行程序，程序会中断在<code>SetUnhandledExceptionFilter</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gljzxn8v3hj31ff0u0tkf.jpg" alt="SetUnhandledExceptionFilter"></p>
-<p>根据 API 说明，它的参数指向自定义异常处理函数，那么就在它的参数地址上设置断点，看看程序是否会触发这个自定义函数；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk01ign7fj31ff0u0484.jpg" alt="参数设置断点"></p>
-</li>
-<li><p>继续运行程序，程序主窗体弹出，输入内容并点击 Check 后，程序再次中断，这次是中断在了<code>UnhandledExceptionFilter</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk05cb5zxj31ff0u0k39.jpg" alt="UnhandledExceptionFilter"></p>
-<p>其实，细心的同学一眼就看到了它调用了另一个 API <code>ZwQueryInformationProcess</code>；</p>
-<p>既然它都要调用<code>ZwQueryInformationProcess</code>了，那我们就需要去启用<code>ZwQueryInformationProcess</code>断点了；</p>
-</li>
-<li><p>激活<code>ZwQueryInformationProcess</code>断点并运行程序，程序会再次中断：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk0bobp81j31ff0u04ag.jpg" alt="ZwQueryInformationProcess"></p>
-<p>可以看到，<code>堆栈窗口</code>中，它的第二参数<code>InfoClass=7</code>，那就说明它本次执行的目的就是检测程序是否正在被调试，而它的第三参数<code>Buffer=0012F5E4</code>则存放的是返回值，<code>数据窗口</code>中跟随一下；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk0htm7h8j31ff0u0wq1.jpg" alt="数据窗口"></p>
-<p>事实上，我们确实正在调试这个这个程序，那我们就看看它的返回值是否是非零值；</p>
-</li>
-<li><p>既然要看它的返回值，那就不能直接运行程序了，<code>Ctrl + F9</code>执行到返回，同时查看<code>数据窗口</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk0sudvwnj31ff0u0wpw.jpg" alt="执行到返回"></p>
-<p>果然，返回值是一个非零值，也就说检测到正在调试程序；</p>
-<p>既然检测到了正在调试程序，如何触发自定义的异常处理函数呢？当然是将返回值置 0；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk0xlkckij31ff0u0k2k.jpg" alt="置0"></p>
-<p>选中返回值用 00 填充，直接修改也是可以的；</p>
-</li>
-<li><p>既然已经修改了返回值，也就是绕过了检测，那么<code>ZwQueryInformationProcess</code>断点也就没用了，禁用<code>ZwQueryInformationProcess</code>断点并运行程序，程序会中断在：为<code>SetUnhandledExceptionFilter 的参数</code>设置的断点位置：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk14tbrvij31ff0u0n9e.jpg" alt="参数断点"></p>
-</li>
-<li><p>毫无悬念了，这里就是用来验证的关键代码：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk2bmg6nqj31ff0u0wqc.jpg" alt="验证"></p>
-<p>把我们输入的内容进行一系列操作之后，去和一个指定的内容做比较；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk2h1fpwqj31ff0u0n8f.jpg" alt="比较"></p>
-<p>到这里就可以理解为什么点击 Check 之后没有任何反馈了，是因为验证失败后没有任何操作；</p>
-<p>既然已经知道会跳转到失败，如何看到成功的弹窗呢？当然是修改<code>ZF</code>标志位，让<code>JNZ</code>不成立：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk2n9tg0jj31ff0u0k2k.jpg" alt="修改"></p>
-<p>继续向下执行，期待已久的成功弹窗：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk2rmsxwmj31ff0u0146.jpg" alt="成功"></p>
-</li>
-<li><p>既然已经知道了它的反调试原理，但又不想每次都手动修改，那该如何绕过能，这里需要借助插件：<code>HideDebugger</code>和<code>HideOD</code>，设置如下：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk39bp648j31ff0u0qeb.jpg" alt="插件"></p>
-<p>无图无真相：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glk3e9o4irj31ff0u07g4.jpg" alt="无图无真相"></p>
-<p>插件的作用就是永远保持<code>ZwQueryInformationProcess</code>的参数为<code>7</code>时的返回值为 0；</p>
-</li>
-<li><p>总结：不得不说，能人背后有能人，这波操作很清奇，也就是说：如果从事物的多个角度去观察，去思考，可能会有不一样的理解与收获；</p>
-<p>期待自己早日变得更加强大，加油 💪💪💪❗️</p>
 </li>
 </ul>
 </li>
@@ -2143,8 +2607,8 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>Windows</category>
         <category>脱壳技术</category>
+        <category>Windows</category>
       </categories>
       <tags>
         <tag>OEP</tag>
@@ -3166,8 +3630,8 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>Windows</category>
         <category>脱壳技术</category>
+        <category>Windows</category>
         <category>文章资料</category>
       </categories>
       <tags>
@@ -3281,8 +3745,8 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>Windows</category>
         <category>脱壳技术</category>
+        <category>Windows</category>
       </categories>
       <tags>
         <tag>OEP</tag>
@@ -3323,8 +3787,8 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>Windows</category>
         <category>脱壳技术</category>
+        <category>Windows</category>
         <category>VB</category>
       </categories>
       <tags>
@@ -3387,6 +3851,90 @@
       </categories>
       <tags>
         <tag>VB 调试</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>VB 调试之 P-Code 替换操作码</title>
+    <url>/posts/3307503664/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-22">CrackMe 和 opcodes.txt</a>来自互联网，仅供学习使用；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
+</ul>
+<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
+<li><p>运行程序，程序会先弹出一个 NAG 窗口，点击确定后弹出主窗体：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuyri1qyhj30sy0lcaau.jpg" alt="运行程序"></p>
+</li>
+<li><p>导入<code>OD</code>开始分析，首先按照常规思路，既然有弹窗，肯定会使用 API：<code>rtcMsgBox</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuyuvjmrpj31dv0u0tcb.jpg" alt="查找API"></p>
+<p>查看 API 列表，找到<code>rtcMsgBox</code>设置断点，然后运行程序；</p>
+</li>
+<li><p>程序中断后，在栈窗口<code>反汇编窗口跟随</code>到返回位置：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuywuticyj31dv0u0q6f.jpg" alt="反汇编窗口跟随"></p>
+<p>在调用位置设置断点，然后重载并运行程序；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv2fpugyyj31dx0u078s.jpg" alt="在调用位置设置断点"></p>
+</li>
+<li><p>调用指令是<code>CALL EAX</code>，当前 EAX 值为 401000，<code>Ctrl + G</code> 跳转到 401000，正是<code>rtcMsgBox</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuz7bgembj31dr0u00wd.jpg" alt="401000"></p>
+<p>按下<code>-</code>减号键，回到断点位置，既然是调用函数，CALL 上面的指令就是它的参数，这种传参方式在 P-Code 中很常见，还没有完，继续；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuznpzrsjj31dv0u0n28.jpg" alt="CALL的参数"></p>
+<p>CALL 的参数到底是什么呢？</p>
+<p>根据上面的代码逻辑，获取一个操作码后无条件跳转了，所以，<code>JMP</code>以上的代码与 CALL 无关；</p>
+<p>因此，CALL 的参数应该是<code>JMP</code>向下，直到<code>CALl</code>；</p>
+<p>给参数起始位置设置断点，因为中间包含<code>JE</code>跳转，为了防止跳转，同时给<code>JE</code>也设置断点，重载并运行程序；</p>
+</li>
+<li><p>这里的戏就很精彩了，程序中断在参数位置：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuzxxlr7hj31dy0u0tcz.jpg" alt="程序中断在参数位置"></p>
+<p>然后按下<code>Ctrl + A</code>分析程序，在信息窗口发现跳转至此处的位置太多，如果挨个儿去跟，那就相当精彩了；</p>
+<p>同时，EAX 中有一个操作码<code>OA</code>，为啥它是操作码？因为根据 P-Code 的惯例，接下来既然要获取参数了，且代码没有执行，那 EAX 中存放的就是上一步的结果，而 P-Code 的逻辑就是先获取操作码，紧接着就是获取参数，那就说明，接下来获取的参数既是 CALL 的参数，也是<code>OA</code>操作码的参数，So，<code>OA</code>肯定是一个操作码；</p>
+<p>数据窗口跟随 ESI，发现<code>OA</code>位于当前 ESI 之前，地址是：401AD2；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv0ahg84qj31e00u0n1p.jpg" alt="数据窗口跟随 ESI"></p>
+<p>既然接下来要执行 CALL 也就是<code>rtcMsgBox</code>函数了，那么<code>OA</code>在 P-Code 中是否就是<code>rtcMsgBox</code>呢？</p>
+</li>
+<li><p>继续运行程序，直到将要获取下一个操作码：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv0jiz60tj31dw0u0q6r.jpg" alt="将要获取下一个操作码"></p>
+<p>标志性的获取操作码的语句，接下来要获取的操作码是<code>36</code>，同时也反向说明，在这行代码之前，<code>OA</code>操作码是一直有效的；</p>
+<p>而且，<code>OA</code>的参数是两个：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv10zic33j31e00u0q8d.jpg" alt="OA 的参数是两个"></p>
+<p>因为操作了两次 ESI，同时，位于<code>OA</code>和<code>36</code>之间的数据被分别放入了 ECX 和 EDI；</p>
+</li>
+<li><p>大胆的猜测一下，如果<code>OA</code>就是<code>rtcMsgBox</code>，那么替换它是否就能跳过弹窗呢？</p>
+</li>
+<li><p>重载程序，在数据窗口 goto 到<code>OA</code>，也就是 401AD2：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv0sw66o4j31dz0u0n0r.jpg" alt="goto 到 OA"></p>
+</li>
+<li><p>打开<code>opcode.txt</code>，发现<code>07</code>与<code>OA</code>参数数量和参数大小都相同，且<code>07</code>没有副作用：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv20byaqvj312e0e20sz.jpg" alt="opcode.txt"></p>
+<p>如上图所示：</p>
+<ul>
+<li><code>OA</code>表示调用指针（ptr）指向的函数，且没有返回值，4 字节大小，有 2 个参数，参数一 2 字节，参数二 2 字节（4 2 2 2）；</li>
+<li><code>07</code>表示 PUSH 值到堆栈，4 字节大小，有 2 个参数，参数一 2 字节，参数二 2 字节（4 2 2 2）；</li>
+</ul>
+<p>这里不用 <code>0B</code>替换<code>OA</code>的原因是：CALL 的副作用要比 PUSH 大的多；</p>
+<p>所以，替换<code>0A</code>为<code>07</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv18ioilnj31dz0u0wiv.jpg" alt="替换 OA"></p>
+<p>需要注意的是：替换操作码时，两个操作码的参数数量和参数大小必须完全相同，且替换的操作码对程序的运行没有副作用；</p>
+</li>
+<li><p>然后运行程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv1e58hd6j31dz0u0n10.jpg" alt="然后运行程序"></p>
+<p>没有出现 NAG 窗口，直接显示程序主窗体；</p>
+</li>
+<li><p>保存修改到可执行文件，运行程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv1hpnkpqj30wa0k23z2.jpg" alt="保存修改到可执行文件"></p>
+<p>修改依然没有问题，完工！</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>Windows</category>
+        <category>逆向分析</category>
+        <category>VB</category>
+      </categories>
+      <tags>
+        <tag>VB 调试</tag>
+        <tag>NAG 窗口</tag>
       </tags>
   </entry>
   <entry>
@@ -3461,90 +4009,6 @@
 <p>接着，运行保存的文件：</p>
 <p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gmxpknxv21j30nc0m2n0o.jpg" alt="reverse"></p>
 <p>直接出现程序主窗体，NAG 窗口被去除；</p>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>Windows</category>
-        <category>逆向分析</category>
-        <category>VB</category>
-      </categories>
-      <tags>
-        <tag>VB 调试</tag>
-        <tag>NAG 窗口</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>VB 调试之 P-Code 替换操作码</title>
-    <url>/posts/3307503664/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-22">CrackMe 和 opcodes.txt</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
-</ul>
-<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
-<li><p>运行程序，程序会先弹出一个 NAG 窗口，点击确定后弹出主窗体：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuyri1qyhj30sy0lcaau.jpg" alt="运行程序"></p>
-</li>
-<li><p>导入<code>OD</code>开始分析，首先按照常规思路，既然有弹窗，肯定会使用 API：<code>rtcMsgBox</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuyuvjmrpj31dv0u0tcb.jpg" alt="查找API"></p>
-<p>查看 API 列表，找到<code>rtcMsgBox</code>设置断点，然后运行程序；</p>
-</li>
-<li><p>程序中断后，在栈窗口<code>反汇编窗口跟随</code>到返回位置：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuywuticyj31dv0u0q6f.jpg" alt="反汇编窗口跟随"></p>
-<p>在调用位置设置断点，然后重载并运行程序；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv2fpugyyj31dx0u078s.jpg" alt="在调用位置设置断点"></p>
-</li>
-<li><p>调用指令是<code>CALL EAX</code>，当前 EAX 值为 401000，<code>Ctrl + G</code> 跳转到 401000，正是<code>rtcMsgBox</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuz7bgembj31dr0u00wd.jpg" alt="401000"></p>
-<p>按下<code>-</code>减号键，回到断点位置，既然是调用函数，CALL 上面的指令就是它的参数，这种传参方式在 P-Code 中很常见，还没有完，继续；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuznpzrsjj31dv0u0n28.jpg" alt="CALL的参数"></p>
-<p>CALL 的参数到底是什么呢？</p>
-<p>根据上面的代码逻辑，获取一个操作码后无条件跳转了，所以，<code>JMP</code>以上的代码与 CALL 无关；</p>
-<p>因此，CALL 的参数应该是<code>JMP</code>向下，直到<code>CALl</code>；</p>
-<p>给参数起始位置设置断点，因为中间包含<code>JE</code>跳转，为了防止跳转，同时给<code>JE</code>也设置断点，重载并运行程序；</p>
-</li>
-<li><p>这里的戏就很精彩了，程序中断在参数位置：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnuzxxlr7hj31dy0u0tcz.jpg" alt="程序中断在参数位置"></p>
-<p>然后按下<code>Ctrl + A</code>分析程序，在信息窗口发现跳转至此处的位置太多，如果挨个儿去跟，那就相当精彩了；</p>
-<p>同时，EAX 中有一个操作码<code>OA</code>，为啥它是操作码？因为根据 P-Code 的惯例，接下来既然要获取参数了，且代码没有执行，那 EAX 中存放的就是上一步的结果，而 P-Code 的逻辑就是先获取操作码，紧接着就是获取参数，那就说明，接下来获取的参数既是 CALL 的参数，也是<code>OA</code>操作码的参数，So，<code>OA</code>肯定是一个操作码；</p>
-<p>数据窗口跟随 ESI，发现<code>OA</code>位于当前 ESI 之前，地址是：401AD2；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv0ahg84qj31e00u0n1p.jpg" alt="数据窗口跟随 ESI"></p>
-<p>既然接下来要执行 CALL 也就是<code>rtcMsgBox</code>函数了，那么<code>OA</code>在 P-Code 中是否就是<code>rtcMsgBox</code>呢？</p>
-</li>
-<li><p>继续运行程序，直到将要获取下一个操作码：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv0jiz60tj31dw0u0q6r.jpg" alt="将要获取下一个操作码"></p>
-<p>标志性的获取操作码的语句，接下来要获取的操作码是<code>36</code>，同时也反向说明，在这行代码之前，<code>OA</code>操作码是一直有效的；</p>
-<p>而且，<code>OA</code>的参数是两个：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv10zic33j31e00u0q8d.jpg" alt="OA 的参数是两个"></p>
-<p>因为操作了两次 ESI，同时，位于<code>OA</code>和<code>36</code>之间的数据被分别放入了 ECX 和 EDI；</p>
-</li>
-<li><p>大胆的猜测一下，如果<code>OA</code>就是<code>rtcMsgBox</code>，那么替换它是否就能跳过弹窗呢？</p>
-</li>
-<li><p>重载程序，在数据窗口 goto 到<code>OA</code>，也就是 401AD2：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv0sw66o4j31dz0u0n0r.jpg" alt="goto 到 OA"></p>
-</li>
-<li><p>打开<code>opcode.txt</code>，发现<code>07</code>与<code>OA</code>参数数量和参数大小都相同，且<code>07</code>没有副作用：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv20byaqvj312e0e20sz.jpg" alt="opcode.txt"></p>
-<p>如上图所示：</p>
-<ul>
-<li><code>OA</code>表示调用指针（ptr）指向的函数，且没有返回值，4 字节大小，有 2 个参数，参数一 2 字节，参数二 2 字节（4 2 2 2）；</li>
-<li><code>07</code>表示 PUSH 值到堆栈，4 字节大小，有 2 个参数，参数一 2 字节，参数二 2 字节（4 2 2 2）；</li>
-</ul>
-<p>这里不用 <code>0B</code>替换<code>OA</code>的原因是：CALL 的副作用要比 PUSH 大的多；</p>
-<p>所以，替换<code>0A</code>为<code>07</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv18ioilnj31dz0u0wiv.jpg" alt="替换 OA"></p>
-<p>需要注意的是：替换操作码时，两个操作码的参数数量和参数大小必须完全相同，且替换的操作码对程序的运行没有副作用；</p>
-</li>
-<li><p>然后运行程序：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv1e58hd6j31dz0u0n10.jpg" alt="然后运行程序"></p>
-<p>没有出现 NAG 窗口，直接显示程序主窗体；</p>
-</li>
-<li><p>保存修改到可执行文件，运行程序：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnv1hpnkpqj30wa0k23z2.jpg" alt="保存修改到可执行文件"></p>
-<p>修改依然没有问题，完工！</p>
 </li>
 </ol>
 ]]></content>
@@ -4669,6 +5133,65 @@
       </tags>
   </entry>
   <entry>
+    <title>修复 IAT 之初探</title>
+    <url>/posts/452711586/</url>
+    <content><![CDATA[<blockquote>
+<p>之前尝试了手动修复 IAT，了解修复的原理后，本次记录使用工具修复的过程；</p>
+</blockquote>
+<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-7">UnPackMe</a>来自互联网，仅供学习使用；</li>
+<li>加壳工具为<a href="https://upx.github.io/">UPX</a>，感谢 🙏 开源；</li>
+<li>Dump 工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-3">PETools</a>，来自互联网；</li>
+<li>IAT 重建工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-4">ImportREC</a>，来自互联网；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
+</ul>
+<h4 id="操作流程"><a href="#操作流程" class="headerlink" title="操作流程"></a>操作流程</h4><ol>
+<li><p>使用 UPX 加密 CM，然后导入 OD；</p>
+</li>
+<li><p>使用栈平衡法定位并跳转至 OEP，接下来在操作过程中不能关闭 OD 且程序需停留在 OEP 位置；</p>
+</li>
+<li><p>打开 PETools，将内存数据 Dump 出来并保存至可执行文件：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzu6nvencj31500u0tbv.jpg" alt="PETools"></p>
+<p>默认保存为 dumped.exe；</p>
+</li>
+<li><p>打开 ImportREC 选择 CM 进程：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzuc3dogbj30wm0omgmq.jpg" alt="选择 CM 进程"></p>
+<p>选择后，日志窗口会提示关联模块获取完成：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzudwpewvj30wo0omwfh.jpg" alt="关联模块获取"></p>
+<p>然后在下方填写 dumped.exe 程序 OEP 的 RVA，以及 IAT 的起始位置（RVA）和尺寸：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzuqyt15wj31e40u00yt.jpg" alt="计算 RVA"></p>
+<p>根据 VA 和 RVA 的转换公式计算如下（注意都是 16 进制哦）：</p>
+<p>OEP 的 RVA &#x3D; 401000 - 400000 &#x3D; 1000；</p>
+<p>IAT 的 RVA &#x3D; 403184 - 400000 &#x3D; 3184；</p>
+<p>IAT 的 Size &#x3D; 40328C - 403184 &#x3D; 108；</p>
+<p>填写 ImportREC 的选项：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzux3fy14j310u0ou75d.jpg" alt="填写 ImportREC"></p>
+<p>然后点击<code>Get Imports</code>，开始获取输入表的内容：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzv149j6vj30wi0oqgn3.jpg" alt="获取内容"></p>
+<p>获取完成后，需要检查获取的数据是否有效，如果 valid 为 NO，需要手动检查是否为无用信息，否则需要修正后重新获取（当前不涉及重定向）；</p>
+<p>接着点击<code>Fix Dump</code>选项，在弹出窗口选择 dumped.exe，用于修复；</p>
+</li>
+<li><p>修复后的程序可以正常运行，但导入 OD 后依然会提示入口点超出代码段范围：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzv6dfug9j313m06sjrl.jpg" alt="入口点超出代码段范围"></p>
+<p>修改代码段的起始地址（RVA）即可：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzvbrofegj31dm0u0gp3.jpg" alt="修改代码段的起始地址"></p>
+<p>然后选中修改并保存到可执行文件，完工！</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>脱壳技术</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>UPX</tag>
+        <tag>IAT</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>修复 IAT 之剔除无用数据</title>
     <url>/posts/1928138386/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -4727,71 +5250,12 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>Windows</category>
         <category>脱壳技术</category>
+        <category>Windows</category>
       </categories>
       <tags>
         <tag>IAT</tag>
         <tag>ASPack</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>修复 IAT 之初探</title>
-    <url>/posts/452711586/</url>
-    <content><![CDATA[<blockquote>
-<p>之前尝试了手动修复 IAT，了解修复的原理后，本次记录使用工具修复的过程；</p>
-</blockquote>
-<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-7">UnPackMe</a>来自互联网，仅供学习使用；</li>
-<li>加壳工具为<a href="https://upx.github.io/">UPX</a>，感谢 🙏 开源；</li>
-<li>Dump 工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-3">PETools</a>，来自互联网；</li>
-<li>IAT 重建工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-4">ImportREC</a>，来自互联网；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
-</ul>
-<h4 id="操作流程"><a href="#操作流程" class="headerlink" title="操作流程"></a>操作流程</h4><ol>
-<li><p>使用 UPX 加密 CM，然后导入 OD；</p>
-</li>
-<li><p>使用栈平衡法定位并跳转至 OEP，接下来在操作过程中不能关闭 OD 且程序需停留在 OEP 位置；</p>
-</li>
-<li><p>打开 PETools，将内存数据 Dump 出来并保存至可执行文件：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzu6nvencj31500u0tbv.jpg" alt="PETools"></p>
-<p>默认保存为 dumped.exe；</p>
-</li>
-<li><p>打开 ImportREC 选择 CM 进程：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzuc3dogbj30wm0omgmq.jpg" alt="选择 CM 进程"></p>
-<p>选择后，日志窗口会提示关联模块获取完成：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzudwpewvj30wo0omwfh.jpg" alt="关联模块获取"></p>
-<p>然后在下方填写 dumped.exe 程序 OEP 的 RVA，以及 IAT 的起始位置（RVA）和尺寸：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzuqyt15wj31e40u00yt.jpg" alt="计算 RVA"></p>
-<p>根据 VA 和 RVA 的转换公式计算如下（注意都是 16 进制哦）：</p>
-<p>OEP 的 RVA &#x3D; 401000 - 400000 &#x3D; 1000；</p>
-<p>IAT 的 RVA &#x3D; 403184 - 400000 &#x3D; 3184；</p>
-<p>IAT 的 Size &#x3D; 40328C - 403184 &#x3D; 108；</p>
-<p>填写 ImportREC 的选项：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzux3fy14j310u0ou75d.jpg" alt="填写 ImportREC"></p>
-<p>然后点击<code>Get Imports</code>，开始获取输入表的内容：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzv149j6vj30wi0oqgn3.jpg" alt="获取内容"></p>
-<p>获取完成后，需要检查获取的数据是否有效，如果 valid 为 NO，需要手动检查是否为无用信息，否则需要修正后重新获取（当前不涉及重定向）；</p>
-<p>接着点击<code>Fix Dump</code>选项，在弹出窗口选择 dumped.exe，用于修复；</p>
-</li>
-<li><p>修复后的程序可以正常运行，但导入 OD 后依然会提示入口点超出代码段范围：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzv6dfug9j313m06sjrl.jpg" alt="入口点超出代码段范围"></p>
-<p>修改代码段的起始地址（RVA）即可：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnzvbrofegj31dm0u0gp3.jpg" alt="修改代码段的起始地址"></p>
-<p>然后选中修改并保存到可执行文件，完工！</p>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>Windows</category>
-        <category>脱壳技术</category>
-      </categories>
-      <tags>
-        <tag>UPX</tag>
-        <tag>IAT</tag>
       </tags>
   </entry>
   <entry>
@@ -4906,8 +5370,8 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>Windows</category>
         <category>脱壳技术</category>
+        <category>Windows</category>
       </categories>
       <tags>
         <tag>IAT</tag>
@@ -4983,8 +5447,8 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>Windows</category>
         <category>脱壳技术</category>
+        <category>Windows</category>
       </categories>
       <tags>
         <tag>IAT</tag>
@@ -5052,8 +5516,8 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>Windows</category>
         <category>脱壳技术</category>
+        <category>Windows</category>
       </categories>
       <tags>
         <tag>OEP</tag>
@@ -5164,8 +5628,8 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>Windows</category>
         <category>脱壳技术</category>
+        <category>Windows</category>
         <category>文章资料</category>
       </categories>
       <tags>
@@ -5227,8 +5691,8 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>Windows</category>
         <category>脱壳技术</category>
+        <category>Windows</category>
       </categories>
       <tags>
         <tag>OEP</tag>
@@ -5313,8 +5777,8 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>Windows</category>
         <category>脱壳技术</category>
+        <category>Windows</category>
         <category>文章资料</category>
       </categories>
       <tags>
@@ -5562,8 +6026,8 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>Windows</category>
         <category>脱壳技术</category>
+        <category>Windows</category>
       </categories>
       <tags>
         <tag>OEP</tag>
@@ -6391,8 +6855,58 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>Windows</category>
         <category>脱壳技术</category>
+        <category>Windows</category>
+        <category>逆向分析</category>
+        <category>文章资料</category>
+      </categories>
+      <tags>
+        <tag>异常处理</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>异常处理流程小记</title>
+    <url>/posts/192684570/</url>
+    <content><![CDATA[<h4 id="异常处理流程图"><a href="#异常处理流程图" class="headerlink" title="异常处理流程图"></a>异常处理流程图</h4><hr>
+<p><strong><em>懒得折腾了，更新就挂，看图最靠谱；</em></strong></p>
+<hr>
+<p><del>已经写好<code>Mermaid</code>的语法，准备输出流程图了，发现<code>Hexo</code>的<code>mermaid</code>插件已是多年前的产物，不兼容最新的版本，无奈只能用<a href="https://app.diagrams.net/">draw.io</a>画了张图；</del></p>
+<p>最稳妥的方案是根据官方文档定义 mermaid 语法块，而不是使用 markdown 语法，例如：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">&#123;% mermaid graph TD %&#125;</span><br><span class="line">  A[test] --&gt;|Get money| B(Go shopping)</span><br><span class="line">  B --&gt; C&#123;Let me think&#125;</span><br><span class="line">  C --&gt;|One| D[Laptop]</span><br><span class="line">  C --&gt;|Two| E[iPhone]</span><br><span class="line">  C --&gt;|Three| F[fa:fa-car Car]</span><br><span class="line">&#123;% endmermaid %&#125;</span><br></pre></td></tr></table></figure>
+
+<!-- htmlmin:ignore -->
+
+<pre class="mermaid">
+graph TD
+A[&quot;系统发现产生了一个异常&quot;] --&gt; B{&quot;程序是否正在被调试&quot;}
+B --&gt; |&quot;是，程序正在被调试&quot;| C{&quot;权限转给调试器，并判断调试器是否忽略了异常&quot;}
+C --&gt; |&quot;是，忽略了&quot;| D{&quot;程序是否安装 SEH&quot;}
+D --&gt; |&quot;是，安装了&quot;| E{&quot;SEH 是否解决异常&quot;}
+E --&gt; |&quot;是，解决了&quot;| F[&quot;程序可以继续正常运行&quot;]
+B --&gt; |&quot;否，程序没有被调试&quot;| D
+C --&gt; |&quot;否，未忽略，但未能解决异常&quot;| G[&quot;系统默认异常处理流程&quot;]
+D --&gt; |&quot;否，未安装&quot;| G
+E --&gt; |&quot;否，未解决&quot;| G
+</pre>
+
+<!-- htmlmin:ignore -->
+
+<p>图片镇楼：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glprz3752lj31ay0u0tcd.jpg" alt="图片镇楼"></p>
+<span id="more"></span>
+
+<p>总结一下上图，共有 7 种流程：</p>
+<p>1.<code>系统发现异常</code> -&gt; <code>是否调试状态</code> -&gt; <code>是</code> -&gt; <code>交给调试器处理</code> -&gt; <code>调试器是否忽略异常</code> -&gt; <code>是</code> -&gt; <code>检查是否安装 SEH</code> -&gt; <code>已安装</code> -&gt; <code>是否解决异常</code> -&gt; <code>已解决</code> -&gt; <code>程序继续运行</code>；</p>
+<p>2.<code>系统发现异常</code> -&gt; <code>是否调试状态</code> -&gt; <code>是</code> -&gt; <code>交给调试器处理</code> -&gt; <code>调试器是否忽略异常</code> -&gt; <code>是</code> -&gt; <code>检查是否安装 SEH</code> -&gt; <code>已安装</code> -&gt; <code>是否解决异常</code> -&gt; <code>未解决</code> -&gt; <code>系统默认异常处理流程</code>；</p>
+<p>3.<code>系统发现异常</code> -&gt; <code>是否调试状态</code> -&gt; <code>是</code> -&gt; <code>交给调试器处理</code> -&gt; <code>调试器是否忽略异常</code> -&gt; <code>是</code> -&gt; <code>检查是否安装 SEH</code> -&gt; <code>未安装</code> -&gt; <code>系统默认异常处理流程</code>；</p>
+<p>4.<code>系统发现异常</code> -&gt; <code>是否调试状态</code> -&gt; <code>是</code> -&gt; <code>交给调试器处理</code> -&gt; <code>调试器是否忽略异常</code> -&gt; <code>否</code> -&gt; <code>是否解决异常</code> -&gt; <code>否</code> -&gt; <code>系统默认异常处理流程</code>；</p>
+<p>5.<code>系统发现异常</code> -&gt; <code>是否调试状态</code> -&gt; <code>否</code> -&gt; <code>检查是否安装 SEH</code> -&gt; <code>已安装</code> -&gt; <code>是否解决异常</code> -&gt; <code>已解决</code> -&gt; <code>程序继续运行</code>；</p>
+<p>6.<code>系统发现异常</code> -&gt; <code>是否调试状态</code> -&gt; <code>否</code> -&gt; <code>检查是否安装 SEH</code> -&gt; <code>已安装</code> -&gt; <code>是否解决异常</code> -&gt; <code>未解决</code> -&gt; <code>系统默认异常处理流程</code>；</p>
+<p>7.<code>系统发现异常</code> -&gt; <code>是否调试状态</code> -&gt; <code>否</code> -&gt; <code>检查是否安装 SEH</code> -&gt; <code>未安装</code> -&gt; <code>系统默认异常处理流程</code>；</p>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>Windows</category>
         <category>逆向分析</category>
         <category>文章资料</category>
       </categories>
@@ -7102,62 +7616,12 @@
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>Windows</category>
         <category>脱壳技术</category>
+        <category>Windows</category>
       </categories>
       <tags>
         <tag>IAT</tag>
         <tag>ASPack</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>异常处理流程小记</title>
-    <url>/posts/192684570/</url>
-    <content><![CDATA[<h4 id="异常处理流程图"><a href="#异常处理流程图" class="headerlink" title="异常处理流程图"></a>异常处理流程图</h4><hr>
-<p><strong><em>懒得折腾了，更新就挂，看图最靠谱；</em></strong></p>
-<hr>
-<p><del>已经写好<code>Mermaid</code>的语法，准备输出流程图了，发现<code>Hexo</code>的<code>mermaid</code>插件已是多年前的产物，不兼容最新的版本，无奈只能用<a href="https://app.diagrams.net/">draw.io</a>画了张图；</del></p>
-<p>最稳妥的方案是根据官方文档定义 mermaid 语法块，而不是使用 markdown 语法，例如：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">&#123;% mermaid graph TD %&#125;</span><br><span class="line">  A[test] --&gt;|Get money| B(Go shopping)</span><br><span class="line">  B --&gt; C&#123;Let me think&#125;</span><br><span class="line">  C --&gt;|One| D[Laptop]</span><br><span class="line">  C --&gt;|Two| E[iPhone]</span><br><span class="line">  C --&gt;|Three| F[fa:fa-car Car]</span><br><span class="line">&#123;% endmermaid %&#125;</span><br></pre></td></tr></table></figure>
-
-<!-- htmlmin:ignore -->
-
-<pre class="mermaid">
-graph TD
-A[&quot;系统发现产生了一个异常&quot;] --&gt; B{&quot;程序是否正在被调试&quot;}
-B --&gt; |&quot;是，程序正在被调试&quot;| C{&quot;权限转给调试器，并判断调试器是否忽略了异常&quot;}
-C --&gt; |&quot;是，忽略了&quot;| D{&quot;程序是否安装 SEH&quot;}
-D --&gt; |&quot;是，安装了&quot;| E{&quot;SEH 是否解决异常&quot;}
-E --&gt; |&quot;是，解决了&quot;| F[&quot;程序可以继续正常运行&quot;]
-B --&gt; |&quot;否，程序没有被调试&quot;| D
-C --&gt; |&quot;否，未忽略，但未能解决异常&quot;| G[&quot;系统默认异常处理流程&quot;]
-D --&gt; |&quot;否，未安装&quot;| G
-E --&gt; |&quot;否，未解决&quot;| G
-</pre>
-
-<!-- htmlmin:ignore -->
-
-<p>图片镇楼：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glprz3752lj31ay0u0tcd.jpg" alt="图片镇楼"></p>
-<span id="more"></span>
-
-<p>总结一下上图，共有 7 种流程：</p>
-<p>1.<code>系统发现异常</code> -&gt; <code>是否调试状态</code> -&gt; <code>是</code> -&gt; <code>交给调试器处理</code> -&gt; <code>调试器是否忽略异常</code> -&gt; <code>是</code> -&gt; <code>检查是否安装 SEH</code> -&gt; <code>已安装</code> -&gt; <code>是否解决异常</code> -&gt; <code>已解决</code> -&gt; <code>程序继续运行</code>；</p>
-<p>2.<code>系统发现异常</code> -&gt; <code>是否调试状态</code> -&gt; <code>是</code> -&gt; <code>交给调试器处理</code> -&gt; <code>调试器是否忽略异常</code> -&gt; <code>是</code> -&gt; <code>检查是否安装 SEH</code> -&gt; <code>已安装</code> -&gt; <code>是否解决异常</code> -&gt; <code>未解决</code> -&gt; <code>系统默认异常处理流程</code>；</p>
-<p>3.<code>系统发现异常</code> -&gt; <code>是否调试状态</code> -&gt; <code>是</code> -&gt; <code>交给调试器处理</code> -&gt; <code>调试器是否忽略异常</code> -&gt; <code>是</code> -&gt; <code>检查是否安装 SEH</code> -&gt; <code>未安装</code> -&gt; <code>系统默认异常处理流程</code>；</p>
-<p>4.<code>系统发现异常</code> -&gt; <code>是否调试状态</code> -&gt; <code>是</code> -&gt; <code>交给调试器处理</code> -&gt; <code>调试器是否忽略异常</code> -&gt; <code>否</code> -&gt; <code>是否解决异常</code> -&gt; <code>否</code> -&gt; <code>系统默认异常处理流程</code>；</p>
-<p>5.<code>系统发现异常</code> -&gt; <code>是否调试状态</code> -&gt; <code>否</code> -&gt; <code>检查是否安装 SEH</code> -&gt; <code>已安装</code> -&gt; <code>是否解决异常</code> -&gt; <code>已解决</code> -&gt; <code>程序继续运行</code>；</p>
-<p>6.<code>系统发现异常</code> -&gt; <code>是否调试状态</code> -&gt; <code>否</code> -&gt; <code>检查是否安装 SEH</code> -&gt; <code>已安装</code> -&gt; <code>是否解决异常</code> -&gt; <code>未解决</code> -&gt; <code>系统默认异常处理流程</code>；</p>
-<p>7.<code>系统发现异常</code> -&gt; <code>是否调试状态</code> -&gt; <code>否</code> -&gt; <code>检查是否安装 SEH</code> -&gt; <code>未安装</code> -&gt; <code>系统默认异常处理流程</code>；</p>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>Windows</category>
-        <category>逆向分析</category>
-        <category>文章资料</category>
-      </categories>
-      <tags>
-        <tag>异常处理</tag>
       </tags>
   </entry>
   <entry>
@@ -7365,8 +7829,8 @@ E --&gt; |&quot;否，未解决&quot;| G
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>Windows</category>
         <category>脱壳技术</category>
+        <category>Windows</category>
       </categories>
       <tags>
         <tag>OEP</tag>
@@ -7437,8 +7901,8 @@ E --&gt; |&quot;否，未解决&quot;| G
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>Windows</category>
         <category>脱壳技术</category>
+        <category>Windows</category>
       </categories>
       <tags>
         <tag>OEP</tag>
@@ -7911,73 +8375,6 @@ E --&gt; |&quot;否，未解决&quot;| G
       </tags>
   </entry>
   <entry>
-    <title>硬编码寻找序列号（五）</title>
-    <url>/posts/755681865/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-5">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
-</ul>
-<span id="more"></span>
-
-<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
-<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
-</li>
-<li><p>倒入<code>OD</code>开始分析：</p>
-<ul>
-<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
-</li>
-<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，翻了翻还真不少，善用搜索，<code>GetDlgItemTextA</code>没找到，那就试试<code>GetWindowTextA</code>，还真有，就它了，在<code>GetWindowTextA</code>上设置断点，然后去<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
-</li>
-<li><p><code>F9</code>运行程序，然鹅，输入内容并点击验证按钮后，程序并没有暂停；</p>
-</li>
-<li><p>界面有按钮，试试消息断点，还是没用，又尝试<code>硬件断点</code>以及<code>内存断点</code>均无效；</p>
-</li>
-<li><p>使用一个特殊的<code>API：TranslateMessage</code>，没错，它的功能就是字面的意思<code>翻译虚拟按键消息为字符消息</code>，很好很强大；</p>
-</li>
-<li><p>在<code>API</code>列表页面搜索，还真有，设置断点，然后在<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，还没有完，在断点上右键<code>断点&gt;&gt;条件记录</code>或者<code>Shift + F4</code>（也就是<code>条件记录断点</code>，毕竟<code>API断点</code>的本质就是<code>CC断点</code>），修改条件：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjea06qzj311u0nfad3.jpg" alt="TranslateMessage"></p>
-</li>
-<li><p>然后运行程序，输入并点击验证，程序在<code>TranslateMessage</code>函数的行首暂停下来，然后<code>Ctrl + F9</code>或者点击菜单栏的调试选项并选择<code>执行到返回</code>，然后<code>F8</code>单步执行到程序领空；</p>
-</li>
-<li><p>然后在<code>内存窗口</code>按下<code>Ctrl + B</code>或者右键选择<code>查找</code>，搜索输入的序列号：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjv4k2qij311w0ngn0d.jpg" alt="查找"></p>
-<p>找到最接近<code>输入的序列号</code>的内容，设置<code>内存访问断点</code>:</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjz6z1umj311m0n7tc9.jpg" alt="内存访问断点"></p>
-</li>
-<li><p>运行程序，程序暂停在了读取序列号的地方，开始分析：<br>好聪明的“程序”，开始转移数据了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizk98xwaej313w0ncdis.jpg" alt="转移数据"></p>
-</li>
-<li><p>既然它都挪窝儿了，咱也别闲着了：在<code>EDI</code>上右键选择<code>数据窗口中跟随</code>,果然，输入的序列号在这里了，选择序列号的数据右键<code>断点&gt;&gt;删除内存访问断点</code>删除第一次设置的<code>内存访问断点</code>，也可以理解为设置在<code>ESI</code>上的<code>内存访问断点</code>，既然数据都转移了，断点也就没意义了，所以要重新设置在<code>EDI</code>上，再次选择序列号的数据右键<code>断点&gt;&gt;内存访问</code>，这样就实时掌握了输入的序列号的动向了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizko5erudj31450o7gpl.jpg" alt="EDI"></p>
-</li>
-<li><p>继续运行程序，终于来到来最关键的地方：比较</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizlfw3ua4j313q0s4dky.jpg" alt="比较"></p>
-<p>分析完毕，逻辑简单粗暴：</p>
-<ul>
-<li>首先，假码 和 可疑字符串 的前 4 个字节的机器码进行比较，不相等跳转到下一步；</li>
-<li>接着，假码 和 可疑字符串 的第 1 个字节的机器码进行比较，不相等跳转到下一步；</li>
-<li>最后，恢复寄存器的内容并<code>RETN</code>，直接弹出错误的弹窗；</li>
-</ul>
-</li>
-<li><p>分析的时候已经发现了正确的序列号，也就是可疑字符串，试一下：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizm3afyiyj30am0btacd.jpg" alt="完工"></p>
-</li>
-</ul>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>Windows</category>
-        <category>逆向分析</category>
-      </categories>
-      <tags>
-        <tag>硬编码</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>硬编码寻找序列号（六）</title>
     <url>/posts/1208254864/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -8066,6 +8463,73 @@ E --&gt; |&quot;否，未解决&quot;| G
 </li>
 <li><p>测试一下：</p>
 <p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gj0mxfxvr3j30v508p758.jpg" alt="测试"></p>
+</li>
+</ul>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>Windows</category>
+        <category>逆向分析</category>
+      </categories>
+      <tags>
+        <tag>硬编码</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>硬编码寻找序列号（五）</title>
+    <url>/posts/755681865/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-5">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
+</ul>
+<span id="more"></span>
+
+<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
+<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
+</li>
+<li><p>倒入<code>OD</code>开始分析：</p>
+<ul>
+<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
+</li>
+<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，翻了翻还真不少，善用搜索，<code>GetDlgItemTextA</code>没找到，那就试试<code>GetWindowTextA</code>，还真有，就它了，在<code>GetWindowTextA</code>上设置断点，然后去<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
+</li>
+<li><p><code>F9</code>运行程序，然鹅，输入内容并点击验证按钮后，程序并没有暂停；</p>
+</li>
+<li><p>界面有按钮，试试消息断点，还是没用，又尝试<code>硬件断点</code>以及<code>内存断点</code>均无效；</p>
+</li>
+<li><p>使用一个特殊的<code>API：TranslateMessage</code>，没错，它的功能就是字面的意思<code>翻译虚拟按键消息为字符消息</code>，很好很强大；</p>
+</li>
+<li><p>在<code>API</code>列表页面搜索，还真有，设置断点，然后在<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，还没有完，在断点上右键<code>断点&gt;&gt;条件记录</code>或者<code>Shift + F4</code>（也就是<code>条件记录断点</code>，毕竟<code>API断点</code>的本质就是<code>CC断点</code>），修改条件：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjea06qzj311u0nfad3.jpg" alt="TranslateMessage"></p>
+</li>
+<li><p>然后运行程序，输入并点击验证，程序在<code>TranslateMessage</code>函数的行首暂停下来，然后<code>Ctrl + F9</code>或者点击菜单栏的调试选项并选择<code>执行到返回</code>，然后<code>F8</code>单步执行到程序领空；</p>
+</li>
+<li><p>然后在<code>内存窗口</code>按下<code>Ctrl + B</code>或者右键选择<code>查找</code>，搜索输入的序列号：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjv4k2qij311w0ngn0d.jpg" alt="查找"></p>
+<p>找到最接近<code>输入的序列号</code>的内容，设置<code>内存访问断点</code>:</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizjz6z1umj311m0n7tc9.jpg" alt="内存访问断点"></p>
+</li>
+<li><p>运行程序，程序暂停在了读取序列号的地方，开始分析：<br>好聪明的“程序”，开始转移数据了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizk98xwaej313w0ncdis.jpg" alt="转移数据"></p>
+</li>
+<li><p>既然它都挪窝儿了，咱也别闲着了：在<code>EDI</code>上右键选择<code>数据窗口中跟随</code>,果然，输入的序列号在这里了，选择序列号的数据右键<code>断点&gt;&gt;删除内存访问断点</code>删除第一次设置的<code>内存访问断点</code>，也可以理解为设置在<code>ESI</code>上的<code>内存访问断点</code>，既然数据都转移了，断点也就没意义了，所以要重新设置在<code>EDI</code>上，再次选择序列号的数据右键<code>断点&gt;&gt;内存访问</code>，这样就实时掌握了输入的序列号的动向了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizko5erudj31450o7gpl.jpg" alt="EDI"></p>
+</li>
+<li><p>继续运行程序，终于来到来最关键的地方：比较</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizlfw3ua4j313q0s4dky.jpg" alt="比较"></p>
+<p>分析完毕，逻辑简单粗暴：</p>
+<ul>
+<li>首先，假码 和 可疑字符串 的前 4 个字节的机器码进行比较，不相等跳转到下一步；</li>
+<li>接着，假码 和 可疑字符串 的第 1 个字节的机器码进行比较，不相等跳转到下一步；</li>
+<li>最后，恢复寄存器的内容并<code>RETN</code>，直接弹出错误的弹窗；</li>
+</ul>
+</li>
+<li><p>分析的时候已经发现了正确的序列号，也就是可疑字符串，试一下：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizm3afyiyj30am0btacd.jpg" alt="完工"></p>
 </li>
 </ul>
 </li>
@@ -8250,71 +8714,12 @@ E --&gt; |&quot;否，未解决&quot;| G
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>Windows</category>
         <category>脱壳技术</category>
+        <category>Windows</category>
       </categories>
       <tags>
         <tag>OEP</tag>
         <tag>UPX</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>脱壳小练习（二）</title>
-    <url>/posts/2304111146/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-5">OllyDbg</a>修改版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/UnPackMe-5">UnPackMe</a>来自互联网，仅供学习使用；</li>
-<li>Dump 工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-3">PETools</a>，来自互联网；</li>
-<li>IAT 重建工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-4">ImportREC</a>，来自互联网；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
-</ul>
-<h4 id="操作流程"><a href="#操作流程" class="headerlink" title="操作流程"></a>操作流程</h4><ol>
-<li><p>将 CM 导入 OD，在尝试了<code>内存访问法</code>和<code>栈平衡法</code>都不能到达 OEP 后，使用 SPOD（Special OD，个人称呼）配合<code>常用函数法</code>最终到达 OEP；</p>
-</li>
-<li><p>将 CM 导入 SPOD，goto 到 GetProcAddress 函数的行首，设置条件记录断点，记录调用 GetProcAddress 函数的地址及参数：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1ysq1mtyj31a90u0goz.jpg" alt="条件记录断点"></p>
-<p>清空 log，然后运行程序；</p>
-</li>
-<li><p>打开 log 窗口，对比各区段偏移后，发现外壳最后一次调用 GetProcAddress 函数的地址为 00478095：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1yw9u35dj31a50u0acu.jpg" alt="最后一次调用"></p>
-<p>重载程序，修改条件记录断点为条件断点：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1z1co1n6j31a40u0tbn.jpg" alt="条件断点"></p>
-<p>然后运行程序；</p>
-</li>
-<li><p>程序中断后，给代码段设置内存执行断点，取消其它断点，运行程序；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1z3ur4g5j31a10u0goy.jpg" alt="删除模块分析"></p>
-<p>删除模块分析后，确认程序到达 OEP；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1zat8x4kj319z0u0dl7.jpg" alt="IAT"></p>
-<p>跟随任意 CALL，确认有调用输入函数后，继续跟随即可定位 IAT，此处为间接调用；</p>
-</li>
-<li><p>查看 IAT 的起始地址和结束地址，计算 Size；</p>
-<p>OEP 的 RVA 为：40300；<br>IAT 的起始地址 RVA 为：430F0；<br>IAT 的结束地址 RVA 为：43674；<br>IAT 的 Size &#x3D; 43674 - 430F0 &#x3D; 584；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1zjm7x68j31a60u0tcs.jpg" alt="计算 RVA"></p>
-</li>
-<li><p>使用 PETools 将内存数据 Dump 并保存为可执行文件；</p>
-</li>
-<li><p>打开 ImportREC，填写相关选项，然后获取输入表：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1znp815mj30wk0osdh9.jpg" alt="ImportREC"></p>
-<p>检查没有无效信息，修复程序；</p>
-</li>
-<li><p>程序可以运行，将程序导入 OD，检查 IAT：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1zynliujj31a40u0422.jpg" alt="检查 IAT"></p>
-<p>检查任意函数的名称字符串：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go200xh5ztj31a10u079p.jpg" alt="函数的名称字符串"></p>
-<p>都没有问题，脱壳完成！</p>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>Windows</category>
-        <category>脱壳技术</category>
-      </categories>
-      <tags>
-        <tag>OEP</tag>
-        <tag>IAT</tag>
-        <tag>FSG</tag>
       </tags>
   </entry>
   <entry>
@@ -8379,11 +8784,70 @@ E --&gt; |&quot;否，未解决&quot;| G
 ]]></content>
       <categories>
         <category>逆向工程</category>
-        <category>Windows</category>
         <category>脱壳技术</category>
+        <category>Windows</category>
       </categories>
       <tags>
         <tag>IAT</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>脱壳小练习（二）</title>
+    <url>/posts/2304111146/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-5">OllyDbg</a>修改版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/UnPackMe-5">UnPackMe</a>来自互联网，仅供学习使用；</li>
+<li>Dump 工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-3">PETools</a>，来自互联网；</li>
+<li>IAT 重建工具为 <a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-4">ImportREC</a>，来自互联网；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
+</ul>
+<h4 id="操作流程"><a href="#操作流程" class="headerlink" title="操作流程"></a>操作流程</h4><ol>
+<li><p>将 CM 导入 OD，在尝试了<code>内存访问法</code>和<code>栈平衡法</code>都不能到达 OEP 后，使用 SPOD（Special OD，个人称呼）配合<code>常用函数法</code>最终到达 OEP；</p>
+</li>
+<li><p>将 CM 导入 SPOD，goto 到 GetProcAddress 函数的行首，设置条件记录断点，记录调用 GetProcAddress 函数的地址及参数：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1ysq1mtyj31a90u0goz.jpg" alt="条件记录断点"></p>
+<p>清空 log，然后运行程序；</p>
+</li>
+<li><p>打开 log 窗口，对比各区段偏移后，发现外壳最后一次调用 GetProcAddress 函数的地址为 00478095：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1yw9u35dj31a50u0acu.jpg" alt="最后一次调用"></p>
+<p>重载程序，修改条件记录断点为条件断点：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1z1co1n6j31a40u0tbn.jpg" alt="条件断点"></p>
+<p>然后运行程序；</p>
+</li>
+<li><p>程序中断后，给代码段设置内存执行断点，取消其它断点，运行程序；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1z3ur4g5j31a10u0goy.jpg" alt="删除模块分析"></p>
+<p>删除模块分析后，确认程序到达 OEP；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1zat8x4kj319z0u0dl7.jpg" alt="IAT"></p>
+<p>跟随任意 CALL，确认有调用输入函数后，继续跟随即可定位 IAT，此处为间接调用；</p>
+</li>
+<li><p>查看 IAT 的起始地址和结束地址，计算 Size；</p>
+<p>OEP 的 RVA 为：40300；<br>IAT 的起始地址 RVA 为：430F0；<br>IAT 的结束地址 RVA 为：43674；<br>IAT 的 Size &#x3D; 43674 - 430F0 &#x3D; 584；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1zjm7x68j31a60u0tcs.jpg" alt="计算 RVA"></p>
+</li>
+<li><p>使用 PETools 将内存数据 Dump 并保存为可执行文件；</p>
+</li>
+<li><p>打开 ImportREC，填写相关选项，然后获取输入表：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1znp815mj30wk0osdh9.jpg" alt="ImportREC"></p>
+<p>检查没有无效信息，修复程序；</p>
+</li>
+<li><p>程序可以运行，将程序导入 OD，检查 IAT：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go1zynliujj31a40u0422.jpg" alt="检查 IAT"></p>
+<p>检查任意函数的名称字符串：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1go200xh5ztj31a10u079p.jpg" alt="函数的名称字符串"></p>
+<p>都没有问题，脱壳完成！</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>脱壳技术</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>OEP</tag>
+        <tag>IAT</tag>
+        <tag>FSG</tag>
       </tags>
   </entry>
   <entry>
