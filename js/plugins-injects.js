@@ -82,12 +82,15 @@
 
 // pjax - busuanzi
 !(function () {
-  document.addEventListener("pjax:success", function () {
-    const ibruce = document.querySelector("#busuanzi-script");
-    const busuanzi = document.createElement("script");
-    busuanzi.setAttribute("src", ibruce.getAttribute("src"));
-    busuanzi.setAttribute("async", true);
-    busuanzi.setAttribute("id", ibruce.getAttribute("id"));
-    document.body.replaceChild(busuanzi, ibruce);
+  document.addEventListener("pjax:success", function (e) {
+    const result = /\posts/g.test(e.target.URL);
+    if (result) {
+      const ibruce = document.querySelector("#busuanzi-script");
+      const busuanzi = document.createElement("script");
+      busuanzi.setAttribute("src", ibruce.getAttribute("src"));
+      busuanzi.setAttribute("async", true);
+      busuanzi.setAttribute("id", ibruce.getAttribute("id"));
+      document.body.replaceChild(busuanzi, ibruce);
+    }
   });
 })();
