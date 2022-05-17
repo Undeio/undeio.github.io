@@ -42,7 +42,7 @@
 
 // runtime
 !(function () {
-  addRunTime();
+  customizeSetInterval(addRunTime, 1000);
 
   function addRunTime() {
     // 建站时间
@@ -78,7 +78,6 @@
     }
     loop();
   }
-  customizeSetInterval(addRunTime, 1000);
 })();
 
 // pjax - busuanzi
@@ -90,6 +89,5 @@
     busuanzi.setAttribute("async", true);
     busuanzi.setAttribute("id", ibruce.getAttribute("id"));
     document.body.replaceChild(busuanzi, ibruce);
-    console.log("pjax:complete");
   });
 })();
