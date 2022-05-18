@@ -1,4 +1,9 @@
-/* busuanzi */
+/**
+ * @description 博客功能添加
+ * @author undeio
+ */
+
+/* busuanzi 自定义 */
 !(function () {
   const parent = document.querySelector(".busuanzi");
   const child = document.querySelector("#busuanzi_value_site_uv");
@@ -68,9 +73,9 @@
     const since = "2020-05-01T12:00:00";
     // 固定时区，不受系统时区影响
     const timeZone = "Asia/Shanghai";
-
     const dateNow = DateTime.now().setZone(timeZone);
     const dateSince = DateTime.fromISO(since).setZone(timeZone);
+
     const dateInterval = dateNow
       .diff(dateSince, [
         "years",
@@ -86,27 +91,26 @@
       dateInterval.months
     }个月${dateInterval.days}天${dateInterval.hours}小时${
       dateInterval.minutes
-    }分${
-      dateInterval.seconds.toFixed() < 10
-        ? "0" + dateInterval.seconds.toFixed()
-        : dateInterval.seconds.toFixed()
-    }秒`;
+    }分${dateInterval.seconds.toFixed()}秒`;
   }
 })();
 
-/* pjax - 修正 busuanzi 统计 */
+/* pjax - 修正 busuanzi 统计 - 开启官方 busuanzi 即可支持
 !(function () {
-  // 缓存 DOM 查询
-  const ibruce = document.querySelector("#busuanzi-script");
-
+  // 无法缓存 DOM 查询，旧的 ibruce 节点被新的 ibruce 节点替换后，缓存结果为 null
+  // const ibruce = document.querySelector("#ibruce");
   document.addEventListener("pjax:success", function (event) {
     const flag = new RegExp("posts", "g").test(event.target.URL);
     if (flag) {
+      // 查找当前的 ibruce 节点
+      const ibruce = document.querySelector("#ibruce");
       const busuanzi = document.createElement("script");
       busuanzi.setAttribute("src", ibruce.getAttribute("src"));
       busuanzi.setAttribute("async", true);
       busuanzi.setAttribute("id", ibruce.getAttribute("id"));
+      // 替换
       document.body.replaceChild(busuanzi, ibruce);
     }
   });
 })();
+*/
