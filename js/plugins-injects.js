@@ -95,7 +95,7 @@
   }
 })();
 
-/* pjax - 修正 busuanzi 统计 - 开启官方 busuanzi 即可支持
+/* pjax - 修正 busuanzi 统计 - 开启 next 内置 busuanzi 即可支持
 !(function () {
   // 无法缓存 DOM 查询，旧的 ibruce 节点被新的 ibruce 节点替换后，缓存结果为 null
   // const ibruce = document.querySelector("#ibruce");
