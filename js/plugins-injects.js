@@ -7,6 +7,7 @@
 !(function () {
   const parent = document.querySelector(".busuanzi");
   const child = document.querySelector("#busuanzi_value_site_uv");
+
   setTimeout(function timer(count = 5) {
     if (child.innerText) {
       parent.style.display = "block";
