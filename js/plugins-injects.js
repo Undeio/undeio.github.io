@@ -1,9 +1,9 @@
 /**
- * @description 博客功能添加
+ * @description 博客功能调整
  * @author undeio
  */
 
-/* busuanzi 自定义 */
+/* 自定义 busuanzi 加载成功才会显示 */
 !(function () {
   const parent = document.querySelector(".busuanzi");
   const child = document.querySelector("#busuanzi_value_site_uv");
@@ -21,7 +21,7 @@
   }, 0);
 })();
 
-/* ip */
+/* 显示访问 ip */
 !(function () {
   const ip = document.querySelector(".access-ip");
   try {
@@ -46,7 +46,7 @@
   }
 })();
 
-/* runtime */
+/* 网站运行时间 runtime */
 !(function () {
   // 引入 luxon 处理时间
   const DateTime = luxon.DateTime;
@@ -96,7 +96,9 @@
   }
 })();
 
-/* pjax - 修正 busuanzi 统计 - 开启 next 内置 busuanzi 即可支持
+/* 修正开启 pjax 时的 busuanzi 统计 */
+// 现已改用 next 内置的 busuanzi 服务
+/*
 !(function () {
   // 无法缓存 DOM 查询，旧的 ibruce 节点被新的 ibruce 节点替换后，缓存结果为 null
   // const ibruce = document.querySelector("#ibruce");
