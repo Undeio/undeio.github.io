@@ -926,7 +926,7 @@
     <url>/posts/1094913070/</url>
     <content><![CDATA[<h2 id="数组-API"><a href="#数组-API" class="headerlink" title="数组 API"></a>数组 API</h2><h3 id="split-和-join-的区别"><a href="#split-和-join-的区别" class="headerlink" title="split 和 join 的区别"></a>split 和 join 的区别</h3><ol>
 <li>split 是 String 的方法，以指定字符分割字符串为数组；</li>
-<li>join 是 Array 的放啊，以指定字符拼接数组元素为字符串；</li>
+<li>join 是 Array 的方法，以指定字符拼接数组元素为字符串；</li>
 <li>二者互为相反的操作；</li>
 </ol>
 <h3 id="数组的-pop、push、unshift、shift-的区别"><a href="#数组的-pop、push、unshift、shift-的区别" class="headerlink" title="数组的 pop、push、unshift、shift 的区别"></a>数组的 pop、push、unshift、shift 的区别</h3><ol>
