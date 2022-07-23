@@ -8,7 +8,8 @@
 
 在线阅读[传送门](https://undeio.com)
 
-文章底部评论会自动创建相关`issues`，请在文章底部评论而不是新开`issues`。
+~~文章底部评论会自动创建相关`issues`，请在文章底部评论而不是新开`issues`。~~
+评论系统由[utterances](https://utteranc.es)切换至[Twikoo](https://twikoo.js.org)，留言无需登录。
 
 ## License
 
