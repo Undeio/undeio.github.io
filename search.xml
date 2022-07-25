@@ -160,68 +160,6 @@
       </tags>
   </entry>
   <entry>
-    <title>DNS 服务器</title>
-    <url>/posts/1115613161/</url>
-    <content><![CDATA[<h4 id="DNS-服务器"><a href="#DNS-服务器" class="headerlink" title="DNS 服务器"></a>DNS 服务器</h4><ol>
-<li>DNS（Domain Name System，域名系统），一个域名与 IP 地址相互映射的分布式数据库；</li>
-<li>DNS 服务器为客户机提供域名解析服务，通过域名最终得到域名对应 IP 地址的过程叫做域名解析；</li>
-<li><code>主机名.域名</code>称为完全限定域名（FQDN）；<span id="more"></span></li>
-<li>一个域名下可以有多个主机，域名是全球唯一的，所以<code>主机名.域名</code>也是全球唯一的；</li>
-<li>DNS 服务器的分类：<ol>
-<li>根名称服务器；</li>
-<li>主要名称服务器；</li>
-<li>辅助名称服务器；</li>
-<li>高速缓存名称服务器；</li>
-</ol>
-</li>
-<li>常见的域名解析类型：<ol>
-<li>A 记录：正向解析；</li>
-<li>CNAME 记录：别名解析；</li>
-<li>PTR 记录：反向解析；</li>
-<li>MX 记录：邮件交换记录解析；</li>
-<li>NS 记录：域名服务器解析；</li>
-</ol>
-</li>
-<li>DNS 解析按照查询方式分为两种：<ol>
-<li>递归查询：客户机与本地 DNS 服务器之间的解析过程，即，所问即所答；</li>
-<li>迭代查询：本地 DNS 服务器与根或其他 DNS 服务器之间的解析过程，即，只告诉你线索，答案我不知道；</li>
-</ol>
-</li>
-<li>DNS 转发的过程是递归查询；</li>
-<li>DNS 解析按照查询内容分为两种：<ol>
-<li>正向解析：已知域名，解析 IP 地址；</li>
-<li>反向解析：已知 IP 地址，解析域名；</li>
-</ol>
-</li>
-<li>客户机请求域名解析的顺序：<ol>
-<li>本机 DNS 缓存；</li>
-<li>本机 Host 文件；</li>
-<li>本地 DNS 服务器；</li>
-</ol>
-</li>
-<li>DNS 服务器对域名请求的解析顺序：<ol>
-<li>DNS 高速缓存；</li>
-<li>本地区域解析文件；</li>
-<li>转发器；</li>
-<li>根；</li>
-</ol>
-</li>
-<li>DNS 服务的端口是<code>TCP/UDP:53</code>；</li>
-<li><code>nslookup 域名</code>：查看指定域名的 DNS 解析；</li>
-<li><code>ipconfig /flushdns</code>：清除 DNS 缓存；</li>
-<li><code>ipconfig /displaydns</code>：查看本机 DNS 缓存；</li>
-</ol>
-]]></content>
-      <categories>
-        <category>网络安全</category>
-        <category>Windows</category>
-      </categories>
-      <tags>
-        <tag>DOS 命令</tag>
-        <tag>DNS</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>HTML 与 CSS</title>
     <url>/posts/732491287/</url>
     <content><![CDATA[<blockquote>
@@ -501,6 +439,68 @@
       <tags>
         <tag>HTML</tag>
         <tag>CSS</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>DNS 服务器</title>
+    <url>/posts/1115613161/</url>
+    <content><![CDATA[<h4 id="DNS-服务器"><a href="#DNS-服务器" class="headerlink" title="DNS 服务器"></a>DNS 服务器</h4><ol>
+<li>DNS（Domain Name System，域名系统），一个域名与 IP 地址相互映射的分布式数据库；</li>
+<li>DNS 服务器为客户机提供域名解析服务，通过域名最终得到域名对应 IP 地址的过程叫做域名解析；</li>
+<li><code>主机名.域名</code>称为完全限定域名（FQDN）；<span id="more"></span></li>
+<li>一个域名下可以有多个主机，域名是全球唯一的，所以<code>主机名.域名</code>也是全球唯一的；</li>
+<li>DNS 服务器的分类：<ol>
+<li>根名称服务器；</li>
+<li>主要名称服务器；</li>
+<li>辅助名称服务器；</li>
+<li>高速缓存名称服务器；</li>
+</ol>
+</li>
+<li>常见的域名解析类型：<ol>
+<li>A 记录：正向解析；</li>
+<li>CNAME 记录：别名解析；</li>
+<li>PTR 记录：反向解析；</li>
+<li>MX 记录：邮件交换记录解析；</li>
+<li>NS 记录：域名服务器解析；</li>
+</ol>
+</li>
+<li>DNS 解析按照查询方式分为两种：<ol>
+<li>递归查询：客户机与本地 DNS 服务器之间的解析过程，即，所问即所答；</li>
+<li>迭代查询：本地 DNS 服务器与根或其他 DNS 服务器之间的解析过程，即，只告诉你线索，答案我不知道；</li>
+</ol>
+</li>
+<li>DNS 转发的过程是递归查询；</li>
+<li>DNS 解析按照查询内容分为两种：<ol>
+<li>正向解析：已知域名，解析 IP 地址；</li>
+<li>反向解析：已知 IP 地址，解析域名；</li>
+</ol>
+</li>
+<li>客户机请求域名解析的顺序：<ol>
+<li>本机 DNS 缓存；</li>
+<li>本机 Host 文件；</li>
+<li>本地 DNS 服务器；</li>
+</ol>
+</li>
+<li>DNS 服务器对域名请求的解析顺序：<ol>
+<li>DNS 高速缓存；</li>
+<li>本地区域解析文件；</li>
+<li>转发器；</li>
+<li>根；</li>
+</ol>
+</li>
+<li>DNS 服务的端口是<code>TCP/UDP:53</code>；</li>
+<li><code>nslookup 域名</code>：查看指定域名的 DNS 解析；</li>
+<li><code>ipconfig /flushdns</code>：清除 DNS 缓存；</li>
+<li><code>ipconfig /displaydns</code>：查看本机 DNS 缓存；</li>
+</ol>
+]]></content>
+      <categories>
+        <category>网络安全</category>
+        <category>Windows</category>
+      </categories>
+      <tags>
+        <tag>DOS 命令</tag>
+        <tag>DNS</tag>
       </tags>
   </entry>
   <entry>
@@ -1762,6 +1762,121 @@
 <p>然后，调用退出进程函数<code>ExitProcess</code>，再运行一下下，结束！</p>
 </li>
 </ul>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>Windows</category>
+        <category>逆向分析</category>
+      </categories>
+      <tags>
+        <tag>反调试</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>OllyDbg 反调试之 ProcessHeap &amp; NTGlobalFlag</title>
+    <url>/posts/3503361299/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code>插件<a href="https://github.com/Undeio/undeio.github.io/releases/tag/Plugin-2">HideDebugger</a>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-14">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
+</ul>
+<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
+<li><p>使用搜索引擎搜寻良久并未找到通俗易懂的说明，在<a href="https://ctf-wiki.github.io/ctf-wiki/">CTF Wiki</a>上发现了描述，但无奈自己功力尚浅，无法透彻理解，遂将链接奉上，感兴趣的同学可以去学习一下<a href="https://ctf-wiki.github.io/ctf-wiki/reverse/windows/anti-debug/ntglobalflag-zh/">NtGlobalFlag</a>，<a href="https://ctf-wiki.github.io/ctf-wiki/reverse/windows/anti-debug/heap-flags-zh/">Heap Flags</a>；</p>
+</li>
+<li><p>文中使用的<code>CrackMe</code>无特定要求，可以使用任意一款；</p>
+</li>
+<li><p>了解一下两个标志，以下描述引用自<a href="https://ctf-wiki.github.io/ctf-wiki/">CTF Wiki</a>：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">NtGlobalFlag</span><br><span class="line"></span><br><span class="line">描述</span><br><span class="line">    1. 在 32 位机器上, NtGlobalFlag字段位于PEB(进程环境块)0x68的偏移处, 64 位机器则是在偏移0xBC位置.</span><br><span class="line">    2. 该字段的默认值为 0.</span><br><span class="line">    3. 当调试器正在运行时, 该字段会被设置为一个特定的值.</span><br><span class="line">    4. 尽管该值并不能十分可信地表明某个调试器真的有在运行, 但该字段常出于该目的而被使用</span><br></pre></td></tr></table></figure>
+
+<p>呃，至于<code>ProcessHeap</code>，实在是总结不出具体的描述性语言，感兴趣的同学去<a href="https://ctf-wiki.github.io/ctf-wiki/">CTF Wiki</a>看吧；</p>
+</li>
+<li><p>接下来就用实例来说明一下这两个标志的用法：</p>
+<ul>
+<li><p>首先选择一个<code>CrackMe</code>倒入<code>OD</code>：</p>
+<p>之前学习<code>IsDebuggerPresent</code>的时候学习到：如果程序倒入<code>OD</code>之后没有运行，那么<code>EBX</code>寄存器指向的位置就是<code>IsDebuggerPresent</code>检测的位置，用代码表示就是：</p>
+<figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">FS</span>:[<span class="number">18</span>]       <span class="comment">; 将 FS:[18] 中的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">30</span>]   <span class="comment">; 将 EAX 中的地址加 0x30 之后的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOVZX</span> <span class="built_in">EAX</span>,<span class="built_in">BYTE</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">2</span>]   <span class="comment">; 将 EAX 中的地址，存储的第 2 个字节的数据拷贝到 EAX</span></span><br><span class="line"><span class="keyword">RETN</span>                            <span class="comment">; 返回</span></span><br></pre></td></tr></table></figure>
+
+<p>在这里简单计算一下，就当作复习之前的知识了，以这个<code>CrackMe</code>为例：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkafiohmmj31ff0u0gxv.jpg" alt="为例子"></p>
+<p>手动计算一下<code>IsDebuggerPresent</code>要检测的位置：</p>
+<ol>
+<li><p><code>MOV EAX,DWORD PTR FS:[18]</code>：<code>FS 寄存器</code>从第 18 位开始，存放的是该寄存器从起始位置依次向后的地址，即第 18 位存放的是起始位置的地址，也就是说，在这里，<code>FS:[18] == 7FFDF000</code>；</p>
+</li>
+<li><p><code>MOV EAX,DWORD PTR DS:[EAX+30]</code>：这个很好计算嘛，<code>[EAX+30] == 7FFDF030</code>，使用<code>Ctrl + G</code>跟随一下这个地址：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkarqpe18j31ff0u0n8e.jpg" alt="计算并跟随"></p>
+<p><code>7FFDF030</code>中存储的地址不正是<code>EBX</code>中的地址嘛；</p>
+</li>
+</ol>
+</li>
+<li><p>回顾完之前的内容，开始学习本次内容的第一个标志<code>NtGlobalFlag</code>：</p>
+<p>根据对<code>NtGlobalFlag</code>描述可知：在 32 位机器上, NtGlobalFlag 字段位于 PEB(进程环境块)0x68 的偏移处；</p>
+<p>首先，什么是 PEB?查询了许久之后又引出了 TEB，不太理解，但找到一些感觉描述很通俗的话：</p>
+<ul>
+<li><p>TEB：即 Thread Environment Block ，它记录相关线程的信息，每一个线程都有自己的 TEB，每个 TEB 都有自己的 TIB（Thread Information Block）,即线程信息块，每当创建一个线程，系统均会为每个线程分配 TEB，而且 TEB 永远放在 FS 寄存器指定的数据段的 0 偏移处；</p>
+</li>
+<li><p>PEB：即（Process Envirorment Block Structure），英文翻译过来就是进程环境信息块，在你进行打开这个程序或以调试方式打开这个程序，那么操作系统会对你这个进程的进程环境块的一些标志设置一系列的属性，如果你使用系统的调试方法，那么系统就会把相对应的标志位给设置上；</p>
+<ol>
+<li><p>TEB 结构体位于 FS 段选择符所指的段内存的起始地址处，也就是 0 偏移处；</p>
+</li>
+<li><p>PEB 成员位于距 TEB 结构体 Offset 30 的位置，也就是 0x30 偏移处；</p>
+</li>
+<li><p>那么就有两种获取 PEB 的方法：</p>
+<ul>
+<li>既然 TEB 位于 <code>FS 寄存器</code> 0 偏移处，在本文中就是<code>7FFDF000</code>，而 PEB 位于距 TEB 结构体 0x30 偏移处，那么是不是可以直接理解为：PEB 位于<code>FS 寄存器</code> 0x30 偏移处，即<code>FS:[30]</code>就是 PEB，在本文中就是<code>7FFDF030</code>；</li>
+<li>TEB 位于 <code>FS 寄存器</code> 0 偏移处，在本文中就是<code>7FFDF000</code>，如何获取<code>FS 寄存器</code> 0 偏移处即文中的<code>7FFDF000</code>呢？当然是<code>FS:[18]</code>了，既然拿到 TEB 本身，如何获取 PEB 呢？方法就和上面复习的一样了；</li>
+</ul>
+</li>
+</ol>
+</li>
+<li><p>既然找到了 PEB 的位置，而根据对<code>NtGlobalFlag</code>的定义得知，它位于 PEB 0x68 偏移处；</p>
+<p>本文中 PEB 为<code>7FFDF030</code>地址中的数据<code>7FFD8000</code>，也就是初始<code>EBX</code>指向的地址，再偏移 0x68 计算为<code>7FFD8068</code>，也就是说，如果<code>7FFD8068</code>地址的数据不为 0，则表示检测到正在调试程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkcwq4qc1j31ff0u0n7p.jpg" alt="NtGlobalFlag"></p>
+<p>整理一下代码的实现：</p>
+<figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">FS</span>:[<span class="number">18</span>]       <span class="comment">; 将 FS:[18] 中的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">30</span>]   <span class="comment">; 将 EAX 中的地址加 0x30 之后的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">68</span>]   <span class="comment">; 将 EAX 中的地址加 0x68 之后的数据拷贝到 EAX</span></span><br><span class="line"><span class="keyword">OR</span> <span class="built_in">EAX</span>,<span class="built_in">EAX</span>                      <span class="comment">; 是否为 0</span></span><br><span class="line"><span class="keyword">RETN</span>                            <span class="comment">; 返回</span></span><br></pre></td></tr></table></figure>
+
+<p>验证一下：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkdsmdg1kj31ff0u0tjp.jpg" alt="验证NtGlobalFlag"></p>
+</li>
+</ul>
+</li>
+<li><p>再来说说第二个标志<code>ProcessHeap</code>：</p>
+<p>对这个标志的了解少之又少，暂时没有查到直接关联的资料，只能大概总结一下：</p>
+<ol>
+<li><p>位于 PEB 偏移 0x18 处，本文中 PEB 是<code>7FFD8000</code>，偏移 0x18 之后是<code>7FFD8018</code>；</p>
+</li>
+<li><p>把偏移后的地址中的 DWORD 长度的数据作为地址，偏移 0x10，即对本文的<code>7FFD8018</code>中的数据<code>00140000</code>偏移 0x10；</p>
+</li>
+<li><p>如果这个位置的数据不为 0，即本文的<code>00140010</code>不为 0，则表示检测到正在调试程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkdjjn9lfj31ff0u0akf.jpg" alt="ProcessHeap"></p>
+<p>整理一下代码的实现：</p>
+<figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">FS</span>:[<span class="number">18</span>]       <span class="comment">; 将 FS:[18] 中的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">30</span>]   <span class="comment">; 将 EAX 中的地址加 0x30 之后的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">18</span>]   <span class="comment">; 将 EAX 中的地址加 0x18 之后的数据拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">10</span>]   <span class="comment">; 将 EAX 中的地址加 0x10 之后的数据拷贝到 EAX</span></span><br><span class="line"><span class="keyword">OR</span> <span class="built_in">EAX</span>,<span class="built_in">EAX</span>                      <span class="comment">; 是否为 0</span></span><br><span class="line"><span class="keyword">RETN</span>                            <span class="comment">; 返回</span></span><br></pre></td></tr></table></figure>
+
+<p>验证一下：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkdp9qncvj31ff0u0qdy.jpg" alt="验证ProcessHeap"></p>
+</li>
+</ol>
+</li>
+<li><p>两个标志分析完毕，接下来就要说说如何绕过了，不能每次都手动修改吧；</p>
+<p>这里需要借助两个<code>OD</code>插件<code>HideDebugger</code>和<code>HideOD</code>；</p>
+<p>设置如下图：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gll7skb4c3j31ff0u048h.jpg" alt="插件设置"></p>
+<p>细心的同学会发现，这里的设置和上节课一模一样，是的，设置相同，但是重点不同；</p>
+<p>虽然之前设置了某些选项，但只是照猫画虎，不知其意，相信学完这节内容，就会理解这样设置的意图；</p>
+</li>
+<li><p>验证一下插件是否生效：</p>
+<p>程序倒入<code>OD</code>不要运行，在<code>数据窗口</code>中跟随<code>EBX</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gll8umchjbj31ff0u07ez.jpg" alt="前两个绕过"></p>
+<p>可以在<code>数据窗口</code>直观的看到，<code>IsDebuggerPresent</code>和<code>NtGlobalFlag</code>检测的位置已经成功置 0，绕过检测，至于<code>ProcessHeap</code>，<code>Ctrl + G</code>跟随地址查看：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gll931b41xj31ff0u0qd9.jpg" alt="最后一个绕过"></p>
+</li>
+</ul>
+</li>
+<li><p>聊完两个标志，再来聊聊另外一个知识点：一个崩溃：</p>
+<p>一个崩溃不是说 Windows 的 API 又有特殊的用途或参数，或者说是开发人员思路清奇把 API 用出了花儿，而是<code>OD</code>的 bug：当被调试的程序通过 OutputDebugString 输出超长的一串调试字符串的时候，OllyDbg 无法处理导致崩溃；</p>
 </li>
 </ol>
 ]]></content>
@@ -3607,121 +3722,6 @@
       </tags>
   </entry>
   <entry>
-    <title>OllyDbg 反调试之 ProcessHeap &amp; NTGlobalFlag</title>
-    <url>/posts/3503361299/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
-<li><code>OD</code>插件<a href="https://github.com/Undeio/undeio.github.io/releases/tag/Plugin-2">HideDebugger</a>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-14">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
-</ul>
-<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
-<li><p>使用搜索引擎搜寻良久并未找到通俗易懂的说明，在<a href="https://ctf-wiki.github.io/ctf-wiki/">CTF Wiki</a>上发现了描述，但无奈自己功力尚浅，无法透彻理解，遂将链接奉上，感兴趣的同学可以去学习一下<a href="https://ctf-wiki.github.io/ctf-wiki/reverse/windows/anti-debug/ntglobalflag-zh/">NtGlobalFlag</a>，<a href="https://ctf-wiki.github.io/ctf-wiki/reverse/windows/anti-debug/heap-flags-zh/">Heap Flags</a>；</p>
-</li>
-<li><p>文中使用的<code>CrackMe</code>无特定要求，可以使用任意一款；</p>
-</li>
-<li><p>了解一下两个标志，以下描述引用自<a href="https://ctf-wiki.github.io/ctf-wiki/">CTF Wiki</a>：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">NtGlobalFlag</span><br><span class="line"></span><br><span class="line">描述</span><br><span class="line">    1. 在 32 位机器上, NtGlobalFlag字段位于PEB(进程环境块)0x68的偏移处, 64 位机器则是在偏移0xBC位置.</span><br><span class="line">    2. 该字段的默认值为 0.</span><br><span class="line">    3. 当调试器正在运行时, 该字段会被设置为一个特定的值.</span><br><span class="line">    4. 尽管该值并不能十分可信地表明某个调试器真的有在运行, 但该字段常出于该目的而被使用</span><br></pre></td></tr></table></figure>
-
-<p>呃，至于<code>ProcessHeap</code>，实在是总结不出具体的描述性语言，感兴趣的同学去<a href="https://ctf-wiki.github.io/ctf-wiki/">CTF Wiki</a>看吧；</p>
-</li>
-<li><p>接下来就用实例来说明一下这两个标志的用法：</p>
-<ul>
-<li><p>首先选择一个<code>CrackMe</code>倒入<code>OD</code>：</p>
-<p>之前学习<code>IsDebuggerPresent</code>的时候学习到：如果程序倒入<code>OD</code>之后没有运行，那么<code>EBX</code>寄存器指向的位置就是<code>IsDebuggerPresent</code>检测的位置，用代码表示就是：</p>
-<figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">FS</span>:[<span class="number">18</span>]       <span class="comment">; 将 FS:[18] 中的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">30</span>]   <span class="comment">; 将 EAX 中的地址加 0x30 之后的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOVZX</span> <span class="built_in">EAX</span>,<span class="built_in">BYTE</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">2</span>]   <span class="comment">; 将 EAX 中的地址，存储的第 2 个字节的数据拷贝到 EAX</span></span><br><span class="line"><span class="keyword">RETN</span>                            <span class="comment">; 返回</span></span><br></pre></td></tr></table></figure>
-
-<p>在这里简单计算一下，就当作复习之前的知识了，以这个<code>CrackMe</code>为例：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkafiohmmj31ff0u0gxv.jpg" alt="为例子"></p>
-<p>手动计算一下<code>IsDebuggerPresent</code>要检测的位置：</p>
-<ol>
-<li><p><code>MOV EAX,DWORD PTR FS:[18]</code>：<code>FS 寄存器</code>从第 18 位开始，存放的是该寄存器从起始位置依次向后的地址，即第 18 位存放的是起始位置的地址，也就是说，在这里，<code>FS:[18] == 7FFDF000</code>；</p>
-</li>
-<li><p><code>MOV EAX,DWORD PTR DS:[EAX+30]</code>：这个很好计算嘛，<code>[EAX+30] == 7FFDF030</code>，使用<code>Ctrl + G</code>跟随一下这个地址：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkarqpe18j31ff0u0n8e.jpg" alt="计算并跟随"></p>
-<p><code>7FFDF030</code>中存储的地址不正是<code>EBX</code>中的地址嘛；</p>
-</li>
-</ol>
-</li>
-<li><p>回顾完之前的内容，开始学习本次内容的第一个标志<code>NtGlobalFlag</code>：</p>
-<p>根据对<code>NtGlobalFlag</code>描述可知：在 32 位机器上, NtGlobalFlag 字段位于 PEB(进程环境块)0x68 的偏移处；</p>
-<p>首先，什么是 PEB?查询了许久之后又引出了 TEB，不太理解，但找到一些感觉描述很通俗的话：</p>
-<ul>
-<li><p>TEB：即 Thread Environment Block ，它记录相关线程的信息，每一个线程都有自己的 TEB，每个 TEB 都有自己的 TIB（Thread Information Block）,即线程信息块，每当创建一个线程，系统均会为每个线程分配 TEB，而且 TEB 永远放在 FS 寄存器指定的数据段的 0 偏移处；</p>
-</li>
-<li><p>PEB：即（Process Envirorment Block Structure），英文翻译过来就是进程环境信息块，在你进行打开这个程序或以调试方式打开这个程序，那么操作系统会对你这个进程的进程环境块的一些标志设置一系列的属性，如果你使用系统的调试方法，那么系统就会把相对应的标志位给设置上；</p>
-<ol>
-<li><p>TEB 结构体位于 FS 段选择符所指的段内存的起始地址处，也就是 0 偏移处；</p>
-</li>
-<li><p>PEB 成员位于距 TEB 结构体 Offset 30 的位置，也就是 0x30 偏移处；</p>
-</li>
-<li><p>那么就有两种获取 PEB 的方法：</p>
-<ul>
-<li>既然 TEB 位于 <code>FS 寄存器</code> 0 偏移处，在本文中就是<code>7FFDF000</code>，而 PEB 位于距 TEB 结构体 0x30 偏移处，那么是不是可以直接理解为：PEB 位于<code>FS 寄存器</code> 0x30 偏移处，即<code>FS:[30]</code>就是 PEB，在本文中就是<code>7FFDF030</code>；</li>
-<li>TEB 位于 <code>FS 寄存器</code> 0 偏移处，在本文中就是<code>7FFDF000</code>，如何获取<code>FS 寄存器</code> 0 偏移处即文中的<code>7FFDF000</code>呢？当然是<code>FS:[18]</code>了，既然拿到 TEB 本身，如何获取 PEB 呢？方法就和上面复习的一样了；</li>
-</ul>
-</li>
-</ol>
-</li>
-<li><p>既然找到了 PEB 的位置，而根据对<code>NtGlobalFlag</code>的定义得知，它位于 PEB 0x68 偏移处；</p>
-<p>本文中 PEB 为<code>7FFDF030</code>地址中的数据<code>7FFD8000</code>，也就是初始<code>EBX</code>指向的地址，再偏移 0x68 计算为<code>7FFD8068</code>，也就是说，如果<code>7FFD8068</code>地址的数据不为 0，则表示检测到正在调试程序：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkcwq4qc1j31ff0u0n7p.jpg" alt="NtGlobalFlag"></p>
-<p>整理一下代码的实现：</p>
-<figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">FS</span>:[<span class="number">18</span>]       <span class="comment">; 将 FS:[18] 中的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">30</span>]   <span class="comment">; 将 EAX 中的地址加 0x30 之后的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">68</span>]   <span class="comment">; 将 EAX 中的地址加 0x68 之后的数据拷贝到 EAX</span></span><br><span class="line"><span class="keyword">OR</span> <span class="built_in">EAX</span>,<span class="built_in">EAX</span>                      <span class="comment">; 是否为 0</span></span><br><span class="line"><span class="keyword">RETN</span>                            <span class="comment">; 返回</span></span><br></pre></td></tr></table></figure>
-
-<p>验证一下：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkdsmdg1kj31ff0u0tjp.jpg" alt="验证NtGlobalFlag"></p>
-</li>
-</ul>
-</li>
-<li><p>再来说说第二个标志<code>ProcessHeap</code>：</p>
-<p>对这个标志的了解少之又少，暂时没有查到直接关联的资料，只能大概总结一下：</p>
-<ol>
-<li><p>位于 PEB 偏移 0x18 处，本文中 PEB 是<code>7FFD8000</code>，偏移 0x18 之后是<code>7FFD8018</code>；</p>
-</li>
-<li><p>把偏移后的地址中的 DWORD 长度的数据作为地址，偏移 0x10，即对本文的<code>7FFD8018</code>中的数据<code>00140000</code>偏移 0x10；</p>
-</li>
-<li><p>如果这个位置的数据不为 0，即本文的<code>00140010</code>不为 0，则表示检测到正在调试程序：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkdjjn9lfj31ff0u0akf.jpg" alt="ProcessHeap"></p>
-<p>整理一下代码的实现：</p>
-<figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">FS</span>:[<span class="number">18</span>]       <span class="comment">; 将 FS:[18] 中的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">30</span>]   <span class="comment">; 将 EAX 中的地址加 0x30 之后的地址拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">18</span>]   <span class="comment">; 将 EAX 中的地址加 0x18 之后的数据拷贝到 EAX</span></span><br><span class="line"><span class="keyword">MOV</span> <span class="built_in">EAX</span>,<span class="built_in">DWORD</span> <span class="built_in">PTR</span> <span class="built_in">DS</span>:[<span class="built_in">EAX</span>+<span class="number">10</span>]   <span class="comment">; 将 EAX 中的地址加 0x10 之后的数据拷贝到 EAX</span></span><br><span class="line"><span class="keyword">OR</span> <span class="built_in">EAX</span>,<span class="built_in">EAX</span>                      <span class="comment">; 是否为 0</span></span><br><span class="line"><span class="keyword">RETN</span>                            <span class="comment">; 返回</span></span><br></pre></td></tr></table></figure>
-
-<p>验证一下：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glkdp9qncvj31ff0u0qdy.jpg" alt="验证ProcessHeap"></p>
-</li>
-</ol>
-</li>
-<li><p>两个标志分析完毕，接下来就要说说如何绕过了，不能每次都手动修改吧；</p>
-<p>这里需要借助两个<code>OD</code>插件<code>HideDebugger</code>和<code>HideOD</code>；</p>
-<p>设置如下图：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gll7skb4c3j31ff0u048h.jpg" alt="插件设置"></p>
-<p>细心的同学会发现，这里的设置和上节课一模一样，是的，设置相同，但是重点不同；</p>
-<p>虽然之前设置了某些选项，但只是照猫画虎，不知其意，相信学完这节内容，就会理解这样设置的意图；</p>
-</li>
-<li><p>验证一下插件是否生效：</p>
-<p>程序倒入<code>OD</code>不要运行，在<code>数据窗口</code>中跟随<code>EBX</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gll8umchjbj31ff0u07ez.jpg" alt="前两个绕过"></p>
-<p>可以在<code>数据窗口</code>直观的看到，<code>IsDebuggerPresent</code>和<code>NtGlobalFlag</code>检测的位置已经成功置 0，绕过检测，至于<code>ProcessHeap</code>，<code>Ctrl + G</code>跟随地址查看：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1gll931b41xj31ff0u0qd9.jpg" alt="最后一个绕过"></p>
-</li>
-</ul>
-</li>
-<li><p>聊完两个标志，再来聊聊另外一个知识点：一个崩溃：</p>
-<p>一个崩溃不是说 Windows 的 API 又有特殊的用途或参数，或者说是开发人员思路清奇把 API 用出了花儿，而是<code>OD</code>的 bug：当被调试的程序通过 OutputDebugString 输出超长的一串调试字符串的时候，OllyDbg 无法处理导致崩溃；</p>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>Windows</category>
-        <category>逆向分析</category>
-      </categories>
-      <tags>
-        <tag>反调试</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>SFX 功能定位 OEP</title>
     <url>/posts/3371155739/</url>
     <content><![CDATA[<blockquote>
@@ -4615,107 +4615,6 @@
       </tags>
   </entry>
   <entry>
-    <title>VB 调试之分析 N-Code（二）</title>
-    <url>/posts/3794155287/</url>
-    <content><![CDATA[<blockquote>
-<p>之前分析过这个 CrackMe（参见：VB 调试之分析 N-Code（一）），需要借助修改版的 OD 才能去除 NAG 窗口，在阅读<a href="https://reversecore.com/">逆向工程核心原理</a>一书后，学到了一种新的技巧，记录下来；</p>
-</blockquote>
-<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-21">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
-</ul>
-<span id="more"></span>
-
-<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
-<li><p>将<code>CrackMe</code>倒入<code>OD</code>，查找<code>rtcMsgBox</code>并设置断点：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpdqgghp6j31b80u0jun.jpg" alt="查找"><br><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpdsakoemj31b40u0jv4.jpg" alt="设置断点"></p>
-</li>
-<li><p>然后<code>F9</code>运行程序，程序会中断在调用位置，与直接给 API 设置的断点不同，这样设置的断点会中断在调用位置，而给 API 设置的断点会中断在<code>rtcMsgBox</code>函数的行首：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpdxeqg7cj31b20u0n0o.jpg" alt="调用位置"></p>
-</li>
-<li><p>向上滚动代码，找到函数栈帧，然后设置断点：</p>
-<p>至于什么是栈帧？</p>
-<p>ESP 始终指向栈的顶端，程序运行中，ESP 寄存器的值随时变化，访问栈中函数的局部变量、参数时，若以 ESP 的值为基准会十分困难，使 CPU 很难引用到准确的位置；</p>
-<p>所以，调用函数时，先要把作为基准点（函数起始地址）的 ESP 值保存到 EBP，并维持在函数内部，这样，无论 ESP 如何变化，以 EBP 的值为基准总是能够安全的访问到相关函数的局部变量、参数、返回地址，这就是栈帧；</p>
-<p>也就是说，ESP 寄存器承担着栈顶指针的作用，而 EBP 寄存器则负责行使栈帧指针的职能；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpedvtcsej31b40u0tcb.jpg" alt="函数栈帧"></p>
-</li>
-<li><p>取消其它断点，重载并运行程序，程序会在断点处中断：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpeifwm5kj31b40u078b.jpg" alt="断点处中断"></p>
-<p>然后在<code>堆栈窗口</code>选择<code>反汇编窗口中跟随</code>到调用位置；</p>
-</li>
-<li><p>给调用位置和返回位置设置<code>F2</code>断点并取消其它断点：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpemqmyx6j31b40u0q6s.jpg" alt="设置两个断点"></p>
-</li>
-<li><p>重载并运行程序，程序中断在调用位置设置的断点处：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpepoqti8j31b40u078f.jpg" alt="调用位置栈顶指针"></p>
-<p>记录调用位置栈顶指针的地址；</p>
-</li>
-<li><p><code>F9</code>运行程序，NAG 窗口弹出，点击确定，程序中断在函数的返回位置：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpeuabiakj31au0u0wil.jpg" alt="返回位置栈顶指针"></p>
-<p>记录返回位置栈顶指针的地址；</p>
-</li>
-<li><p>用返回位置的栈顶指针也就是 ESP 的值减去调用位置 ESP 的值；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpey3glw9j30pk0go0tj.jpg" alt="ESP相减"></p>
-<p>以图为例：<code>0012FA10 - 0012FA08 = 8(16 进制)</code>，是不是可以这么理解：在调用函数中使用了 8 个字节的栈内存；</p>
-</li>
-<li><p>Win32 API 使用的函数调用约定是 stdcall 方式，这种方式的栈内存由被调用者清理，在这里就是由被调用的函数清理，如果在函数的起始位置直接清理栈内存，函数就不会被执行，也就不会弹出 NAG 窗口了；</p>
-<p>函数调用约定参见：寄存器小记</p>
-</li>
-<li><p>重载并运行程序，程序中断在调用位置，<code>F7</code>单步步入到函数内部：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpfnfbtjvj31b50u0wik.jpg" alt="再次中断"></p>
-<p>然后来到了 VB 程序类似于交通枢纽的位置，继续<code>F7</code>，跳转到创建 NAG 窗口的函数内部；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpfqj3wzxj31b60u0juw.jpg" alt="交通枢纽"></p>
-<p>创建 NAG 窗口的函数：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpfuhpl8ij31b70u041w.jpg" alt="创建 NAG 窗口的函数"></p>
-<p>咦，好眼熟啊，是的，这里就是设置程序第 1 个断点的函数，调用<code>rtcMsgBox</code>的函数；</p>
-</li>
-<li><p>之前的步骤终于派上用场了，根据计算，调用创建 NAG 窗口的函数会使用 8 个字节的栈内存，所以，修改函数的行首，清理栈内存：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpg1bxiquj31b40u0q6s.jpg" alt="清理栈内存"></p>
-<p>然后运行程序，没有 NAG 窗口，直接弹出程序主窗体；</p>
-</li>
-<li><p>保存修改到可执行文件，然后运行程序：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpg54qpa0j30f00eut95.jpg" alt="运行程序"></p>
-</li>
-<li><p>将修改后的 CrackMe 倒入<code>OD</code>，开始处理序列号的问题，然后发现，给<code>rtcMsgBox</code>设置断点后，程序并不会中断，怎么办？</p>
-<p>既然程序在输入错误的序列号后会弹出错误弹窗，那么程序内部肯定验证了序列号，那就查找关于字符串比较的函数：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpghdpk83j31b80u0adv.jpg" alt="vbastrcmp"></p>
-<p>找到<code>__vbaStrCmp</code>并设置断点，然后<code>F9</code>运行程序；</p>
-</li>
-<li><p>程序中断在调用<code>__vbaStrCmp</code>的位置，然后，在 EAX 中发现了输入的随机序列号：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpgllvlhaj31bk0u0787.jpg" alt="发现序列号"></p>
-<p>既然 EAX 是第 2 参数，那么 ECX 中存放的就是第 1 参数，可能就是真正的序列号；</p>
-</li>
-<li><p>数据窗口中跟随 ECX 后发现，西欧文字系统无法显示，就是一堆乱码，既然真实注册码无法使用，那有没有可能让任意字符成为注册码，继续向下分析：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnphe6x02uj31ba0u0q7k.jpg" alt="返回非0"></p>
-<p>首先，向下执行一行代码后，EAX 为非 0 值，这里使用的是<code>__vbaStrCmp</code>，所以非 0 说明不相等；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnphegy116j31bd0u0781.jpg" alt="操作EDI"></p>
-<p>接着，把返回值拷贝到 EDI 中，进行了一系列操作后，来到了一个跳转，这就很可疑了；</p>
-<p>这里对 EDI 进行的一系列操作，如果 EDI 为 0，则没有任何影响，最后的结果是跳转实现，但随机注册码和指定字符串比较，结果肯定不为 0，最终的结果是跳转失败；</p>
-<p>按照这个逻辑来推断，这个跳转应该是关键跳转，如何证明呢？修改<code>JE</code>为<code>JMP</code>，然后运行程序：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnphla0vxzj31b20u0jvy.jpg" alt="正确弹窗"></p>
-<p>修改<code>JE</code>为<code>JMP</code>并运行程序后，弹出提示序列号正确的弹窗，至于为什么这是正确的弹窗，很简单，因为它和错误弹窗不一样；</p>
-</li>
-<li><p>保存修改到可执行程序，然后运行程序：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnphohcvjij30si0cudgg.jpg" alt="成功了"></p>
-<p>输入任意字符，点击 OK 后，弹出成功弹窗，结束！</p>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>Windows</category>
-        <category>逆向分析</category>
-        <category>VB</category>
-      </categories>
-      <tags>
-        <tag>VB 调试</tag>
-        <tag>NAG 窗口</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>VB 调试之分析 N-Code（一）</title>
     <url>/posts/1203909517/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -4819,6 +4718,107 @@
 </ol>
 </li>
 </ul>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>Windows</category>
+        <category>逆向分析</category>
+        <category>VB</category>
+      </categories>
+      <tags>
+        <tag>VB 调试</tag>
+        <tag>NAG 窗口</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>VB 调试之分析 N-Code（二）</title>
+    <url>/posts/3794155287/</url>
+    <content><![CDATA[<blockquote>
+<p>之前分析过这个 CrackMe（参见：VB 调试之分析 N-Code（一）），需要借助修改版的 OD 才能去除 NAG 窗口，在阅读<a href="https://reversecore.com/">逆向工程核心原理</a>一书后，学到了一种新的技巧，记录下来；</p>
+</blockquote>
+<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-21">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
+</ul>
+<span id="more"></span>
+
+<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
+<li><p>将<code>CrackMe</code>倒入<code>OD</code>，查找<code>rtcMsgBox</code>并设置断点：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpdqgghp6j31b80u0jun.jpg" alt="查找"><br><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpdsakoemj31b40u0jv4.jpg" alt="设置断点"></p>
+</li>
+<li><p>然后<code>F9</code>运行程序，程序会中断在调用位置，与直接给 API 设置的断点不同，这样设置的断点会中断在调用位置，而给 API 设置的断点会中断在<code>rtcMsgBox</code>函数的行首：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpdxeqg7cj31b20u0n0o.jpg" alt="调用位置"></p>
+</li>
+<li><p>向上滚动代码，找到函数栈帧，然后设置断点：</p>
+<p>至于什么是栈帧？</p>
+<p>ESP 始终指向栈的顶端，程序运行中，ESP 寄存器的值随时变化，访问栈中函数的局部变量、参数时，若以 ESP 的值为基准会十分困难，使 CPU 很难引用到准确的位置；</p>
+<p>所以，调用函数时，先要把作为基准点（函数起始地址）的 ESP 值保存到 EBP，并维持在函数内部，这样，无论 ESP 如何变化，以 EBP 的值为基准总是能够安全的访问到相关函数的局部变量、参数、返回地址，这就是栈帧；</p>
+<p>也就是说，ESP 寄存器承担着栈顶指针的作用，而 EBP 寄存器则负责行使栈帧指针的职能；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpedvtcsej31b40u0tcb.jpg" alt="函数栈帧"></p>
+</li>
+<li><p>取消其它断点，重载并运行程序，程序会在断点处中断：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpeifwm5kj31b40u078b.jpg" alt="断点处中断"></p>
+<p>然后在<code>堆栈窗口</code>选择<code>反汇编窗口中跟随</code>到调用位置；</p>
+</li>
+<li><p>给调用位置和返回位置设置<code>F2</code>断点并取消其它断点：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpemqmyx6j31b40u0q6s.jpg" alt="设置两个断点"></p>
+</li>
+<li><p>重载并运行程序，程序中断在调用位置设置的断点处：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpepoqti8j31b40u078f.jpg" alt="调用位置栈顶指针"></p>
+<p>记录调用位置栈顶指针的地址；</p>
+</li>
+<li><p><code>F9</code>运行程序，NAG 窗口弹出，点击确定，程序中断在函数的返回位置：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpeuabiakj31au0u0wil.jpg" alt="返回位置栈顶指针"></p>
+<p>记录返回位置栈顶指针的地址；</p>
+</li>
+<li><p>用返回位置的栈顶指针也就是 ESP 的值减去调用位置 ESP 的值；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpey3glw9j30pk0go0tj.jpg" alt="ESP相减"></p>
+<p>以图为例：<code>0012FA10 - 0012FA08 = 8(16 进制)</code>，是不是可以这么理解：在调用函数中使用了 8 个字节的栈内存；</p>
+</li>
+<li><p>Win32 API 使用的函数调用约定是 stdcall 方式，这种方式的栈内存由被调用者清理，在这里就是由被调用的函数清理，如果在函数的起始位置直接清理栈内存，函数就不会被执行，也就不会弹出 NAG 窗口了；</p>
+<p>函数调用约定参见：寄存器小记</p>
+</li>
+<li><p>重载并运行程序，程序中断在调用位置，<code>F7</code>单步步入到函数内部：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpfnfbtjvj31b50u0wik.jpg" alt="再次中断"></p>
+<p>然后来到了 VB 程序类似于交通枢纽的位置，继续<code>F7</code>，跳转到创建 NAG 窗口的函数内部；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpfqj3wzxj31b60u0juw.jpg" alt="交通枢纽"></p>
+<p>创建 NAG 窗口的函数：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpfuhpl8ij31b70u041w.jpg" alt="创建 NAG 窗口的函数"></p>
+<p>咦，好眼熟啊，是的，这里就是设置程序第 1 个断点的函数，调用<code>rtcMsgBox</code>的函数；</p>
+</li>
+<li><p>之前的步骤终于派上用场了，根据计算，调用创建 NAG 窗口的函数会使用 8 个字节的栈内存，所以，修改函数的行首，清理栈内存：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpg1bxiquj31b40u0q6s.jpg" alt="清理栈内存"></p>
+<p>然后运行程序，没有 NAG 窗口，直接弹出程序主窗体；</p>
+</li>
+<li><p>保存修改到可执行文件，然后运行程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpg54qpa0j30f00eut95.jpg" alt="运行程序"></p>
+</li>
+<li><p>将修改后的 CrackMe 倒入<code>OD</code>，开始处理序列号的问题，然后发现，给<code>rtcMsgBox</code>设置断点后，程序并不会中断，怎么办？</p>
+<p>既然程序在输入错误的序列号后会弹出错误弹窗，那么程序内部肯定验证了序列号，那就查找关于字符串比较的函数：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpghdpk83j31b80u0adv.jpg" alt="vbastrcmp"></p>
+<p>找到<code>__vbaStrCmp</code>并设置断点，然后<code>F9</code>运行程序；</p>
+</li>
+<li><p>程序中断在调用<code>__vbaStrCmp</code>的位置，然后，在 EAX 中发现了输入的随机序列号：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnpgllvlhaj31bk0u0787.jpg" alt="发现序列号"></p>
+<p>既然 EAX 是第 2 参数，那么 ECX 中存放的就是第 1 参数，可能就是真正的序列号；</p>
+</li>
+<li><p>数据窗口中跟随 ECX 后发现，西欧文字系统无法显示，就是一堆乱码，既然真实注册码无法使用，那有没有可能让任意字符成为注册码，继续向下分析：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnphe6x02uj31ba0u0q7k.jpg" alt="返回非0"></p>
+<p>首先，向下执行一行代码后，EAX 为非 0 值，这里使用的是<code>__vbaStrCmp</code>，所以非 0 说明不相等；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnphegy116j31bd0u0781.jpg" alt="操作EDI"></p>
+<p>接着，把返回值拷贝到 EDI 中，进行了一系列操作后，来到了一个跳转，这就很可疑了；</p>
+<p>这里对 EDI 进行的一系列操作，如果 EDI 为 0，则没有任何影响，最后的结果是跳转实现，但随机注册码和指定字符串比较，结果肯定不为 0，最终的结果是跳转失败；</p>
+<p>按照这个逻辑来推断，这个跳转应该是关键跳转，如何证明呢？修改<code>JE</code>为<code>JMP</code>，然后运行程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnphla0vxzj31b20u0jvy.jpg" alt="正确弹窗"></p>
+<p>修改<code>JE</code>为<code>JMP</code>并运行程序后，弹出提示序列号正确的弹窗，至于为什么这是正确的弹窗，很简单，因为它和错误弹窗不一样；</p>
+</li>
+<li><p>保存修改到可执行程序，然后运行程序：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008eGmZEly1gnphohcvjij30si0cudgg.jpg" alt="成功了"></p>
+<p>输入任意字符，点击 OK 后，弹出成功弹窗，结束！</p>
 </li>
 </ol>
 ]]></content>
@@ -5419,204 +5419,6 @@
       </tags>
   </entry>
   <entry>
-    <title>WSL2 下 VS Code 编写 C 代码</title>
-    <url>/posts/3184033620/</url>
-    <content><![CDATA[<blockquote>
-<p>记录 WSL2 下使用 VS Code 编写 C 代码并通过 Clang 调试时遇到的问题。</p>
-</blockquote>
-<h4 id="前戏"><a href="#前戏" class="headerlink" title="前戏"></a>前戏</h4><p>WSL2 的安装就不用说了，官方文档的描述非常详细，网上还有诸多大佬披荆斩棘写了很多好教程，搜索引擎一波就啥都搞定了；</p>
-<p>VS Code 的语言插件就更不用说了，指定文件后缀并保存后，自然而然就知道需要装啥插件了，实在不行不还有搜索引擎嘛；</p>
-<span id="more"></span>
-
-<p>这里只安装了</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNgy1gutsz57gzij60ce02m0so02.jpg" alt="C/C++"></p>
-<p>和</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNgy1gutsz2guvlj60ce02imx602.jpg" alt="Remote - WSL"></p>
-<p>既然要用 Clang，当然需要安装了：在 WSL2 的子系统 linux 上安装<code>llvm</code>，<code>lldb</code>，<code>clang</code>；</p>
-<p>然后随便写个 demo 用于生成调试配置文件：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNgy1gutt2ndp26j60xm0d7mz002.jpg" alt="1，2"></p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNgy1gutt3dybd2j60za0ag0ub02.jpg" alt="3"></p>
-<p>WSL 当然要选 <code>C++(GDB/LLDB)</code>了；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNgy1gutt3fie12j60l408z3zw02.jpg" alt="4"></p>
-<p>首先要选的是 Clang，至于选哪个看心情，反正哪个都能用，区别在于<code>/usr/bin</code>和<code>/usr/sbin</code>，搜索引擎一波就知道差异和选择了；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNgy1gutt7faff4j60cw06ggls02.jpg" alt="5"></p>
-<p>至此，调试文件就生成了，开始调试，问题也就来了；</p>
-<h4 id="问题一：找不到lldb-mi-xxx，xxx-表示版本号"><a href="#问题一：找不到lldb-mi-xxx，xxx-表示版本号" class="headerlink" title="问题一：找不到lldb-mi-xxx，xxx 表示版本号"></a>问题一：找不到<code>lldb-mi-xxx</code>，xxx 表示版本号</h4><p>无图无真相：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNgy1gutta2i2ncj60vb0t0q7502.jpg" alt="error"></p>
-<p>看到问题提示时一头雾水，什么情况，还没开始就结束了？难道<code>lldb</code>中不包含<code>lldb-mi</code>吗？</p>
-<blockquote>
-<p>lldb-mi: MI 调试程序；</p>
-</blockquote>
-<p>几经查找后发现，貌似是 10.0 版本之后就不包含<code>lldb-mi</code>了，如果需要使用则自己编译，那还等什么；</p>
-<p>官方存储库 <a href="https://github.com/lldb-tools/lldb-mi">lldb-tools&#x2F;lldb-mi</a> 根据文档编译即可（在 WSL2 的 linux 上）；</p>
-<p>懒得看请运行：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git <span class="built_in">clone</span> https://github.com/lldb-tools/lldb-mi.git</span><br><span class="line"><span class="built_in">cd</span> lldb-mi</span><br><span class="line">make .</span><br><span class="line">make --build .</span><br><span class="line">sudo <span class="built_in">cp</span> src/lldb-mi /usr/bin</span><br></pre></td></tr></table></figure>
-
-<p>当然，也可以不管不顾直接调试（我就是这么干的 😭），毕竟“不听不听，王八念经”，然后会得到以下错误：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1guttwgzuy2j60fx040wev02.jpg" alt="error1"></p>
-<p>或者：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">Unable to start debugging. Unable to establish a connection to LLDB. The following message was written to stderr:</span><br><span class="line">lldb: unrecognized option &#x27;--interpreter=mi&#x27;</span><br><span class="line">...</span><br><span class="line">(此处略去好多字儿)</span><br></pre></td></tr></table></figure>
-
-<p>最后还得滚回去（咳咳）编译<code>lldb-mi</code>；</p>
-<p>莫慌，还有其他解决方案，安装<code>CodeLLDB</code>插件，一触即达，也就不会遇到下面两个问题了；</p>
-<h5 id="问题一点五：编译lldb-mi时cmake命令不存在？"><a href="#问题一点五：编译lldb-mi时cmake命令不存在？" class="headerlink" title="问题一点五：编译lldb-mi时cmake命令不存在？"></a>问题一点五：编译<code>lldb-mi</code>时<code>cmake</code>命令不存在？</h5><p>这还不简单，<code>sudo pacman -S cmake</code>（仅适用于 Arch，其他版本请自查）；</p>
-<h4 id="问题二：编译lldb-mi时出现”CMAKE-MAKE-PROGRAM-is-not-set-”"><a href="#问题二：编译lldb-mi时出现”CMAKE-MAKE-PROGRAM-is-not-set-”" class="headerlink" title="问题二：编译lldb-mi时出现”CMAKE_MAKE_PROGRAM is not set.”"></a>问题二：编译<code>lldb-mi</code>时出现”CMAKE_MAKE_PROGRAM is not set.”</h4><p>出现此问题的应该不多，这里使用的是 Arch，其他 WSL2 子系统未知；</p>
-<p>如果你也使用的是 Arch，并且是通过 <a href="https://github.com/yuk7/ArchWSL">yuk7&#x2F;ArchWSL</a> 安装的，那么就需要手动安装<code>base-devel</code>基础包，单独安装 cmake 会报此错误；</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">sudo pacman -S base-devel</span><br></pre></td></tr></table></figure>
-
-<p>如果是自己下载手动安装的 Arch（没有使用<code>yuk7/ArchWSL</code>），则不存在此问题；</p>
-<p>然后编译并拷贝<code>lldb-mi</code>到<code>/usr/bin</code>或其他<code>$PATH</code>路径，然后修改<code>launch.json</code>的<code>&quot;miDebuggerPath&quot;</code>为<code>&quot;/usr/bin/lldb-mi&quot;</code>(默认是”&#x2F;usr&#x2F;bin&#x2F;lldb-mi-xxx”)，当然，也可以在拷贝时改名为<code>lldb-mi-xxx</code>，配置文件就不用改了；</p>
-<p>目前就遇到这两个问题，既然解决了，测试一下：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNgy1gutuesp8g5j61950qlwie02.jpg" alt="ok"></p>
-]]></content>
-      <categories>
-        <category>Windows</category>
-        <category>C</category>
-      </categories>
-      <tags>
-        <tag>VS Code</tag>
-        <tag>WSL2</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Webpack</title>
-    <url>/posts/3750383396/</url>
-    <content><![CDATA[<h2 id="webpack"><a href="#webpack" class="headerlink" title="webpack"></a>webpack</h2><p>用于现代 JavaScript 应用程序的静态模块打包工具；</p>
-<h3 id="基本配置"><a href="#基本配置" class="headerlink" title="基本配置"></a>基本配置</h3><p>请通读文档并动手尝试，<a href="https://www.webpackjs.com/">webpackjs.com</a>更新较为滞后，请阅读<a href="https://webpack.docschina.org/configuration/">官方文档</a></p>
-<span id="more"></span>
-
-<p>包括但不限于以下常见的配置项：</p>
-<ol>
-<li><p>mode：webpack 的工作模式，默认 production，可选 development 及 none；</p>
-</li>
-<li><p>entry：入口配置，如：</p>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="attr">entry</span>: &#123;</span><br><span class="line">  <span class="comment">// 入口名对应的入口文件</span></span><br><span class="line">  <span class="attr">index</span>: <span class="string">&quot;./src/index.js&quot;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>output：输出配置，如：</p>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="attr">output</span>: &#123;</span><br><span class="line"> <span class="comment">// 输出文件，[name] 动态获取 entry 的入口名</span></span><br><span class="line">  <span class="attr">filename</span>: <span class="string">&quot;[name].bundle.js&quot;</span>,</span><br><span class="line">  <span class="comment">// 输出目录，绝对路径</span></span><br><span class="line">  <span class="attr">path</span>: path.<span class="title function_">resolve</span>(__dirname, <span class="string">&#x27;dist&#x27;</span>),</span><br><span class="line">  <span class="comment">// 每次构建清空输出目录</span></span><br><span class="line">  <span class="attr">clean</span>: <span class="literal">true</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>module：决定如何处理项目中不同类型的模块（文件），如：</p>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="attr">module</span>: &#123;</span><br><span class="line">  <span class="attr">rules</span>: [</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="comment">// 处理 css</span></span><br><span class="line">      <span class="attr">test</span>: <span class="regexp">/\.css$/i</span>,</span><br><span class="line">      <span class="attr">use</span>: [<span class="string">&quot;style-loader&quot;</span>, <span class="string">&quot;css-loader&quot;</span>],</span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="comment">// 处理图片</span></span><br><span class="line">      <span class="attr">test</span>: <span class="regexp">/\.(png|svg|jpg|gif)$/i</span>,</span><br><span class="line">      <span class="attr">use</span>: [</span><br><span class="line">        &#123;</span><br><span class="line">          <span class="attr">loader</span>: <span class="string">&quot;file-loader&quot;</span>,</span><br><span class="line">          <span class="attr">options</span>: &#123;&#125;,</span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">          <span class="attr">loader</span>: <span class="string">&quot;url-loader&quot;</span>,</span><br><span class="line">          <span class="attr">options</span>: &#123;</span><br><span class="line">            <span class="attr">limit</span>: <span class="number">5</span> * <span class="number">1024</span>,</span><br><span class="line">          &#125;,</span><br><span class="line">        &#125;,</span><br><span class="line">      ],</span><br><span class="line">    &#125;,</span><br><span class="line">  ],</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>plugins：通过内置插件或第三方插件自定义 webpack 构建过程，如：</p>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="attr">plugins</span>: [</span><br><span class="line">  <span class="comment">// 生成 index.html 并自动引入 webpack 生成的 bundle</span></span><br><span class="line">  <span class="keyword">new</span> <span class="title class_">HtmlWebpackPlugin</span>(),</span><br><span class="line">  <span class="comment">// 热更新</span></span><br><span class="line">  <span class="keyword">new</span> webpack.<span class="title class_">HotModuleReplacementPlugin</span>(),</span><br><span class="line">],</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>devtool：控制是否生成 source map，如：</p>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="attr">devtool</span>: <span class="string">&quot;inline-source-map&quot;</span>,</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>devServer：自动重载修改后的代码，需要安装 webpack-dev-server 插件，如：</p>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="attr">devServer</span>: &#123;</span><br><span class="line"> <span class="comment">// 静态文件路径</span></span><br><span class="line">  <span class="attr">static</span>: <span class="string">&#x27;./dist&#x27;</span>,</span><br><span class="line">  <span class="comment">// 监听端口</span></span><br><span class="line">  <span class="attr">port</span>: <span class="number">9008</span>,</span><br><span class="line">  <span class="comment">// 自动打开浏览器</span></span><br><span class="line">  <span class="attr">open</span>: <span class="literal">true</span>,</span><br><span class="line">  <span class="comment">// 跨域代理</span></span><br><span class="line">  <span class="attr">proxy</span>: &#123;</span><br><span class="line">   <span class="comment">// 将 /api 的请求代理到 http://localhost:8888/api</span></span><br><span class="line">    <span class="string">&#x27;/api&#x27;</span>: <span class="string">&quot;http://localhost:8888&quot;</span>,</span><br><span class="line">    <span class="comment">// 将 /api 的请求代理到 http://localhost:8888</span></span><br><span class="line">    <span class="string">&#x27;/api&#x27;</span>: &#123;</span><br><span class="line">     <span class="attr">target</span>: <span class="string">&#x27;http://localhost:8888&#x27;</span>,</span><br><span class="line">     <span class="attr">pathRewrite</span>: &#123;<span class="string">&#x27;^api&#x27;</span>, <span class="string">&#x27;&#x27;</span>&#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>使用 webpack-merge 拆分配置文件；</p>
-<p>webpack 5 引入方式变化<code>const &#123; merge &#125; = require(&quot;webpack-merge&quot;);</code></p>
-</li>
-</ol>
-<h3 id="高级配置（webpack-常见的性能优化）"><a href="#高级配置（webpack-常见的性能优化）" class="headerlink" title="高级配置（webpack 常见的性能优化）"></a>高级配置（webpack 常见的性能优化）</h3><h4 id="优化打包效率"><a href="#优化打包效率" class="headerlink" title="优化打包效率"></a>优化打包效率</h4><ol>
-<li><p>优化 babel-loader</p>
-<ul>
-<li>使用缓存；</li>
-<li>限制打包范围；</li>
-</ul>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="attr">module</span>: &#123;</span><br><span class="line">  <span class="attr">rules</span>: [</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">test</span>: <span class="regexp">/\.js$/i</span>,</span><br><span class="line">      <span class="attr">include</span>: path.<span class="title function_">resolve</span>(__dirname, <span class="string">&quot;src&quot;</span>),</span><br><span class="line">      <span class="attr">loader</span>: <span class="string">&quot;babel-loader?cacheDirectory&quot;</span>,</span><br><span class="line">    &#125;,</span><br><span class="line">  ],</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>IgnorePlugin：第三方模块按需导入，避免引入无用模块，减小代码体积，提高构建速度；</p>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="attr">plugins</span>: [</span><br><span class="line"> <span class="keyword">new</span> webpack.<span class="title class_">IgnorePlugin</span>(&#123;</span><br><span class="line">   <span class="comment">// 直接引入 moment/local/ 将被忽略</span></span><br><span class="line">   <span class="attr">resourceRegExp</span>: <span class="regexp">/moment\/locale\//</span>,</span><br><span class="line"> &#125;)</span><br><span class="line">],</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>module.noParse：避免重复的打包，如：</p>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="attr">module</span>: &#123;</span><br><span class="line">  <span class="attr">noParse</span>: <span class="regexp">/\.min\.js$/</span>,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>HappyPack：启用多进程打包，提高构建速度，如：</p>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="attr">module</span>: &#123;</span><br><span class="line">  <span class="attr">rules</span>: [</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">test</span>: <span class="regexp">/\.js$/i</span>,</span><br><span class="line">      <span class="attr">use</span>: <span class="string">&#x27;HappyPack/loader?id=js&#x27;</span></span><br><span class="line">    &#125;,</span><br><span class="line">  ],</span><br><span class="line">&#125;,</span><br><span class="line"><span class="attr">plugins</span>: [</span><br><span class="line"> <span class="keyword">new</span> <span class="title class_">HappyPack</span>(&#123;</span><br><span class="line">   <span class="comment">// HappyPack 的全局唯一 id，用来匹配 rules</span></span><br><span class="line">   <span class="attr">id</span>: <span class="string">&#x27;js&#x27;</span>,</span><br><span class="line">   <span class="attr">loaders</span>: [<span class="string">&#x27;babel-loader&#x27;</span>],</span><br><span class="line"> &#125;)</span><br><span class="line">],</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>ParallelUglifyPlugin：启用多进程压缩 JS，如：</p>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="attr">plugins</span>: [</span><br><span class="line">  <span class="comment">// 启用 ParallelUglifyPlugin</span></span><br><span class="line">  <span class="keyword">new</span> <span class="title class_">ParallelUglifyPlugin</span>()</span><br><span class="line">],</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>DllPlugin：将不常改动的源文件拆分成单独的 bundle，如：</p>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="attr">entry</span>: &#123;</span><br><span class="line">  <span class="attr">jQuery</span>: [<span class="string">&#x27;jQuery&#x27;</span>]</span><br><span class="line">&#125;,</span><br><span class="line"><span class="attr">output</span>: &#123;</span><br><span class="line">  <span class="attr">filename</span>: <span class="string">&#x27;[name].dll.js&#x27;</span>,</span><br><span class="line">  <span class="attr">path</span>: path.<span class="title function_">resolve</span>(__dirname, <span class="string">&#x27;dist&#x27;</span>),</span><br><span class="line">  <span class="comment">// 动态链接库的全局变量前缀，防止命名冲突</span></span><br><span class="line">  <span class="attr">library</span>: <span class="string">&#x27;_dll_[name]&#x27;</span>,</span><br><span class="line">&#125;,</span><br><span class="line"><span class="attr">plugins</span>: [</span><br><span class="line">  <span class="keyword">new</span> <span class="title class_">DllPlugin</span>(&#123;</span><br><span class="line">   <span class="comment">// 动态链接库变量名，和 output.library 保持一致</span></span><br><span class="line">    <span class="attr">name</span>: <span class="string">&#x27;_dll_[name]&#x27;</span>,</span><br><span class="line">    <span class="attr">path</span>: path.<span class="title function_">resolve</span>(__dirname, <span class="string">&#x27;dist&#x27;</span>, <span class="string">&#x27;[name].manifest.json&#x27;</span>)</span><br><span class="line">  &#125;)</span><br><span class="line">],</span><br></pre></td></tr></table></figure></li>
-</ol>
-<h4 id="优化产出代码"><a href="#优化产出代码" class="headerlink" title="优化产出代码"></a>优化产出代码</h4><ol>
-<li><p>小图片 base64 编码，如</p>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="attr">module</span>: &#123;</span><br><span class="line"> <span class="attr">rules</span>: [</span><br><span class="line">   &#123;</span><br><span class="line">     <span class="attr">test</span>: <span class="regexp">/\.(png|svg|jpg|gif)$/i</span>,</span><br><span class="line">     <span class="attr">use</span>: [</span><br><span class="line">       &#123;</span><br><span class="line">         <span class="attr">loader</span>: <span class="string">&quot;file-loader&quot;</span>,</span><br><span class="line">         <span class="attr">options</span>: &#123;&#125;,</span><br><span class="line">       &#125;,</span><br><span class="line">       &#123;</span><br><span class="line">         <span class="attr">loader</span>: <span class="string">&quot;url-loader&quot;</span>,</span><br><span class="line">         <span class="attr">options</span>: &#123;</span><br><span class="line">           <span class="attr">limit</span>: <span class="number">5</span> * <span class="number">1024</span>,</span><br><span class="line">           <span class="attr">outputPath</span>: <span class="string">&#x27;/images/&#x27;</span></span><br><span class="line">         &#125;,</span><br><span class="line">       &#125;,</span><br><span class="line">     ],</span><br><span class="line">   &#125;,</span><br><span class="line"> ],</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>bundle 使用 hash，内容不变则使用缓存，如：</p>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="attr">output</span>: &#123;</span><br><span class="line"> <span class="comment">// contentHash 变为小写 contenthash</span></span><br><span class="line"> <span class="attr">filename</span>: <span class="string">&quot;bundle.[contenthash:8].js&quot;</span>,</span><br><span class="line">&#125;,</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>懒加载，使用 ES6 Module 语法延迟加载模块；</p>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="built_in">setTimeout</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="title function_">import</span>(<span class="string">&quot;./module.js&quot;</span>).<span class="title function_">then</span>(<span class="function">(<span class="params"><span class="variable language_">module</span></span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="comment">// 必须使用 default</span></span><br><span class="line">    <span class="keyword">const</span> print = <span class="variable language_">module</span>.<span class="property">default</span>;</span><br><span class="line">    <span class="title function_">print</span>();</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;, <span class="number">2000</span>);</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>MiniCssExtractPlugin：从 JS 中抽离 CSS 到单独的文件，如：</p>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="attr">module</span>: &#123;</span><br><span class="line">  <span class="attr">rules</span>: [</span><br><span class="line">    &#123; <span class="comment">// 抽离 css</span></span><br><span class="line">      <span class="attr">test</span>: <span class="regexp">/\.css$/</span>,</span><br><span class="line">      <span class="attr">loader</span>: [</span><br><span class="line">        <span class="comment">// 注意，这里不再使用 style-loader</span></span><br><span class="line">        <span class="title class_">MiniCssExtractPlugin</span>.<span class="property">loader</span>,</span><br><span class="line">        <span class="string">&#x27;css-loader&#x27;</span>,</span><br><span class="line">      ]</span><br><span class="line">    &#125;,</span><br><span class="line">  ]</span><br><span class="line">&#125;,</span><br><span class="line"><span class="attr">plugins</span>: [</span><br><span class="line">  <span class="comment">// 抽离 css 文件</span></span><br><span class="line">  <span class="keyword">new</span> <span class="title class_">MiniCssExtractPlugin</span>(&#123;</span><br><span class="line">      <span class="attr">filename</span>: <span class="string">&#x27;css/main.[contentHash:8].css&#x27;</span></span><br><span class="line">  &#125;)</span><br><span class="line">],</span><br><span class="line"><span class="attr">optimization</span>: &#123;</span><br><span class="line">  <span class="attr">minimizer</span>: [</span><br><span class="line">    <span class="comment">// 压缩 css</span></span><br><span class="line">    <span class="keyword">new</span> <span class="title class_">CssMinimizerWebpackPlugin</span>()</span><br><span class="line">  ],</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>MiniCssExtractPlugin webpack5 已内置，不需要 🙅‍♂️ 安装插件了；</p>
-</li>
-<li><p>splitChunks：提取公共代码，避免重复打包，减小代码体积，如：</p>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="attr">optimization</span>: &#123;</span><br><span class="line">  <span class="attr">splitChunks</span>: &#123;</span><br><span class="line">    <span class="comment">// all 表示同步，异步代码都分割</span></span><br><span class="line">     <span class="attr">chunks</span>: <span class="string">&#x27;all&#x27;</span>,</span><br><span class="line">     <span class="attr">cacheGroups</span>: &#123;</span><br><span class="line">       <span class="comment">// 第三方模块</span></span><br><span class="line">       <span class="attr">vendor</span>: &#123;</span><br><span class="line">         <span class="comment">// 只要是 node_modules 中的模块就包含在 vendor 中</span></span><br><span class="line">         <span class="attr">test</span>: <span class="regexp">/node_modules/</span>，</span><br><span class="line">         <span class="comment">// chunk 名</span></span><br><span class="line">         <span class="attr">name</span>: <span class="string">&#x27;vendor&#x27;</span>,</span><br><span class="line">         <span class="comment">// 小于设定大小则不分割</span></span><br><span class="line">         <span class="attr">miniSize</span>: <span class="number">0</span>,</span><br><span class="line">         <span class="comment">// 最少被复用的次数</span></span><br><span class="line">         <span class="attr">miniChunks</span>: <span class="number">1</span>,</span><br><span class="line">         <span class="comment">// 抽离优先级</span></span><br><span class="line">         <span class="attr">priority</span>: <span class="number">1</span>,</span><br><span class="line">       &#125;,</span><br><span class="line">       <span class="comment">// 公共模块</span></span><br><span class="line">       <span class="attr">common</span>: &#123;</span><br><span class="line">         <span class="comment">// chunk 名</span></span><br><span class="line">         <span class="attr">name</span>: <span class="string">&#x27;common&#x27;</span>,</span><br><span class="line">         <span class="comment">// 小于设定大小则不分割</span></span><br><span class="line">         <span class="attr">miniSize</span>: <span class="number">3</span> * <span class="number">1024</span>,</span><br><span class="line">         <span class="comment">// 最少被复用的次数</span></span><br><span class="line">         <span class="attr">miniChunks</span>: <span class="number">2</span>,</span><br><span class="line">         <span class="comment">// 抽离优先级</span></span><br><span class="line">         <span class="attr">priority</span>: <span class="number">0</span>,</span><br><span class="line">       &#125;</span><br><span class="line">     &#125;</span><br><span class="line">  &#125;,</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>IgnorePlugin：第三方模块按需加载，减小代码体积；</p>
-</li>
-<li><p>使用 CDN 来加载静态资源，提高访问速度；</p>
-</li>
-<li><p>使用<code>mode: &#39;production&#39;</code> 选项，webpack 会进行以下操作：</p>
-<ul>
-<li><p>自动开启代码压缩；</p>
-</li>
-<li><p>某些框架依赖于<code>mode: &#39;production&#39;</code>自动删除调试代码；</p>
-</li>
-<li><p>自动启用 Tree-Shaking，删除未使用的代码；</p>
-<p>必须使用 ES6 Module 才能让 Tree-Shaking 生效；</p>
-<p>ES6 Module 是静态引入，编译时引用；</p>
-<p>commonjs 是动态引入，执行时引用；</p>
-<p>只有 ES6 Module 才能静态分析，实现 Tree-Shaking；</p>
-</li>
-</ul>
-</li>
-</ol>
-<h3 id="module、chunk、bundle-分别是什么，有何区别？"><a href="#module、chunk、bundle-分别是什么，有何区别？" class="headerlink" title="module、chunk、bundle 分别是什么，有何区别？"></a>module、chunk、bundle 分别是什么，有何区别？</h3><p>一份源码在不同场景下的名字；</p>
-<ol>
-<li>module 是各个源码文件，包括第三方模块和自己编写的源码，，webpack 中一切皆模块；</li>
-<li>chunk 是多个模块的合成，webpack 处理时在内存中生成的就是 chunk；</li>
-<li>bundle 是最终的输出文件，一般一个 chunk 对应一个 bundle；</li>
-</ol>
-<h3 id="loader-和-plugin-的区别"><a href="#loader-和-plugin-的区别" class="headerlink" title="loader 和 plugin 的区别"></a>loader 和 plugin 的区别</h3><ol>
-<li><p>loader 是模块转换器，让 webpack 能够处理其他类型的文件，并将其转换为有效的模块；</p>
-</li>
-<li><p>plugin 是扩展增强，让 webpack 可以执行范围更广的任务，如 打包优化，资源管理，注入环境变量等；</p>
-</li>
-</ol>
-<h3 id="webpack-构建流程概述"><a href="#webpack-构建流程概述" class="headerlink" title="webpack 构建流程概述"></a>webpack 构建流程概述</h3><ol>
-<li>初始化：启动构建，从配置文件中读取合并参数，加载 plugin，实例化 complier 对象；</li>
-<li>编译，从 entry 出发，用配置中的每个 loader 对模块进行编译和翻译，并找出依赖关系，递归进行编译处理；</li>
-<li>输出：将编译后的模块根据依赖关系组合成一个个包含多个模块的 chunk，再把每个 chunk 根据配置中的路径和文件名转换成 bundle 并输出到文件系统中；</li>
-</ol>
-<h2 id="babel"><a href="#babel" class="headerlink" title="babel"></a>babel</h2><p>JavaScript 编译器，将 ES2015+ 的语法编译为向后兼容的 JS 语法，使 JS 应用程序可以运行在当前和旧版本的环境中；</p>
-<h3 id="preset-和-plugin"><a href="#preset-和-plugin" class="headerlink" title="preset 和 plugin"></a>preset 和 plugin</h3><p>preset 是常用 plugin 的集合，在 preset 无法满足要求时，可以在 plugin 中进一步扩展；</p>
-<h3 id="babel-polyfill"><a href="#babel-polyfill" class="headerlink" title="babel-polyfill"></a>babel-polyfill</h3><p>babel-polyfill 是 corejs 和 regenerator 库的集合，包含了常用的 polyfill；</p>
-<h3 id="babel-runtime-和-babel-polyfill"><a href="#babel-runtime-和-babel-polyfill" class="headerlink" title="babel-runtime 和 babel-polyfill"></a>babel-runtime 和 babel-polyfill</h3><p>babel-runtime 变量会重新取名，不污染全局环境；<br>babel-polyfill 会污染全局环境，可能会造成命名冲突或变量覆盖；</p>
-<h2 id="webpack-和-babel-的区别"><a href="#webpack-和-babel-的区别" class="headerlink" title="webpack 和 babel 的区别"></a>webpack 和 babel 的区别</h2><ol>
-<li>webpack 是打包构建工具，不关心语法，是多个 loader 和 plugin 的集合；</li>
-<li>babel 是新型语法编译工具，不关心模块化；</li>
-</ol>
-<h2 id="前端为何要进行打包和构建"><a href="#前端为何要进行打包和构建" class="headerlink" title="前端为何要进行打包和构建"></a>前端为何要进行打包和构建</h2><p>随着互联网的发展，前端项目越来越复杂，促使前端开发向模块化发展，模块化可以帮助我们更好的解决复杂应用开发过程中的代码组织问题，也提高了代码复用性，使得开发更加快捷和高效；</p>
-<p>但随着模块化思想的引入，在开发过程中又产生了许多新的问题，如：客户端环境不统一导致的兼容性问题，模块化导致项目资源零散，网络请求增多带来的服务器压力增大、用户体验差等问题促使前端开发中 webpack 等一系列打包构建工具的出现，让我们的应用开发既能享受模块化带来的便利，又不必担心模块化对生产环境产生影响；</p>
-<h3 id="在代码层面"><a href="#在代码层面" class="headerlink" title="在代码层面"></a>在代码层面</h3><ol>
-<li>代码经过合并压缩，体积更小，加载速度更快；</li>
-<li>开发中可以使用 TS、ES6、scss、less 等高级语言或语法，集成了 polyfill、postcss 等提高兼容性的插件，提高开发效率的同时也不必担心兼容性问题；</li>
-<li>同时集成了语法检查等工具，在开发过程中就可以及时发现错误并改正，降低了代码出错的几率，节省了 debug 时间；</li>
-</ol>
-<h3 id="在开发流程方面"><a href="#在开发流程方面" class="headerlink" title="在开发流程方面"></a>在开发流程方面</h3><ol>
-<li>统一高效的开发环境，以及统一的构建流程和产出标准，大大的提高了项目开发的质量；</li>
-<li>集成公司构建规范，使得项目的开发可以标准化、高质量、高效率的完成；</li>
-</ol>
-]]></content>
-      <categories>
-        <category>Web</category>
-        <category>JavaScript</category>
-      </categories>
-      <tags>
-        <tag>webpack</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>WEB API</title>
     <url>/posts/306979106/</url>
     <content><![CDATA[<h2 id="DOM"><a href="#DOM" class="headerlink" title="DOM"></a>DOM</h2><h3 id="DOM-操作的常用-API"><a href="#DOM-操作的常用-API" class="headerlink" title="DOM 操作的常用 API"></a>DOM 操作的常用 API</h3><ol>
@@ -5818,6 +5620,204 @@
         <tag>跨域</tag>
         <tag>HTTP</tag>
         <tag>Git</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>WSL2 下 VS Code 编写 C 代码</title>
+    <url>/posts/3184033620/</url>
+    <content><![CDATA[<blockquote>
+<p>记录 WSL2 下使用 VS Code 编写 C 代码并通过 Clang 调试时遇到的问题。</p>
+</blockquote>
+<h4 id="前戏"><a href="#前戏" class="headerlink" title="前戏"></a>前戏</h4><p>WSL2 的安装就不用说了，官方文档的描述非常详细，网上还有诸多大佬披荆斩棘写了很多好教程，搜索引擎一波就啥都搞定了；</p>
+<p>VS Code 的语言插件就更不用说了，指定文件后缀并保存后，自然而然就知道需要装啥插件了，实在不行不还有搜索引擎嘛；</p>
+<span id="more"></span>
+
+<p>这里只安装了</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNgy1gutsz57gzij60ce02m0so02.jpg" alt="C/C++"></p>
+<p>和</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNgy1gutsz2guvlj60ce02imx602.jpg" alt="Remote - WSL"></p>
+<p>既然要用 Clang，当然需要安装了：在 WSL2 的子系统 linux 上安装<code>llvm</code>，<code>lldb</code>，<code>clang</code>；</p>
+<p>然后随便写个 demo 用于生成调试配置文件：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNgy1gutt2ndp26j60xm0d7mz002.jpg" alt="1，2"></p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNgy1gutt3dybd2j60za0ag0ub02.jpg" alt="3"></p>
+<p>WSL 当然要选 <code>C++(GDB/LLDB)</code>了；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNgy1gutt3fie12j60l408z3zw02.jpg" alt="4"></p>
+<p>首先要选的是 Clang，至于选哪个看心情，反正哪个都能用，区别在于<code>/usr/bin</code>和<code>/usr/sbin</code>，搜索引擎一波就知道差异和选择了；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNgy1gutt7faff4j60cw06ggls02.jpg" alt="5"></p>
+<p>至此，调试文件就生成了，开始调试，问题也就来了；</p>
+<h4 id="问题一：找不到lldb-mi-xxx，xxx-表示版本号"><a href="#问题一：找不到lldb-mi-xxx，xxx-表示版本号" class="headerlink" title="问题一：找不到lldb-mi-xxx，xxx 表示版本号"></a>问题一：找不到<code>lldb-mi-xxx</code>，xxx 表示版本号</h4><p>无图无真相：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNgy1gutta2i2ncj60vb0t0q7502.jpg" alt="error"></p>
+<p>看到问题提示时一头雾水，什么情况，还没开始就结束了？难道<code>lldb</code>中不包含<code>lldb-mi</code>吗？</p>
+<blockquote>
+<p>lldb-mi: MI 调试程序；</p>
+</blockquote>
+<p>几经查找后发现，貌似是 10.0 版本之后就不包含<code>lldb-mi</code>了，如果需要使用则自己编译，那还等什么；</p>
+<p>官方存储库 <a href="https://github.com/lldb-tools/lldb-mi">lldb-tools&#x2F;lldb-mi</a> 根据文档编译即可（在 WSL2 的 linux 上）；</p>
+<p>懒得看请运行：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git <span class="built_in">clone</span> https://github.com/lldb-tools/lldb-mi.git</span><br><span class="line"><span class="built_in">cd</span> lldb-mi</span><br><span class="line">make .</span><br><span class="line">make --build .</span><br><span class="line">sudo <span class="built_in">cp</span> src/lldb-mi /usr/bin</span><br></pre></td></tr></table></figure>
+
+<p>当然，也可以不管不顾直接调试（我就是这么干的 😭），毕竟“不听不听，王八念经”，然后会得到以下错误：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1guttwgzuy2j60fx040wev02.jpg" alt="error1"></p>
+<p>或者：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">Unable to start debugging. Unable to establish a connection to LLDB. The following message was written to stderr:</span><br><span class="line">lldb: unrecognized option &#x27;--interpreter=mi&#x27;</span><br><span class="line">...</span><br><span class="line">(此处略去好多字儿)</span><br></pre></td></tr></table></figure>
+
+<p>最后还得滚回去（咳咳）编译<code>lldb-mi</code>；</p>
+<p>莫慌，还有其他解决方案，安装<code>CodeLLDB</code>插件，一触即达，也就不会遇到下面两个问题了；</p>
+<h5 id="问题一点五：编译lldb-mi时cmake命令不存在？"><a href="#问题一点五：编译lldb-mi时cmake命令不存在？" class="headerlink" title="问题一点五：编译lldb-mi时cmake命令不存在？"></a>问题一点五：编译<code>lldb-mi</code>时<code>cmake</code>命令不存在？</h5><p>这还不简单，<code>sudo pacman -S cmake</code>（仅适用于 Arch，其他版本请自查）；</p>
+<h4 id="问题二：编译lldb-mi时出现”CMAKE-MAKE-PROGRAM-is-not-set-”"><a href="#问题二：编译lldb-mi时出现”CMAKE-MAKE-PROGRAM-is-not-set-”" class="headerlink" title="问题二：编译lldb-mi时出现”CMAKE_MAKE_PROGRAM is not set.”"></a>问题二：编译<code>lldb-mi</code>时出现”CMAKE_MAKE_PROGRAM is not set.”</h4><p>出现此问题的应该不多，这里使用的是 Arch，其他 WSL2 子系统未知；</p>
+<p>如果你也使用的是 Arch，并且是通过 <a href="https://github.com/yuk7/ArchWSL">yuk7&#x2F;ArchWSL</a> 安装的，那么就需要手动安装<code>base-devel</code>基础包，单独安装 cmake 会报此错误；</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">sudo pacman -S base-devel</span><br></pre></td></tr></table></figure>
+
+<p>如果是自己下载手动安装的 Arch（没有使用<code>yuk7/ArchWSL</code>），则不存在此问题；</p>
+<p>然后编译并拷贝<code>lldb-mi</code>到<code>/usr/bin</code>或其他<code>$PATH</code>路径，然后修改<code>launch.json</code>的<code>&quot;miDebuggerPath&quot;</code>为<code>&quot;/usr/bin/lldb-mi&quot;</code>(默认是”&#x2F;usr&#x2F;bin&#x2F;lldb-mi-xxx”)，当然，也可以在拷贝时改名为<code>lldb-mi-xxx</code>，配置文件就不用改了；</p>
+<p>目前就遇到这两个问题，既然解决了，测试一下：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNgy1gutuesp8g5j61950qlwie02.jpg" alt="ok"></p>
+]]></content>
+      <categories>
+        <category>Windows</category>
+        <category>C</category>
+      </categories>
+      <tags>
+        <tag>VS Code</tag>
+        <tag>WSL2</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Webpack</title>
+    <url>/posts/3750383396/</url>
+    <content><![CDATA[<h2 id="webpack"><a href="#webpack" class="headerlink" title="webpack"></a>webpack</h2><p>用于现代 JavaScript 应用程序的静态模块打包工具；</p>
+<h3 id="基本配置"><a href="#基本配置" class="headerlink" title="基本配置"></a>基本配置</h3><p>请通读文档并动手尝试，<a href="https://www.webpackjs.com/">webpackjs.com</a>更新较为滞后，请阅读<a href="https://webpack.docschina.org/configuration/">官方文档</a></p>
+<span id="more"></span>
+
+<p>包括但不限于以下常见的配置项：</p>
+<ol>
+<li><p>mode：webpack 的工作模式，默认 production，可选 development 及 none；</p>
+</li>
+<li><p>entry：入口配置，如：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="attr">entry</span>: &#123;</span><br><span class="line">  <span class="comment">// 入口名对应的入口文件</span></span><br><span class="line">  <span class="attr">index</span>: <span class="string">&quot;./src/index.js&quot;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>output：输出配置，如：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="attr">output</span>: &#123;</span><br><span class="line"> <span class="comment">// 输出文件，[name] 动态获取 entry 的入口名</span></span><br><span class="line">  <span class="attr">filename</span>: <span class="string">&quot;[name].bundle.js&quot;</span>,</span><br><span class="line">  <span class="comment">// 输出目录，绝对路径</span></span><br><span class="line">  <span class="attr">path</span>: path.<span class="title function_">resolve</span>(__dirname, <span class="string">&#x27;dist&#x27;</span>),</span><br><span class="line">  <span class="comment">// 每次构建清空输出目录</span></span><br><span class="line">  <span class="attr">clean</span>: <span class="literal">true</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>module：决定如何处理项目中不同类型的模块（文件），如：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="attr">module</span>: &#123;</span><br><span class="line">  <span class="attr">rules</span>: [</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="comment">// 处理 css</span></span><br><span class="line">      <span class="attr">test</span>: <span class="regexp">/\.css$/i</span>,</span><br><span class="line">      <span class="attr">use</span>: [<span class="string">&quot;style-loader&quot;</span>, <span class="string">&quot;css-loader&quot;</span>],</span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="comment">// 处理图片</span></span><br><span class="line">      <span class="attr">test</span>: <span class="regexp">/\.(png|svg|jpg|gif)$/i</span>,</span><br><span class="line">      <span class="attr">use</span>: [</span><br><span class="line">        &#123;</span><br><span class="line">          <span class="attr">loader</span>: <span class="string">&quot;file-loader&quot;</span>,</span><br><span class="line">          <span class="attr">options</span>: &#123;&#125;,</span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">          <span class="attr">loader</span>: <span class="string">&quot;url-loader&quot;</span>,</span><br><span class="line">          <span class="attr">options</span>: &#123;</span><br><span class="line">            <span class="attr">limit</span>: <span class="number">5</span> * <span class="number">1024</span>,</span><br><span class="line">          &#125;,</span><br><span class="line">        &#125;,</span><br><span class="line">      ],</span><br><span class="line">    &#125;,</span><br><span class="line">  ],</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>plugins：通过内置插件或第三方插件自定义 webpack 构建过程，如：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="attr">plugins</span>: [</span><br><span class="line">  <span class="comment">// 生成 index.html 并自动引入 webpack 生成的 bundle</span></span><br><span class="line">  <span class="keyword">new</span> <span class="title class_">HtmlWebpackPlugin</span>(),</span><br><span class="line">  <span class="comment">// 热更新</span></span><br><span class="line">  <span class="keyword">new</span> webpack.<span class="title class_">HotModuleReplacementPlugin</span>(),</span><br><span class="line">],</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>devtool：控制是否生成 source map，如：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="attr">devtool</span>: <span class="string">&quot;inline-source-map&quot;</span>,</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>devServer：自动重载修改后的代码，需要安装 webpack-dev-server 插件，如：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="attr">devServer</span>: &#123;</span><br><span class="line"> <span class="comment">// 静态文件路径</span></span><br><span class="line">  <span class="attr">static</span>: <span class="string">&#x27;./dist&#x27;</span>,</span><br><span class="line">  <span class="comment">// 监听端口</span></span><br><span class="line">  <span class="attr">port</span>: <span class="number">9008</span>,</span><br><span class="line">  <span class="comment">// 自动打开浏览器</span></span><br><span class="line">  <span class="attr">open</span>: <span class="literal">true</span>,</span><br><span class="line">  <span class="comment">// 跨域代理</span></span><br><span class="line">  <span class="attr">proxy</span>: &#123;</span><br><span class="line">   <span class="comment">// 将 /api 的请求代理到 http://localhost:8888/api</span></span><br><span class="line">    <span class="string">&#x27;/api&#x27;</span>: <span class="string">&quot;http://localhost:8888&quot;</span>,</span><br><span class="line">    <span class="comment">// 将 /api 的请求代理到 http://localhost:8888</span></span><br><span class="line">    <span class="string">&#x27;/api&#x27;</span>: &#123;</span><br><span class="line">     <span class="attr">target</span>: <span class="string">&#x27;http://localhost:8888&#x27;</span>,</span><br><span class="line">     <span class="attr">pathRewrite</span>: &#123;<span class="string">&#x27;^api&#x27;</span>, <span class="string">&#x27;&#x27;</span>&#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>使用 webpack-merge 拆分配置文件；</p>
+<p>webpack 5 引入方式变化<code>const &#123; merge &#125; = require(&quot;webpack-merge&quot;);</code></p>
+</li>
+</ol>
+<h3 id="高级配置（webpack-常见的性能优化）"><a href="#高级配置（webpack-常见的性能优化）" class="headerlink" title="高级配置（webpack 常见的性能优化）"></a>高级配置（webpack 常见的性能优化）</h3><h4 id="优化打包效率"><a href="#优化打包效率" class="headerlink" title="优化打包效率"></a>优化打包效率</h4><ol>
+<li><p>优化 babel-loader</p>
+<ul>
+<li>使用缓存；</li>
+<li>限制打包范围；</li>
+</ul>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="attr">module</span>: &#123;</span><br><span class="line">  <span class="attr">rules</span>: [</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">test</span>: <span class="regexp">/\.js$/i</span>,</span><br><span class="line">      <span class="attr">include</span>: path.<span class="title function_">resolve</span>(__dirname, <span class="string">&quot;src&quot;</span>),</span><br><span class="line">      <span class="attr">loader</span>: <span class="string">&quot;babel-loader?cacheDirectory&quot;</span>,</span><br><span class="line">    &#125;,</span><br><span class="line">  ],</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>IgnorePlugin：第三方模块按需导入，避免引入无用模块，减小代码体积，提高构建速度；</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="attr">plugins</span>: [</span><br><span class="line"> <span class="keyword">new</span> webpack.<span class="title class_">IgnorePlugin</span>(&#123;</span><br><span class="line">   <span class="comment">// 直接引入 moment/local/ 将被忽略</span></span><br><span class="line">   <span class="attr">resourceRegExp</span>: <span class="regexp">/moment\/locale\//</span>,</span><br><span class="line"> &#125;)</span><br><span class="line">],</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>module.noParse：避免重复的打包，如：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="attr">module</span>: &#123;</span><br><span class="line">  <span class="attr">noParse</span>: <span class="regexp">/\.min\.js$/</span>,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>HappyPack：启用多进程打包，提高构建速度，如：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="attr">module</span>: &#123;</span><br><span class="line">  <span class="attr">rules</span>: [</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">test</span>: <span class="regexp">/\.js$/i</span>,</span><br><span class="line">      <span class="attr">use</span>: <span class="string">&#x27;HappyPack/loader?id=js&#x27;</span></span><br><span class="line">    &#125;,</span><br><span class="line">  ],</span><br><span class="line">&#125;,</span><br><span class="line"><span class="attr">plugins</span>: [</span><br><span class="line"> <span class="keyword">new</span> <span class="title class_">HappyPack</span>(&#123;</span><br><span class="line">   <span class="comment">// HappyPack 的全局唯一 id，用来匹配 rules</span></span><br><span class="line">   <span class="attr">id</span>: <span class="string">&#x27;js&#x27;</span>,</span><br><span class="line">   <span class="attr">loaders</span>: [<span class="string">&#x27;babel-loader&#x27;</span>],</span><br><span class="line"> &#125;)</span><br><span class="line">],</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>ParallelUglifyPlugin：启用多进程压缩 JS，如：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="attr">plugins</span>: [</span><br><span class="line">  <span class="comment">// 启用 ParallelUglifyPlugin</span></span><br><span class="line">  <span class="keyword">new</span> <span class="title class_">ParallelUglifyPlugin</span>()</span><br><span class="line">],</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>DllPlugin：将不常改动的源文件拆分成单独的 bundle，如：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="attr">entry</span>: &#123;</span><br><span class="line">  <span class="attr">jQuery</span>: [<span class="string">&#x27;jQuery&#x27;</span>]</span><br><span class="line">&#125;,</span><br><span class="line"><span class="attr">output</span>: &#123;</span><br><span class="line">  <span class="attr">filename</span>: <span class="string">&#x27;[name].dll.js&#x27;</span>,</span><br><span class="line">  <span class="attr">path</span>: path.<span class="title function_">resolve</span>(__dirname, <span class="string">&#x27;dist&#x27;</span>),</span><br><span class="line">  <span class="comment">// 动态链接库的全局变量前缀，防止命名冲突</span></span><br><span class="line">  <span class="attr">library</span>: <span class="string">&#x27;_dll_[name]&#x27;</span>,</span><br><span class="line">&#125;,</span><br><span class="line"><span class="attr">plugins</span>: [</span><br><span class="line">  <span class="keyword">new</span> <span class="title class_">DllPlugin</span>(&#123;</span><br><span class="line">   <span class="comment">// 动态链接库变量名，和 output.library 保持一致</span></span><br><span class="line">    <span class="attr">name</span>: <span class="string">&#x27;_dll_[name]&#x27;</span>,</span><br><span class="line">    <span class="attr">path</span>: path.<span class="title function_">resolve</span>(__dirname, <span class="string">&#x27;dist&#x27;</span>, <span class="string">&#x27;[name].manifest.json&#x27;</span>)</span><br><span class="line">  &#125;)</span><br><span class="line">],</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h4 id="优化产出代码"><a href="#优化产出代码" class="headerlink" title="优化产出代码"></a>优化产出代码</h4><ol>
+<li><p>小图片 base64 编码，如</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="attr">module</span>: &#123;</span><br><span class="line"> <span class="attr">rules</span>: [</span><br><span class="line">   &#123;</span><br><span class="line">     <span class="attr">test</span>: <span class="regexp">/\.(png|svg|jpg|gif)$/i</span>,</span><br><span class="line">     <span class="attr">use</span>: [</span><br><span class="line">       &#123;</span><br><span class="line">         <span class="attr">loader</span>: <span class="string">&quot;file-loader&quot;</span>,</span><br><span class="line">         <span class="attr">options</span>: &#123;&#125;,</span><br><span class="line">       &#125;,</span><br><span class="line">       &#123;</span><br><span class="line">         <span class="attr">loader</span>: <span class="string">&quot;url-loader&quot;</span>,</span><br><span class="line">         <span class="attr">options</span>: &#123;</span><br><span class="line">           <span class="attr">limit</span>: <span class="number">5</span> * <span class="number">1024</span>,</span><br><span class="line">           <span class="attr">outputPath</span>: <span class="string">&#x27;/images/&#x27;</span></span><br><span class="line">         &#125;,</span><br><span class="line">       &#125;,</span><br><span class="line">     ],</span><br><span class="line">   &#125;,</span><br><span class="line"> ],</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>bundle 使用 hash，内容不变则使用缓存，如：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="attr">output</span>: &#123;</span><br><span class="line"> <span class="comment">// contentHash 变为小写 contenthash</span></span><br><span class="line"> <span class="attr">filename</span>: <span class="string">&quot;bundle.[contenthash:8].js&quot;</span>,</span><br><span class="line">&#125;,</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>懒加载，使用 ES6 Module 语法延迟加载模块；</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="built_in">setTimeout</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="title function_">import</span>(<span class="string">&quot;./module.js&quot;</span>).<span class="title function_">then</span>(<span class="function">(<span class="params"><span class="variable language_">module</span></span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="comment">// 必须使用 default</span></span><br><span class="line">    <span class="keyword">const</span> print = <span class="variable language_">module</span>.<span class="property">default</span>;</span><br><span class="line">    <span class="title function_">print</span>();</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;, <span class="number">2000</span>);</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>MiniCssExtractPlugin：从 JS 中抽离 CSS 到单独的文件，如：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="attr">module</span>: &#123;</span><br><span class="line">  <span class="attr">rules</span>: [</span><br><span class="line">    &#123; <span class="comment">// 抽离 css</span></span><br><span class="line">      <span class="attr">test</span>: <span class="regexp">/\.css$/</span>,</span><br><span class="line">      <span class="attr">loader</span>: [</span><br><span class="line">        <span class="comment">// 注意，这里不再使用 style-loader</span></span><br><span class="line">        <span class="title class_">MiniCssExtractPlugin</span>.<span class="property">loader</span>,</span><br><span class="line">        <span class="string">&#x27;css-loader&#x27;</span>,</span><br><span class="line">      ]</span><br><span class="line">    &#125;,</span><br><span class="line">  ]</span><br><span class="line">&#125;,</span><br><span class="line"><span class="attr">plugins</span>: [</span><br><span class="line">  <span class="comment">// 抽离 css 文件</span></span><br><span class="line">  <span class="keyword">new</span> <span class="title class_">MiniCssExtractPlugin</span>(&#123;</span><br><span class="line">      <span class="attr">filename</span>: <span class="string">&#x27;css/main.[contentHash:8].css&#x27;</span></span><br><span class="line">  &#125;)</span><br><span class="line">],</span><br><span class="line"><span class="attr">optimization</span>: &#123;</span><br><span class="line">  <span class="attr">minimizer</span>: [</span><br><span class="line">    <span class="comment">// 压缩 css</span></span><br><span class="line">    <span class="keyword">new</span> <span class="title class_">CssMinimizerWebpackPlugin</span>()</span><br><span class="line">  ],</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>MiniCssExtractPlugin webpack5 已内置，不需要 🙅‍♂️ 安装插件了；</p>
+</li>
+<li><p>splitChunks：提取公共代码，避免重复打包，减小代码体积，如：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="attr">optimization</span>: &#123;</span><br><span class="line">  <span class="attr">splitChunks</span>: &#123;</span><br><span class="line">    <span class="comment">// all 表示同步，异步代码都分割</span></span><br><span class="line">     <span class="attr">chunks</span>: <span class="string">&#x27;all&#x27;</span>,</span><br><span class="line">     <span class="attr">cacheGroups</span>: &#123;</span><br><span class="line">       <span class="comment">// 第三方模块</span></span><br><span class="line">       <span class="attr">vendor</span>: &#123;</span><br><span class="line">         <span class="comment">// 只要是 node_modules 中的模块就包含在 vendor 中</span></span><br><span class="line">         <span class="attr">test</span>: <span class="regexp">/node_modules/</span>，</span><br><span class="line">         <span class="comment">// chunk 名</span></span><br><span class="line">         <span class="attr">name</span>: <span class="string">&#x27;vendor&#x27;</span>,</span><br><span class="line">         <span class="comment">// 小于设定大小则不分割</span></span><br><span class="line">         <span class="attr">miniSize</span>: <span class="number">0</span>,</span><br><span class="line">         <span class="comment">// 最少被复用的次数</span></span><br><span class="line">         <span class="attr">miniChunks</span>: <span class="number">1</span>,</span><br><span class="line">         <span class="comment">// 抽离优先级</span></span><br><span class="line">         <span class="attr">priority</span>: <span class="number">1</span>,</span><br><span class="line">       &#125;,</span><br><span class="line">       <span class="comment">// 公共模块</span></span><br><span class="line">       <span class="attr">common</span>: &#123;</span><br><span class="line">         <span class="comment">// chunk 名</span></span><br><span class="line">         <span class="attr">name</span>: <span class="string">&#x27;common&#x27;</span>,</span><br><span class="line">         <span class="comment">// 小于设定大小则不分割</span></span><br><span class="line">         <span class="attr">miniSize</span>: <span class="number">3</span> * <span class="number">1024</span>,</span><br><span class="line">         <span class="comment">// 最少被复用的次数</span></span><br><span class="line">         <span class="attr">miniChunks</span>: <span class="number">2</span>,</span><br><span class="line">         <span class="comment">// 抽离优先级</span></span><br><span class="line">         <span class="attr">priority</span>: <span class="number">0</span>,</span><br><span class="line">       &#125;</span><br><span class="line">     &#125;</span><br><span class="line">  &#125;,</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>IgnorePlugin：第三方模块按需加载，减小代码体积；</p>
+</li>
+<li><p>使用 CDN 来加载静态资源，提高访问速度；</p>
+</li>
+<li><p>使用<code>mode: &#39;production&#39;</code> 选项，webpack 会进行以下操作：</p>
+<ul>
+<li><p>自动开启代码压缩；</p>
+</li>
+<li><p>某些框架依赖于<code>mode: &#39;production&#39;</code>自动删除调试代码；</p>
+</li>
+<li><p>自动启用 Tree-Shaking，删除未使用的代码；</p>
+<p>必须使用 ES6 Module 才能让 Tree-Shaking 生效；</p>
+<p>ES6 Module 是静态引入，编译时引用；</p>
+<p>commonjs 是动态引入，执行时引用；</p>
+<p>只有 ES6 Module 才能静态分析，实现 Tree-Shaking；</p>
+</li>
+</ul>
+</li>
+</ol>
+<h3 id="module、chunk、bundle-分别是什么，有何区别？"><a href="#module、chunk、bundle-分别是什么，有何区别？" class="headerlink" title="module、chunk、bundle 分别是什么，有何区别？"></a>module、chunk、bundle 分别是什么，有何区别？</h3><p>一份源码在不同场景下的名字；</p>
+<ol>
+<li>module 是各个源码文件，包括第三方模块和自己编写的源码，，webpack 中一切皆模块；</li>
+<li>chunk 是多个模块的合成，webpack 处理时在内存中生成的就是 chunk；</li>
+<li>bundle 是最终的输出文件，一般一个 chunk 对应一个 bundle；</li>
+</ol>
+<h3 id="loader-和-plugin-的区别"><a href="#loader-和-plugin-的区别" class="headerlink" title="loader 和 plugin 的区别"></a>loader 和 plugin 的区别</h3><ol>
+<li><p>loader 是模块转换器，让 webpack 能够处理其他类型的文件，并将其转换为有效的模块；</p>
+</li>
+<li><p>plugin 是扩展增强，让 webpack 可以执行范围更广的任务，如 打包优化，资源管理，注入环境变量等；</p>
+</li>
+</ol>
+<h3 id="webpack-构建流程概述"><a href="#webpack-构建流程概述" class="headerlink" title="webpack 构建流程概述"></a>webpack 构建流程概述</h3><ol>
+<li>初始化：启动构建，从配置文件中读取合并参数，加载 plugin，实例化 complier 对象；</li>
+<li>编译，从 entry 出发，用配置中的每个 loader 对模块进行编译和翻译，并找出依赖关系，递归进行编译处理；</li>
+<li>输出：将编译后的模块根据依赖关系组合成一个个包含多个模块的 chunk，再把每个 chunk 根据配置中的路径和文件名转换成 bundle 并输出到文件系统中；</li>
+</ol>
+<h2 id="babel"><a href="#babel" class="headerlink" title="babel"></a>babel</h2><p>JavaScript 编译器，将 ES2015+ 的语法编译为向后兼容的 JS 语法，使 JS 应用程序可以运行在当前和旧版本的环境中；</p>
+<h3 id="preset-和-plugin"><a href="#preset-和-plugin" class="headerlink" title="preset 和 plugin"></a>preset 和 plugin</h3><p>preset 是常用 plugin 的集合，在 preset 无法满足要求时，可以在 plugin 中进一步扩展；</p>
+<h3 id="babel-polyfill"><a href="#babel-polyfill" class="headerlink" title="babel-polyfill"></a>babel-polyfill</h3><p>babel-polyfill 是 corejs 和 regenerator 库的集合，包含了常用的 polyfill；</p>
+<h3 id="babel-runtime-和-babel-polyfill"><a href="#babel-runtime-和-babel-polyfill" class="headerlink" title="babel-runtime 和 babel-polyfill"></a>babel-runtime 和 babel-polyfill</h3><p>babel-runtime 变量会重新取名，不污染全局环境；<br>babel-polyfill 会污染全局环境，可能会造成命名冲突或变量覆盖；</p>
+<h2 id="webpack-和-babel-的区别"><a href="#webpack-和-babel-的区别" class="headerlink" title="webpack 和 babel 的区别"></a>webpack 和 babel 的区别</h2><ol>
+<li>webpack 是打包构建工具，不关心语法，是多个 loader 和 plugin 的集合；</li>
+<li>babel 是新型语法编译工具，不关心模块化；</li>
+</ol>
+<h2 id="前端为何要进行打包和构建"><a href="#前端为何要进行打包和构建" class="headerlink" title="前端为何要进行打包和构建"></a>前端为何要进行打包和构建</h2><p>随着互联网的发展，前端项目越来越复杂，促使前端开发向模块化发展，模块化可以帮助我们更好的解决复杂应用开发过程中的代码组织问题，也提高了代码复用性，使得开发更加快捷和高效；</p>
+<p>但随着模块化思想的引入，在开发过程中又产生了许多新的问题，如：客户端环境不统一导致的兼容性问题，模块化导致项目资源零散，网络请求增多带来的服务器压力增大、用户体验差等问题促使前端开发中 webpack 等一系列打包构建工具的出现，让我们的应用开发既能享受模块化带来的便利，又不必担心模块化对生产环境产生影响；</p>
+<h3 id="在代码层面"><a href="#在代码层面" class="headerlink" title="在代码层面"></a>在代码层面</h3><ol>
+<li>代码经过合并压缩，体积更小，加载速度更快；</li>
+<li>开发中可以使用 TS、ES6、scss、less 等高级语言或语法，集成了 polyfill、postcss 等提高兼容性的插件，提高开发效率的同时也不必担心兼容性问题；</li>
+<li>同时集成了语法检查等工具，在开发过程中就可以及时发现错误并改正，降低了代码出错的几率，节省了 debug 时间；</li>
+</ol>
+<h3 id="在开发流程方面"><a href="#在开发流程方面" class="headerlink" title="在开发流程方面"></a>在开发流程方面</h3><ol>
+<li>统一高效的开发环境，以及统一的构建流程和产出标准，大大的提高了项目开发的质量；</li>
+<li>集成公司构建规范，使得项目的开发可以标准化、高质量、高效率的完成；</li>
+</ol>
+]]></content>
+      <categories>
+        <category>Web</category>
+        <category>JavaScript</category>
+      </categories>
+      <tags>
+        <tag>webpack</tag>
       </tags>
   </entry>
   <entry>
@@ -7149,6 +7149,113 @@
       </tags>
   </entry>
   <entry>
+    <title>对 Object.defineProperty 的理解</title>
+    <url>/posts/1829252959/</url>
+    <content><![CDATA[<blockquote>
+<p>仅以此文记录自己对 <code>Object.defineProperty()</code>方法的理解，源起题目<code>监听 data 变化的核心 API 是什么？</code></p>
+</blockquote>
+<h2 id="听君一席话"><a href="#听君一席话" class="headerlink" title="听君一席话"></a>听君一席话</h2><p>首先是方法的描述:</p>
+<p><code>Object.defineProperty() 方法会直接在一个对象上定义一个新属性，或者修改一个对象的现有属性，并返回此对象</code></p>
+<p>通俗易懂，来自<a href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty">MDN</a></p>
+<span id="more"></span>
+
+<p>参数部分，参数有三：</p>
+<ol>
+<li>target，要修改的目标对象；</li>
+<li>prop, 要修改的属性；</li>
+<li>descriptor, 要定义或修改的属性描述符；</li>
+</ol>
+<p>前两个好理解，参数 3 如何理解呢？</p>
+<ol>
+<li><p>对象中目前存在两种属性描述符，数据描述符和存取描述符；</p>
+</li>
+<li><p>这两种属性描述符共享以下三个参数：</p>
+<ol>
+<li><p>configurable，值为 true 或 false，为 true 时属性才能被修改或删除，从 config 这个词就可以理解，默认为 false；</p>
+</li>
+<li><p>enumerable，值为 true 或 false，为 true 时属性才能被枚举，还可以直接写成属性对应的值，默认为 false；</p>
+</li>
+<li><p>writable，值为 true 或 false，为 true 时属性才能被修改，也就是 enumerable 才能直接写属性对应的值，默认为 false；</p>
+<p>同时，writable 还有两个可选的键值 get 和 set</p>
+<ul>
+<li>get，属性的 getter 函数，访问属性时调用此方法，函数的返回值就是属性的值，默认为 undefined；</li>
+<li>set， 属性的 setter 函数，修改属性时调用此方法，接受一个参数，也就是新的属性值，默认为 undefined;</li>
+</ul>
+</li>
+<li><p>默认情况下，直接由<code>Object.defineProperty()</code>定义的属性是不可修改的，因为 configurable 属性默认是 false，如要修改，需要显示的定义 configurable 属性为 true 才行；</p>
+</li>
+<li><p>接上一条，注意：是<strong>直接</strong>由<code>Object.defineProperty()</code>定义的属性默认不能修改，所以，对象上已存在的（不是由<code>Object.defineProperty()</code>定义的）属性默认是可以被修改的；</p>
+</li>
+</ol>
+</li>
+</ol>
+<p>今天的主角是<code>vue 是如何实现 data 响应式的?</code>，所以，不要过分纠结此方法的细节，否则会深陷其中而顾此失彼，感兴趣的话可以抽空通读细读文档；</p>
+<h2 id="正题"><a href="#正题" class="headerlink" title="正题"></a>正题</h2><p>先来一道开胃菜，不借助框架如何实现下面对象的响应式？</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> data = &#123;</span><br><span class="line">  <span class="attr">name</span>: <span class="string">&quot;zhangsan&quot;</span>,</span><br><span class="line">  <span class="attr">age</span>: <span class="number">18</span>,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>预期调用：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="title function_">observer</span>(data);</span><br><span class="line">data.<span class="property">name</span> = <span class="string">&quot;lisi&quot;</span>;</span><br><span class="line">data.<span class="property">age</span> = <span class="number">20</span>;</span><br></pre></td></tr></table></figure>
+
+<p>预期输出：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/e6c9d24ely1h3umpr6xcjj20da010a9x.jpg" alt="预期输出"></p>
+<p>首先定义一个方法，提示视图更新：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">updataView</span>(<span class="params">key, value, newValue</span>) &#123;</span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">`视图更新，属性<span class="subst">$&#123;key&#125;</span>由<span class="subst">$&#123;value&#125;</span>变更为<span class="subst">$&#123;newValue&#125;</span>`</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后定义主方法：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">observer</span>(<span class="params">target</span>) &#123;</span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">let</span> key <span class="keyword">in</span> target) &#123;</span><br><span class="line">    <span class="title function_">defineReactive</span>(target, key, target[key]);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后实现核心方法</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">defineReactive</span>(<span class="params">target, key, value</span>) &#123;</span><br><span class="line">  <span class="comment">// 主角登场</span></span><br><span class="line">  <span class="comment">// 这里用到了存取描述符 writable 的 get 和 set 方法，来获取和修改对象已存在的属性</span></span><br><span class="line">  <span class="title class_">Object</span>.<span class="title function_">defineProperty</span>(target, key, &#123;</span><br><span class="line">    <span class="title function_">get</span>(<span class="params"></span>) &#123;</span><br><span class="line">      <span class="keyword">return</span> value;</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="title function_">set</span>(<span class="params">newValue</span>) &#123;</span><br><span class="line">      <span class="comment">// 保存 value 给 updataView 用</span></span><br><span class="line">      <span class="keyword">const</span> oldValue = value;</span><br><span class="line">      <span class="keyword">if</span> (newValue !== value) &#123;</span><br><span class="line">        value = newValue;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 触发更新</span></span><br><span class="line">        <span class="title function_">updataView</span>(key, oldValue, newValue);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="加个菜"><a href="#加个菜" class="headerlink" title="加个菜"></a>加个菜</h3><p>如果对象是这样的呢？</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> data = &#123;</span><br><span class="line">  <span class="attr">name</span>: <span class="string">&quot;zhangsan&quot;</span>,</span><br><span class="line">  <span class="attr">age</span>: <span class="number">18</span>,</span><br><span class="line">  <span class="attr">info</span>: &#123;</span><br><span class="line">    <span class="attr">city</span>: <span class="string">&quot;beijing&quot;</span>,</span><br><span class="line">  &#125;,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>是不是想到了，在遍历目标对象的属性时加个判断，然后递归调用，没错！</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">observer</span>(<span class="params">target</span>) &#123;</span><br><span class="line">  <span class="keyword">if</span> (<span class="keyword">typeof</span> target !== <span class="string">&quot;object&quot;</span> || <span class="keyword">typeof</span> target === <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> target;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">let</span> key <span class="keyword">in</span> target) &#123;</span><br><span class="line">    <span class="title function_">defineReactive</span>(target, key, target[key]);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">defineReactive</span>(<span class="params">target, key, value</span>) &#123;</span><br><span class="line">  <span class="comment">// 递归调用</span></span><br><span class="line">  <span class="title function_">observer</span>(value);</span><br><span class="line">  <span class="title class_">Object</span>.<span class="title function_">defineProperty</span>(target, key, &#123;</span><br><span class="line">    <span class="title function_">get</span>(<span class="params"></span>) &#123;</span><br><span class="line">      <span class="keyword">return</span> value;</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="title function_">set</span>(<span class="params">newValue</span>) &#123;</span><br><span class="line">      <span class="keyword">const</span> oldValue = value;</span><br><span class="line">      <span class="keyword">if</span> (newValue !== value) &#123;</span><br><span class="line">        value = newValue;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 触发更新</span></span><br><span class="line">        <span class="title function_">updataView</span>(key, oldValue, newValue);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/e6c9d24ely1h3uon6j957j20co01p748.jpg" alt="加个菜"></p>
+<h4 id="菜中菜"><a href="#菜中菜" class="headerlink" title="菜中菜"></a>菜中菜</h4><p>如果调用时是这样呢？</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line">data.<span class="property">age</span> = <span class="number">20</span>;</span><br><span class="line">data.<span class="property">name</span> = &#123;</span><br><span class="line">  <span class="attr">firstName</span>: <span class="string">&quot;john&quot;</span>,</span><br><span class="line">  <span class="attr">lastName</span>: <span class="string">&quot;Lee&quot;</span>,</span><br><span class="line">&#125;;</span><br><span class="line"><span class="comment">// 雷同</span></span><br><span class="line">data.<span class="property">name</span>.<span class="property">firstName</span> = <span class="string">&quot;smith&quot;</span>;</span><br><span class="line">data.<span class="property">name</span>.<span class="property">last</span> = <span class="string">&quot;Bruce&quot;</span>;</span><br><span class="line">data.<span class="property">info</span>.<span class="property">city</span> = <span class="string">&quot;shanghai&quot;</span>;</span><br></pre></td></tr></table></figure>
+
+<p>很简单，在 set 函数中也使用深度监听（递归调用）：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">defineReactive</span>(<span class="params">target, key, value</span>) &#123;</span><br><span class="line">  <span class="comment">// 递归调用</span></span><br><span class="line">  <span class="title function_">observer</span>(value);</span><br><span class="line">  <span class="title class_">Object</span>.<span class="title function_">defineProperty</span>(target, key, &#123;</span><br><span class="line">    <span class="title function_">get</span>(<span class="params"></span>) &#123;</span><br><span class="line">      <span class="keyword">return</span> value;</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="title function_">set</span>(<span class="params">newValue</span>) &#123;</span><br><span class="line">      <span class="keyword">const</span> oldValue = value;</span><br><span class="line">      <span class="keyword">if</span> (newValue !== value) &#123;</span><br><span class="line">        <span class="comment">// 深度监听</span></span><br><span class="line">        <span class="title function_">observer</span>(newValue);</span><br><span class="line">        value = newValue;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 触发更新</span></span><br><span class="line">        <span class="title function_">updataView</span>(key, oldValue, newValue);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/e6c9d24ely1h3upoglrn5j20cq02twem.jpg" alt="菜中菜"></p>
+<p>基本类型和对象的响应式已经差不多了，那么数组的响应式是如何实现的呢，往下看；</p>
+<h3 id="Object-defineProperty-方法的不足"><a href="#Object-defineProperty-方法的不足" class="headerlink" title="Object.defineProperty()方法的不足"></a><code>Object.defineProperty()</code>方法的不足</h3><p>第 1 条确实是<code>Object.defineProperty()</code>方法的不足，但下面两条其实<code>Object.defineProperty()</code>是可以实现的，但基于性能或其他考虑，Vue 并没有使用</p>
+<ul>
+<li>深度监听时，如果对象嵌套层级很深，需要递归到底，一次性计算量很大；</li>
+<li>无法监听新增和删除属性：<ul>
+<li>原因：<code>由于 Vue 会在初始化实例时对 property 执行 getter/setter 转化，所以 property 必须在 data 对象上存在才能让 Vue 将它转换为响应式的。</code> 来自<a href="https://cn.vuejs.org/v2/guide/reactivity.html">官方文档</a>;</li>
+<li>可以使用 <code>Vue.set()</code>和<code>Vue.delete()</code>实现对象的增删；</li>
+</ul>
+</li>
+<li>无法监听数组长度的变化，以及直接使用索引修改数组内容</li>
+</ul>
+<h4 id="数组的响应式"><a href="#数组的响应式" class="headerlink" title="数组的响应式"></a>数组的响应式</h4><p>接着上面的代码，首先重写数组原型：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 重新定义数组原型</span></span><br><span class="line"><span class="keyword">const</span> newArrayPrototype = <span class="title class_">Array</span>.<span class="property"><span class="keyword">prototype</span></span>;</span><br><span class="line"><span class="comment">// 创建新对象，原型指向 newArrayPrototype，扩展的新方法不会污染全局的 Array.prototype</span></span><br><span class="line"><span class="keyword">const</span> arrProto = <span class="title class_">Object</span>.<span class="title function_">create</span>(newArrayPrototype);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 重写数组的方法</span></span><br><span class="line">[<span class="string">&quot;push&quot;</span>, <span class="string">&quot;pop&quot;</span>].<span class="title function_">forEach</span>(<span class="function">(<span class="params">methodName</span>) =&gt;</span> &#123;</span><br><span class="line">  arrProto[methodName] = <span class="keyword">function</span> (<span class="params"></span>) &#123;</span><br><span class="line">    <span class="comment">// 触发更新</span></span><br><span class="line">    <span class="title function_">updateView</span>();</span><br><span class="line">    newArrayPrototype[methodName].<span class="title function_">call</span>(<span class="variable language_">this</span>, ...<span class="variable language_">arguments</span>);</span><br><span class="line">  &#125;;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<p>然后在主函数中处理数组：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">observer</span>(<span class="params">target</span>) &#123;</span><br><span class="line">  <span class="keyword">if</span> (<span class="keyword">typeof</span> target !== <span class="string">&quot;object&quot;</span> || <span class="keyword">typeof</span> target === <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> target;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 将数组的隐式原型指向我们定义的原型</span></span><br><span class="line">  <span class="comment">// 这里调用的数组方法就是我们重写后的方法</span></span><br><span class="line">  <span class="keyword">if</span> (<span class="title class_">Array</span>.<span class="title function_">isArray</span>(target)) &#123;</span><br><span class="line">    target.<span class="property">__proto__</span> = arrProto;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">let</span> key <span class="keyword">in</span> target) &#123;</span><br><span class="line">    <span class="title function_">defineReactive</span>(target, key, target[key]);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输入：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> data = &#123;</span><br><span class="line">  <span class="attr">name</span>: <span class="string">&quot;zhangsan&quot;</span>,</span><br><span class="line">  <span class="attr">age</span>: <span class="number">18</span>,</span><br><span class="line">  <span class="attr">info</span>: &#123;</span><br><span class="line">    <span class="attr">city</span>: <span class="string">&quot;beijing&quot;</span>,</span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="attr">arr</span>: [<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>],</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="title function_">observer</span>(data);</span><br><span class="line"></span><br><span class="line">data.<span class="property">arr</span>.<span class="title function_">push</span>(<span class="number">40</span>);</span><br><span class="line">data.<span class="property">arr</span>.<span class="title function_">pop</span>();</span><br></pre></td></tr></table></figure>
+
+<p>输出：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/e6c9d24ely1h3uu9n5blgj20c30163yf.jpg" alt="数组"></p>
+<p>undefined 是因为数组在触发视图更新时没有传递参数；</p>
+]]></content>
+      <categories>
+        <category>Web</category>
+        <category>JavaScript</category>
+      </categories>
+      <tags>
+        <tag>defineProperty</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>常见的汇编指令</title>
     <url>/posts/1025109479/</url>
     <content><![CDATA[<h3 id="常见指令"><a href="#常见指令" class="headerlink" title="常见指令"></a>常见指令</h3><h4 id="NOP"><a href="#NOP" class="headerlink" title="NOP"></a>NOP</h4><ul>
@@ -7419,113 +7526,6 @@
       </tags>
   </entry>
   <entry>
-    <title>对 Object.defineProperty 的理解</title>
-    <url>/posts/1829252959/</url>
-    <content><![CDATA[<blockquote>
-<p>仅以此文记录自己对 <code>Object.defineProperty()</code>方法的理解，源起题目<code>监听 data 变化的核心 API 是什么？</code></p>
-</blockquote>
-<h2 id="听君一席话"><a href="#听君一席话" class="headerlink" title="听君一席话"></a>听君一席话</h2><p>首先是方法的描述:</p>
-<p><code>Object.defineProperty() 方法会直接在一个对象上定义一个新属性，或者修改一个对象的现有属性，并返回此对象</code></p>
-<p>通俗易懂，来自<a href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty">MDN</a></p>
-<span id="more"></span>
-
-<p>参数部分，参数有三：</p>
-<ol>
-<li>target，要修改的目标对象；</li>
-<li>prop, 要修改的属性；</li>
-<li>descriptor, 要定义或修改的属性描述符；</li>
-</ol>
-<p>前两个好理解，参数 3 如何理解呢？</p>
-<ol>
-<li><p>对象中目前存在两种属性描述符，数据描述符和存取描述符；</p>
-</li>
-<li><p>这两种属性描述符共享以下三个参数：</p>
-<ol>
-<li><p>configurable，值为 true 或 false，为 true 时属性才能被修改或删除，从 config 这个词就可以理解，默认为 false；</p>
-</li>
-<li><p>enumerable，值为 true 或 false，为 true 时属性才能被枚举，还可以直接写成属性对应的值，默认为 false；</p>
-</li>
-<li><p>writable，值为 true 或 false，为 true 时属性才能被修改，也就是 enumerable 才能直接写属性对应的值，默认为 false；</p>
-<p>同时，writable 还有两个可选的键值 get 和 set</p>
-<ul>
-<li>get，属性的 getter 函数，访问属性时调用此方法，函数的返回值就是属性的值，默认为 undefined；</li>
-<li>set， 属性的 setter 函数，修改属性时调用此方法，接受一个参数，也就是新的属性值，默认为 undefined;</li>
-</ul>
-</li>
-<li><p>默认情况下，直接由<code>Object.defineProperty()</code>定义的属性是不可修改的，因为 configurable 属性默认是 false，如要修改，需要显示的定义 configurable 属性为 true 才行；</p>
-</li>
-<li><p>接上一条，注意：是<strong>直接</strong>由<code>Object.defineProperty()</code>定义的属性默认不能修改，所以，对象上已存在的（不是由<code>Object.defineProperty()</code>定义的）属性默认是可以被修改的；</p>
-</li>
-</ol>
-</li>
-</ol>
-<p>今天的主角是<code>vue 是如何实现 data 响应式的?</code>，所以，不要过分纠结此方法的细节，否则会深陷其中而顾此失彼，感兴趣的话可以抽空通读细读文档；</p>
-<h2 id="正题"><a href="#正题" class="headerlink" title="正题"></a>正题</h2><p>先来一道开胃菜，不借助框架如何实现下面对象的响应式？</p>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> data = &#123;</span><br><span class="line">  <span class="attr">name</span>: <span class="string">&quot;zhangsan&quot;</span>,</span><br><span class="line">  <span class="attr">age</span>: <span class="number">18</span>,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-
-<p>预期调用：</p>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="title function_">observer</span>(data);</span><br><span class="line">data.<span class="property">name</span> = <span class="string">&quot;lisi&quot;</span>;</span><br><span class="line">data.<span class="property">age</span> = <span class="number">20</span>;</span><br></pre></td></tr></table></figure>
-
-<p>预期输出：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/e6c9d24ely1h3umpr6xcjj20da010a9x.jpg" alt="预期输出"></p>
-<p>首先定义一个方法，提示视图更新：</p>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">updataView</span>(<span class="params">key, value, newValue</span>) &#123;</span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">`视图更新，属性<span class="subst">$&#123;key&#125;</span>由<span class="subst">$&#123;value&#125;</span>变更为<span class="subst">$&#123;newValue&#125;</span>`</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>然后定义主方法：</p>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">observer</span>(<span class="params">target</span>) &#123;</span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">let</span> key <span class="keyword">in</span> target) &#123;</span><br><span class="line">    <span class="title function_">defineReactive</span>(target, key, target[key]);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>然后实现核心方法</p>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">defineReactive</span>(<span class="params">target, key, value</span>) &#123;</span><br><span class="line">  <span class="comment">// 主角登场</span></span><br><span class="line">  <span class="comment">// 这里用到了存取描述符 writable 的 get 和 set 方法，来获取和修改对象已存在的属性</span></span><br><span class="line">  <span class="title class_">Object</span>.<span class="title function_">defineProperty</span>(target, key, &#123;</span><br><span class="line">    <span class="title function_">get</span>(<span class="params"></span>) &#123;</span><br><span class="line">      <span class="keyword">return</span> value;</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="title function_">set</span>(<span class="params">newValue</span>) &#123;</span><br><span class="line">      <span class="comment">// 保存 value 给 updataView 用</span></span><br><span class="line">      <span class="keyword">const</span> oldValue = value;</span><br><span class="line">      <span class="keyword">if</span> (newValue !== value) &#123;</span><br><span class="line">        value = newValue;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 触发更新</span></span><br><span class="line">        <span class="title function_">updataView</span>(key, oldValue, newValue);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="加个菜"><a href="#加个菜" class="headerlink" title="加个菜"></a>加个菜</h3><p>如果对象是这样的呢？</p>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> data = &#123;</span><br><span class="line">  <span class="attr">name</span>: <span class="string">&quot;zhangsan&quot;</span>,</span><br><span class="line">  <span class="attr">age</span>: <span class="number">18</span>,</span><br><span class="line">  <span class="attr">info</span>: &#123;</span><br><span class="line">    <span class="attr">city</span>: <span class="string">&quot;beijing&quot;</span>,</span><br><span class="line">  &#125;,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-
-<p>是不是想到了，在遍历目标对象的属性时加个判断，然后递归调用，没错！</p>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">observer</span>(<span class="params">target</span>) &#123;</span><br><span class="line">  <span class="keyword">if</span> (<span class="keyword">typeof</span> target !== <span class="string">&quot;object&quot;</span> || <span class="keyword">typeof</span> target === <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> target;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">let</span> key <span class="keyword">in</span> target) &#123;</span><br><span class="line">    <span class="title function_">defineReactive</span>(target, key, target[key]);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">defineReactive</span>(<span class="params">target, key, value</span>) &#123;</span><br><span class="line">  <span class="comment">// 递归调用</span></span><br><span class="line">  <span class="title function_">observer</span>(value);</span><br><span class="line">  <span class="title class_">Object</span>.<span class="title function_">defineProperty</span>(target, key, &#123;</span><br><span class="line">    <span class="title function_">get</span>(<span class="params"></span>) &#123;</span><br><span class="line">      <span class="keyword">return</span> value;</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="title function_">set</span>(<span class="params">newValue</span>) &#123;</span><br><span class="line">      <span class="keyword">const</span> oldValue = value;</span><br><span class="line">      <span class="keyword">if</span> (newValue !== value) &#123;</span><br><span class="line">        value = newValue;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 触发更新</span></span><br><span class="line">        <span class="title function_">updataView</span>(key, oldValue, newValue);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>输出：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/e6c9d24ely1h3uon6j957j20co01p748.jpg" alt="加个菜"></p>
-<h4 id="菜中菜"><a href="#菜中菜" class="headerlink" title="菜中菜"></a>菜中菜</h4><p>如果调用时是这样呢？</p>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line">data.<span class="property">age</span> = <span class="number">20</span>;</span><br><span class="line">data.<span class="property">name</span> = &#123;</span><br><span class="line">  <span class="attr">firstName</span>: <span class="string">&quot;john&quot;</span>,</span><br><span class="line">  <span class="attr">lastName</span>: <span class="string">&quot;Lee&quot;</span>,</span><br><span class="line">&#125;;</span><br><span class="line"><span class="comment">// 雷同</span></span><br><span class="line">data.<span class="property">name</span>.<span class="property">firstName</span> = <span class="string">&quot;smith&quot;</span>;</span><br><span class="line">data.<span class="property">name</span>.<span class="property">last</span> = <span class="string">&quot;Bruce&quot;</span>;</span><br><span class="line">data.<span class="property">info</span>.<span class="property">city</span> = <span class="string">&quot;shanghai&quot;</span>;</span><br></pre></td></tr></table></figure>
-
-<p>很简单，在 set 函数中也使用深度监听（递归调用）：</p>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">defineReactive</span>(<span class="params">target, key, value</span>) &#123;</span><br><span class="line">  <span class="comment">// 递归调用</span></span><br><span class="line">  <span class="title function_">observer</span>(value);</span><br><span class="line">  <span class="title class_">Object</span>.<span class="title function_">defineProperty</span>(target, key, &#123;</span><br><span class="line">    <span class="title function_">get</span>(<span class="params"></span>) &#123;</span><br><span class="line">      <span class="keyword">return</span> value;</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="title function_">set</span>(<span class="params">newValue</span>) &#123;</span><br><span class="line">      <span class="keyword">const</span> oldValue = value;</span><br><span class="line">      <span class="keyword">if</span> (newValue !== value) &#123;</span><br><span class="line">        <span class="comment">// 深度监听</span></span><br><span class="line">        <span class="title function_">observer</span>(newValue);</span><br><span class="line">        value = newValue;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 触发更新</span></span><br><span class="line">        <span class="title function_">updataView</span>(key, oldValue, newValue);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>输出：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/e6c9d24ely1h3upoglrn5j20cq02twem.jpg" alt="菜中菜"></p>
-<p>基本类型和对象的响应式已经差不多了，那么数组的响应式是如何实现的呢，往下看；</p>
-<h3 id="Object-defineProperty-方法的不足"><a href="#Object-defineProperty-方法的不足" class="headerlink" title="Object.defineProperty()方法的不足"></a><code>Object.defineProperty()</code>方法的不足</h3><p>第 1 条确实是<code>Object.defineProperty()</code>方法的不足，但下面两条其实<code>Object.defineProperty()</code>是可以实现的，但基于性能或其他考虑，Vue 并没有使用</p>
-<ul>
-<li>深度监听时，如果对象嵌套层级很深，需要递归到底，一次性计算量很大；</li>
-<li>无法监听新增和删除属性：<ul>
-<li>原因：<code>由于 Vue 会在初始化实例时对 property 执行 getter/setter 转化，所以 property 必须在 data 对象上存在才能让 Vue 将它转换为响应式的。</code> 来自<a href="https://cn.vuejs.org/v2/guide/reactivity.html">官方文档</a>;</li>
-<li>可以使用 <code>Vue.set()</code>和<code>Vue.delete()</code>实现对象的增删；</li>
-</ul>
-</li>
-<li>无法监听数组长度的变化，以及直接使用索引修改数组内容</li>
-</ul>
-<h4 id="数组的响应式"><a href="#数组的响应式" class="headerlink" title="数组的响应式"></a>数组的响应式</h4><p>接着上面的代码，首先重写数组原型：</p>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 重新定义数组原型</span></span><br><span class="line"><span class="keyword">const</span> newArrayPrototype = <span class="title class_">Array</span>.<span class="property"><span class="keyword">prototype</span></span>;</span><br><span class="line"><span class="comment">// 创建新对象，原型指向 newArrayPrototype，扩展的新方法不会污染全局的 Array.prototype</span></span><br><span class="line"><span class="keyword">const</span> arrProto = <span class="title class_">Object</span>.<span class="title function_">create</span>(newArrayPrototype);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 重写数组的方法</span></span><br><span class="line">[<span class="string">&quot;push&quot;</span>, <span class="string">&quot;pop&quot;</span>].<span class="title function_">forEach</span>(<span class="function">(<span class="params">methodName</span>) =&gt;</span> &#123;</span><br><span class="line">  arrProto[methodName] = <span class="keyword">function</span> (<span class="params"></span>) &#123;</span><br><span class="line">    <span class="comment">// 触发更新</span></span><br><span class="line">    <span class="title function_">updateView</span>();</span><br><span class="line">    newArrayPrototype[methodName].<span class="title function_">call</span>(<span class="variable language_">this</span>, ...<span class="variable language_">arguments</span>);</span><br><span class="line">  &#125;;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
-
-<p>然后在主函数中处理数组：</p>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">observer</span>(<span class="params">target</span>) &#123;</span><br><span class="line">  <span class="keyword">if</span> (<span class="keyword">typeof</span> target !== <span class="string">&quot;object&quot;</span> || <span class="keyword">typeof</span> target === <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> target;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 将数组的隐式原型指向我们定义的原型</span></span><br><span class="line">  <span class="comment">// 这里调用的数组方法就是我们重写后的方法</span></span><br><span class="line">  <span class="keyword">if</span> (<span class="title class_">Array</span>.<span class="title function_">isArray</span>(target)) &#123;</span><br><span class="line">    target.<span class="property">__proto__</span> = arrProto;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">let</span> key <span class="keyword">in</span> target) &#123;</span><br><span class="line">    <span class="title function_">defineReactive</span>(target, key, target[key]);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>输入：</p>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> data = &#123;</span><br><span class="line">  <span class="attr">name</span>: <span class="string">&quot;zhangsan&quot;</span>,</span><br><span class="line">  <span class="attr">age</span>: <span class="number">18</span>,</span><br><span class="line">  <span class="attr">info</span>: &#123;</span><br><span class="line">    <span class="attr">city</span>: <span class="string">&quot;beijing&quot;</span>,</span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="attr">arr</span>: [<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>],</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="title function_">observer</span>(data);</span><br><span class="line"></span><br><span class="line">data.<span class="property">arr</span>.<span class="title function_">push</span>(<span class="number">40</span>);</span><br><span class="line">data.<span class="property">arr</span>.<span class="title function_">pop</span>();</span><br></pre></td></tr></table></figure>
-
-<p>输出：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/e6c9d24ely1h3uu9n5blgj20c30163yf.jpg" alt="数组"></p>
-<p>undefined 是因为数组在触发视图更新时没有传递参数；</p>
-]]></content>
-      <categories>
-        <category>Web</category>
-        <category>JavaScript</category>
-      </categories>
-      <tags>
-        <tag>defineProperty</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>异常处理初探</title>
     <url>/posts/996855490/</url>
     <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
@@ -7598,6 +7598,56 @@
         <category>逆向工程</category>
         <category>Windows</category>
         <category>逆向分析</category>
+      </categories>
+      <tags>
+        <tag>异常处理</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>异常处理流程小记</title>
+    <url>/posts/192684570/</url>
+    <content><![CDATA[<h4 id="异常处理流程图"><a href="#异常处理流程图" class="headerlink" title="异常处理流程图"></a>异常处理流程图</h4><hr>
+<p><strong><em>懒得折腾了，更新就挂，看图最靠谱；</em></strong></p>
+<hr>
+<p><del>已经写好<code>Mermaid</code>的语法，准备输出流程图了，发现<code>Hexo</code>的<code>mermaid</code>插件已是多年前的产物，不兼容最新的版本，无奈只能用<a href="https://app.diagrams.net/">draw.io</a>画了张图；</del></p>
+<p>最稳妥的方案是根据官方文档定义 mermaid 语法块，而不是使用 markdown 语法，例如：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">&#123;% mermaid graph TD %&#125;</span><br><span class="line">  A[test] --&gt;|Get money| B(Go shopping)</span><br><span class="line">  B --&gt; C&#123;Let me think&#125;</span><br><span class="line">  C --&gt;|One| D[Laptop]</span><br><span class="line">  C --&gt;|Two| E[iPhone]</span><br><span class="line">  C --&gt;|Three| F[fa:fa-car Car]</span><br><span class="line">&#123;% endmermaid %&#125;</span><br></pre></td></tr></table></figure>
+
+<!-- htmlmin:ignore -->
+
+<pre class="mermaid">
+graph TD
+A[&quot;系统发现产生了一个异常&quot;] --&gt; B{&quot;程序是否正在被调试&quot;}
+B --&gt; |&quot;是，程序正在被调试&quot;| C{&quot;权限转给调试器，并判断调试器是否忽略了异常&quot;}
+C --&gt; |&quot;是，忽略了&quot;| D{&quot;程序是否安装 SEH&quot;}
+D --&gt; |&quot;是，安装了&quot;| E{&quot;SEH 是否解决异常&quot;}
+E --&gt; |&quot;是，解决了&quot;| F[&quot;程序可以继续正常运行&quot;]
+B --&gt; |&quot;否，程序没有被调试&quot;| D
+C --&gt; |&quot;否，未忽略，但未能解决异常&quot;| G[&quot;系统默认异常处理流程&quot;]
+D --&gt; |&quot;否，未安装&quot;| G
+E --&gt; |&quot;否，未解决&quot;| G
+</pre>
+
+<!-- htmlmin:ignore -->
+
+<p>图片镇楼：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glprz3752lj31ay0u0tcd.jpg" alt="图片镇楼"></p>
+<span id="more"></span>
+
+<p>总结一下上图，共有 7 种流程：</p>
+<p>1.<code>系统发现异常</code> -&gt; <code>是否调试状态</code> -&gt; <code>是</code> -&gt; <code>交给调试器处理</code> -&gt; <code>调试器是否忽略异常</code> -&gt; <code>是</code> -&gt; <code>检查是否安装 SEH</code> -&gt; <code>已安装</code> -&gt; <code>是否解决异常</code> -&gt; <code>已解决</code> -&gt; <code>程序继续运行</code>；</p>
+<p>2.<code>系统发现异常</code> -&gt; <code>是否调试状态</code> -&gt; <code>是</code> -&gt; <code>交给调试器处理</code> -&gt; <code>调试器是否忽略异常</code> -&gt; <code>是</code> -&gt; <code>检查是否安装 SEH</code> -&gt; <code>已安装</code> -&gt; <code>是否解决异常</code> -&gt; <code>未解决</code> -&gt; <code>系统默认异常处理流程</code>；</p>
+<p>3.<code>系统发现异常</code> -&gt; <code>是否调试状态</code> -&gt; <code>是</code> -&gt; <code>交给调试器处理</code> -&gt; <code>调试器是否忽略异常</code> -&gt; <code>是</code> -&gt; <code>检查是否安装 SEH</code> -&gt; <code>未安装</code> -&gt; <code>系统默认异常处理流程</code>；</p>
+<p>4.<code>系统发现异常</code> -&gt; <code>是否调试状态</code> -&gt; <code>是</code> -&gt; <code>交给调试器处理</code> -&gt; <code>调试器是否忽略异常</code> -&gt; <code>否</code> -&gt; <code>是否解决异常</code> -&gt; <code>否</code> -&gt; <code>系统默认异常处理流程</code>；</p>
+<p>5.<code>系统发现异常</code> -&gt; <code>是否调试状态</code> -&gt; <code>否</code> -&gt; <code>检查是否安装 SEH</code> -&gt; <code>已安装</code> -&gt; <code>是否解决异常</code> -&gt; <code>已解决</code> -&gt; <code>程序继续运行</code>；</p>
+<p>6.<code>系统发现异常</code> -&gt; <code>是否调试状态</code> -&gt; <code>否</code> -&gt; <code>检查是否安装 SEH</code> -&gt; <code>已安装</code> -&gt; <code>是否解决异常</code> -&gt; <code>未解决</code> -&gt; <code>系统默认异常处理流程</code>；</p>
+<p>7.<code>系统发现异常</code> -&gt; <code>是否调试状态</code> -&gt; <code>否</code> -&gt; <code>检查是否安装 SEH</code> -&gt; <code>未安装</code> -&gt; <code>系统默认异常处理流程</code>；</p>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>Windows</category>
+        <category>逆向分析</category>
+        <category>文章资料</category>
       </categories>
       <tags>
         <tag>异常处理</tag>
@@ -7830,56 +7880,6 @@
       <categories>
         <category>逆向工程</category>
         <category>脱壳技术</category>
-        <category>Windows</category>
-        <category>逆向分析</category>
-        <category>文章资料</category>
-      </categories>
-      <tags>
-        <tag>异常处理</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>异常处理流程小记</title>
-    <url>/posts/192684570/</url>
-    <content><![CDATA[<h4 id="异常处理流程图"><a href="#异常处理流程图" class="headerlink" title="异常处理流程图"></a>异常处理流程图</h4><hr>
-<p><strong><em>懒得折腾了，更新就挂，看图最靠谱；</em></strong></p>
-<hr>
-<p><del>已经写好<code>Mermaid</code>的语法，准备输出流程图了，发现<code>Hexo</code>的<code>mermaid</code>插件已是多年前的产物，不兼容最新的版本，无奈只能用<a href="https://app.diagrams.net/">draw.io</a>画了张图；</del></p>
-<p>最稳妥的方案是根据官方文档定义 mermaid 语法块，而不是使用 markdown 语法，例如：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">&#123;% mermaid graph TD %&#125;</span><br><span class="line">  A[test] --&gt;|Get money| B(Go shopping)</span><br><span class="line">  B --&gt; C&#123;Let me think&#125;</span><br><span class="line">  C --&gt;|One| D[Laptop]</span><br><span class="line">  C --&gt;|Two| E[iPhone]</span><br><span class="line">  C --&gt;|Three| F[fa:fa-car Car]</span><br><span class="line">&#123;% endmermaid %&#125;</span><br></pre></td></tr></table></figure>
-
-<!-- htmlmin:ignore -->
-
-<pre class="mermaid">
-graph TD
-A[&quot;系统发现产生了一个异常&quot;] --&gt; B{&quot;程序是否正在被调试&quot;}
-B --&gt; |&quot;是，程序正在被调试&quot;| C{&quot;权限转给调试器，并判断调试器是否忽略了异常&quot;}
-C --&gt; |&quot;是，忽略了&quot;| D{&quot;程序是否安装 SEH&quot;}
-D --&gt; |&quot;是，安装了&quot;| E{&quot;SEH 是否解决异常&quot;}
-E --&gt; |&quot;是，解决了&quot;| F[&quot;程序可以继续正常运行&quot;]
-B --&gt; |&quot;否，程序没有被调试&quot;| D
-C --&gt; |&quot;否，未忽略，但未能解决异常&quot;| G[&quot;系统默认异常处理流程&quot;]
-D --&gt; |&quot;否，未安装&quot;| G
-E --&gt; |&quot;否，未解决&quot;| G
-</pre>
-
-<!-- htmlmin:ignore -->
-
-<p>图片镇楼：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/0081Kckwly1glprz3752lj31ay0u0tcd.jpg" alt="图片镇楼"></p>
-<span id="more"></span>
-
-<p>总结一下上图，共有 7 种流程：</p>
-<p>1.<code>系统发现异常</code> -&gt; <code>是否调试状态</code> -&gt; <code>是</code> -&gt; <code>交给调试器处理</code> -&gt; <code>调试器是否忽略异常</code> -&gt; <code>是</code> -&gt; <code>检查是否安装 SEH</code> -&gt; <code>已安装</code> -&gt; <code>是否解决异常</code> -&gt; <code>已解决</code> -&gt; <code>程序继续运行</code>；</p>
-<p>2.<code>系统发现异常</code> -&gt; <code>是否调试状态</code> -&gt; <code>是</code> -&gt; <code>交给调试器处理</code> -&gt; <code>调试器是否忽略异常</code> -&gt; <code>是</code> -&gt; <code>检查是否安装 SEH</code> -&gt; <code>已安装</code> -&gt; <code>是否解决异常</code> -&gt; <code>未解决</code> -&gt; <code>系统默认异常处理流程</code>；</p>
-<p>3.<code>系统发现异常</code> -&gt; <code>是否调试状态</code> -&gt; <code>是</code> -&gt; <code>交给调试器处理</code> -&gt; <code>调试器是否忽略异常</code> -&gt; <code>是</code> -&gt; <code>检查是否安装 SEH</code> -&gt; <code>未安装</code> -&gt; <code>系统默认异常处理流程</code>；</p>
-<p>4.<code>系统发现异常</code> -&gt; <code>是否调试状态</code> -&gt; <code>是</code> -&gt; <code>交给调试器处理</code> -&gt; <code>调试器是否忽略异常</code> -&gt; <code>否</code> -&gt; <code>是否解决异常</code> -&gt; <code>否</code> -&gt; <code>系统默认异常处理流程</code>；</p>
-<p>5.<code>系统发现异常</code> -&gt; <code>是否调试状态</code> -&gt; <code>否</code> -&gt; <code>检查是否安装 SEH</code> -&gt; <code>已安装</code> -&gt; <code>是否解决异常</code> -&gt; <code>已解决</code> -&gt; <code>程序继续运行</code>；</p>
-<p>6.<code>系统发现异常</code> -&gt; <code>是否调试状态</code> -&gt; <code>否</code> -&gt; <code>检查是否安装 SEH</code> -&gt; <code>已安装</code> -&gt; <code>是否解决异常</code> -&gt; <code>未解决</code> -&gt; <code>系统默认异常处理流程</code>；</p>
-<p>7.<code>系统发现异常</code> -&gt; <code>是否调试状态</code> -&gt; <code>否</code> -&gt; <code>检查是否安装 SEH</code> -&gt; <code>未安装</code> -&gt; <code>系统默认异常处理流程</code>；</p>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
         <category>Windows</category>
         <category>逆向分析</category>
         <category>文章资料</category>
@@ -9519,6 +9519,73 @@ E --&gt; |&quot;否，未解决&quot;| G
       </tags>
   </entry>
   <entry>
+    <title>硬编码寻找序列号（四）</title>
+    <url>/posts/1116999438/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code>插件：<a href="https://github.com/Undeio/undeio.github.io/releases/tag/Plugin-3">中文搜索引擎</a>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-4">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
+</ul>
+<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><p>事实证明：不能“以貌取人”。</p>
+<p>刚打开软件的时候，心里还想着，这么简陋？分分钟就逆向完毕了，结果，“啪啪啪”实力打脸，针扎的疼。</p>
+<ol>
+<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
+</li>
+<li><p>倒入<code>OD</code>开始分析：</p>
+<ul>
+<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
+</li>
+<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，翻了翻，呀呵，看着简陋，用的<code>API</code>还真不少，那就搜索吧，没有<code>GetDlgItemTextA</code>？那就拿<code>GetWindowTextA</code>下手吧：在<code>GetWindowTextA</code>函数上设置断点，然后去<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
+</li>
+<li><p>然后<code>F9</code>运行程序，“随便输入” 一些字符后点击验证，可以随便输入，但请记住它；</p>
+</li>
+<li><p>居然没有断下来，也没有弹窗，这让我很尴尬：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giz8frx378j305905zglj.jpg" alt="尴尬"></p>
+</li>
+<li><p>嗯，界面有按钮，那就试试消息断点，熟练的设置好<code>消息断点</code>，运行程序，输入，点击按钮，还是没有断下来；</p>
+</li>
+<li><p>不怕，还有<code>内存断点</code>、<code>硬件断点</code>，挨个试了一遍之后，没有一个成功的，灰心丧气呀，怎么像刺猬 🦔 一样无从下手？</p>
+</li>
+<li><p>等等，看了看程序的界面，猛的想起了大佬说的一个工具：</p>
+<p><code>中文搜索引擎</code>：这玩意儿可以参考，但不要过分依赖，友好的开发者可能只是关闭你的程序不让你调试，至于不友好的，知道为啥要用虚拟机吗？</p>
+</li>
+<li><p>重载程序，在<code>反汇编窗口</code>右键选择<code>中文搜索引擎</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giz8ldzoguj311o0njq5w.jpg" alt="中文搜索引擎"></p>
+<p>然后<code>Ctrl + F</code>搜索熟悉的字眼儿<code>Wrong Code DUDE</code>，果然有，双击来到<code>反汇编窗口</code>，嘿嘿，这里看起来很重要嘛：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giz8xso4qtj30m90by402.jpg" alt="关键"></p>
+<ul>
+<li>一个失败的字样；</li>
+<li>一个成功的字样；</li>
+<li>紧挨着上面有一个跳转：可以猜测，如果跳转的话，可能就显示成功了；</li>
+<li>跳转上面是一个<code>CALL</code>，那它很可能是比较的<code>CALL</code>；</li>
+<li>至于更上面的代码，那肯定是获取用的呗，瞎猜的；</li>
+</ul>
+</li>
+<li><p>既然找到了可疑的代码，那就双击<code>CALL</code>给它下一个<code>CC断点</code>，然后运行程序，输入序列号点击验证后，程序暂停在了<code>CALL</code>的位置，那就<code>F7</code>进<code>CALL</code>看看，验证一下猜测；</p>
+</li>
+<li><p>刚一进<code>CALL</code>，就在寄存器窗口发现了熟悉的字样：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giz99kl1svj311n0nlgoq.jpg" alt="call"></p>
+<p>既然把“序列号”都传进来了，那应该就是比较了，开始分析：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizaftudazj30xb0u0n15.jpg" alt="分析"></p>
+</li>
+<li><p>分析完成，比较的部分是常规方法，就是中断程序有点麻烦！</p>
+</li>
+</ul>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>Windows</category>
+        <category>逆向分析</category>
+      </categories>
+      <tags>
+        <tag>硬编码</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>简单的 DOS 命令与批处理</title>
     <url>/posts/1220899652/</url>
     <content><![CDATA[<h4 id="DOS-命令"><a href="#DOS-命令" class="headerlink" title="DOS 命令"></a>DOS 命令</h4><ol>
@@ -9584,73 +9651,6 @@ E --&gt; |&quot;否，未解决&quot;| G
       <tags>
         <tag>DOS 命令</tag>
         <tag>批处理</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>硬编码寻找序列号（四）</title>
-    <url>/posts/1116999438/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
-<li><code>OD</code>插件：<a href="https://github.com/Undeio/undeio.github.io/releases/tag/Plugin-3">中文搜索引擎</a>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-4">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
-</ul>
-<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><p>事实证明：不能“以貌取人”。</p>
-<p>刚打开软件的时候，心里还想着，这么简陋？分分钟就逆向完毕了，结果，“啪啪啪”实力打脸，针扎的疼。</p>
-<ol>
-<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了；</p>
-</li>
-<li><p>倒入<code>OD</code>开始分析：</p>
-<ul>
-<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
-</li>
-<li><p>接着按下<code>Ctrl + N</code>查看使用了哪些<code>API</code>，翻了翻，呀呵，看着简陋，用的<code>API</code>还真不少，那就搜索吧，没有<code>GetDlgItemTextA</code>？那就拿<code>GetWindowTextA</code>下手吧：在<code>GetWindowTextA</code>函数上设置断点，然后去<code>断点窗口</code>双击断点进入<code>反汇编窗口</code>给断点设置备注，这是一个好的习惯，请保持；</p>
-</li>
-<li><p>然后<code>F9</code>运行程序，“随便输入” 一些字符后点击验证，可以随便输入，但请记住它；</p>
-</li>
-<li><p>居然没有断下来，也没有弹窗，这让我很尴尬：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giz8frx378j305905zglj.jpg" alt="尴尬"></p>
-</li>
-<li><p>嗯，界面有按钮，那就试试消息断点，熟练的设置好<code>消息断点</code>，运行程序，输入，点击按钮，还是没有断下来；</p>
-</li>
-<li><p>不怕，还有<code>内存断点</code>、<code>硬件断点</code>，挨个试了一遍之后，没有一个成功的，灰心丧气呀，怎么像刺猬 🦔 一样无从下手？</p>
-</li>
-<li><p>等等，看了看程序的界面，猛的想起了大佬说的一个工具：</p>
-<p><code>中文搜索引擎</code>：这玩意儿可以参考，但不要过分依赖，友好的开发者可能只是关闭你的程序不让你调试，至于不友好的，知道为啥要用虚拟机吗？</p>
-</li>
-<li><p>重载程序，在<code>反汇编窗口</code>右键选择<code>中文搜索引擎</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giz8ldzoguj311o0njq5w.jpg" alt="中文搜索引擎"></p>
-<p>然后<code>Ctrl + F</code>搜索熟悉的字眼儿<code>Wrong Code DUDE</code>，果然有，双击来到<code>反汇编窗口</code>，嘿嘿，这里看起来很重要嘛：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giz8xso4qtj30m90by402.jpg" alt="关键"></p>
-<ul>
-<li>一个失败的字样；</li>
-<li>一个成功的字样；</li>
-<li>紧挨着上面有一个跳转：可以猜测，如果跳转的话，可能就显示成功了；</li>
-<li>跳转上面是一个<code>CALL</code>，那它很可能是比较的<code>CALL</code>；</li>
-<li>至于更上面的代码，那肯定是获取用的呗，瞎猜的；</li>
-</ul>
-</li>
-<li><p>既然找到了可疑的代码，那就双击<code>CALL</code>给它下一个<code>CC断点</code>，然后运行程序，输入序列号点击验证后，程序暂停在了<code>CALL</code>的位置，那就<code>F7</code>进<code>CALL</code>看看，验证一下猜测；</p>
-</li>
-<li><p>刚一进<code>CALL</code>，就在寄存器窗口发现了熟悉的字样：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1giz99kl1svj311n0nlgoq.jpg" alt="call"></p>
-<p>既然把“序列号”都传进来了，那应该就是比较了，开始分析：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gizaftudazj30xb0u0n15.jpg" alt="分析"></p>
-</li>
-<li><p>分析完成，比较的部分是常规方法，就是中断程序有点麻烦！</p>
-</li>
-</ul>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>Windows</category>
-        <category>逆向分析</category>
-      </categories>
-      <tags>
-        <tag>硬编码</tag>
       </tags>
   </entry>
   <entry>
@@ -10343,6 +10343,313 @@ E --&gt; |&quot;否，未解决&quot;| G
 <p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj35sltkm7j30ld0gp0sz.jpg" alt="无图无真相"></p>
 </li>
 </ul>
+</li>
+</ul>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>Windows</category>
+        <category>逆向分析</category>
+      </categories>
+      <tags>
+        <tag>软编码</tag>
+        <tag>算法分析</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>软编码寻找序列号（二）</title>
+    <url>/posts/3362832349/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-8">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
+</ul>
+<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
+<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1lnjinquj307x04v0tf.jpg" alt="开始"></p>
+<p>有点意思，输入内容之后没有任何提示，看来只有输入正确的序列号才会有提示；</p>
+</li>
+<li><p>倒入<code>OD</code>开始分析：</p>
+<ul>
+<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
+</li>
+<li><p>既然界面没有按钮，那就得先猜测它的工作原理了，如果它会在输入正确之后提示的话，那么它就是实时获取我们输入的内容并进行判断，这样的话，有用的应该就是<code>内存断点</code>了；</p>
+</li>
+<li><p>说干就干，既然要去内存中找我们输入的内容，那输入就一定得个性一点，起码不是内存中常见的，不然一找一大堆就无从下手了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1lnjinquj307x04v0tf.jpg" alt="输入"></p>
+</li>
+<li><p>然后去<code>内存窗口</code>按下<code>Ctrl + B</code>或者右键选择<code>查找</code>，输入我们的序列号点击确定开始查找，记得勾选<code>区分大小写</code>：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1m10r2ncj30b806e74c.jpg" alt="查找"></p>
+</li>
+<li><p>输入的还算奇葩，只找到了两个，选择第二个吧，虽然第一个是独立的，但它在内存中的范围不太像：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1m2ueqnpj312j0nlgp6.jpg" alt="找到"></p>
+</li>
+<li><p>设置<code>内存访问断点</code>，长度随意，看心情，我就选 5 个字节了；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1m8qdz03j312i0noadj.jpg" alt="内存断点"></p>
+</li>
+<li><p>然后去程序界面再输入一个字符后，发现程序中断了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1mbkjvz1j312k0npgob.jpg" alt="中断1"></p>
+<p>不过中断的地方好像没什么用，我们输入的内容在<code>EDX</code>中，下面的代码段并没有操作它，<code>F9</code>继续运行程序；</p>
+</li>
+<li><p>刚一进程序领空就发现了亮点，这里好像就是比较了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1mgimi9aj312i0nljub.jpg" alt="亮点"></p>
+</li>
+<li><p>分析一番之后发现，逻辑很常规：</p>
+<ul>
+<li><p>首先，假码 和 可疑字符串 的前 4 个字节的机器码进行比较，不相等跳转到下一步；</p>
+</li>
+<li><p>接着，假码 和 可疑字符串 的第 1 个字节的机器码进行比较，不相等跳转到下一步</p>
+</li>
+<li><p>最后，恢复寄存器的内容并<code>RETN</code>，然后就杳无音讯了；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1mp4qouej312g0qqdjn.jpg" alt="比较"></p>
+</li>
+</ul>
+</li>
+<li><p>至于正确的序列号，当然就是那串可疑字符串了，那这串字符是怎么来的呢，不能每次都这么找吧：</p>
+<ul>
+<li><p>我们都知道<code>RETN</code>返回的是调用位置的下一行，那跟着<code>RETN</code>去看看：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1mv3jb6bj312i0qnq6f.jpg" alt="调用位置"></p>
+</li>
+<li><p>按照程序的流程走，既然这里是判断，那上面的就是获取和处理了，上面有好几个<code>CALL</code>，哪一个才是我们想要的那个呢，按照先获取后处理的流程来看，离我们最近的那个<code>CALL</code>应该是处理用的，那么这个<code>CALL</code>上面那两行代码应该就是它的参数，在参数上设置断点，看看参数是什么就知道这个<code>CALL</code>的用途了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1n7mrqnaj312i0qp0w5.jpg" alt="重点"></p>
+<p>设置断点，重载程序并运行后，程序中断了，但重点不在<code>反汇编窗口</code>，而是在<code>堆栈窗口</code>，我们发现了可疑字符串也就是正确的序列号，如果我们设置断点的这个<code>CALL</code>是处理函数的话，那么它还没运行怎么会出现正确的序列号呢？取消断点，在它上面那个<code>CALL</code>的参数上设置断点；</p>
+</li>
+<li><p>和上面的情况一样，程序中断后，在<code>堆栈窗口</code>，我们又发现了正确的序列号，再次取消断点，给它上面那个<code>CALL</code>设置断点：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1niua0lfj312g0qrgp0.jpg" alt="新断点"></p>
+<p>这次就好多了，虽然没发现有用的数据但正确的序列号也没有出现，那这个<code>CALL</code>很可能就是生成序列号的函数了，<code>F7</code>跟进去看看，结果很丧气，它也不是；</p>
+</li>
+<li><p>那就接着往上呗，终于，在设置好断点，重载并运行程序之后有了欣喜的收获，用户名当作参数传递了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1o2fra1jj312j0qowhy.jpg" alt="真的重点"></p>
+<p>虽然还没有运行代码，但信息窗口已经告诉我们它是什么了；</p>
+</li>
+<li><p>果断<code>F7</code>跟进去看看，都失败那么多次了，不差这一次：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1o7hfyf0j312h0qr0w3.jpg" alt="进CALL"></p>
+<p>进来只有四行代码，但内容非常令人兴奋：这几行代码在检测有没有输入用户名；这就是一个好的开始，因为要操作数据的时候才会检测数据有没有输入；</p>
+</li>
+<li><p>从这个<code>CALl</code>里出来的窗口很熟悉，因为我们在这里已经操作了 3 次了，也失败了 3 次，这次将会是最后一次了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1ofq31sjj312h0qp78t.jpg" alt="多次操作"></p>
+</li>
+<li><p>这手灯下黑玩儿的漂亮，它一直在眼皮子底下计算序列号：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1q8fz1njj312g0qmn0r.jpg" alt="序列号运算"></p>
+<p>这就完了？那序列号呢？嘿嘿，在这里：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1qc14sgtj312i0qn42d.jpg" alt="序列号"></p>
+<p>是的，运算结束后，虽然数据保存到了<code>EBP-C</code>的位置，但我们并没有弹栈，所以<code>EAX</code>没有被覆盖，双击<code>EAX</code>试试，对啦，将运算结果转为 10 进制就是这个用户名对应的序列号；</p>
+</li>
+</ul>
+</li>
+<li><p>序列号的算法：</p>
+<ul>
+<li>用户名最少两位；</li>
+<li>用户名的下标从 1 开始；</li>
+<li>取用户名每个字节和它对应的下标进行异或运算；</li>
+<li>所有字节异或后的结果累加在一起；</li>
+<li>取最后一个字节的机器码，与对应下标进行异或运算后，循环左移 C 位；</li>
+<li>然后把左移的结果和所有字节异或后累加的结果相加；</li>
+<li>最后把最终结果转换成 10 进制就是这个用户名对应的注册码；</li>
+</ul>
+</li>
+<li><p>无图无真相</p>
+<ul>
+<li><p>例如：用户名<code>feng</code>对应的机器码是<code>66 65 6E 67</code>；</p>
+</li>
+<li><p>用户名的下标从 1 开始；</p>
+</li>
+<li><p>每个字节分别与它对应的下标进行异或运算<code>xor 66, 1 &gt;&gt; 67</code>，<code>xor 65, 2 &gt;&gt; 67</code>，<code>xor 6E, 3 &gt;&gt; 6D</code>，<code>xor 67, 4 &gt;&gt; 63</code>;</p>
+</li>
+<li><p>异或后的结果累加<code>67 + 67 + 6D + 63 &gt;&gt; 19E</code>;</p>
+</li>
+<li><p>取最后一个字节的机器码，与对应下标进行异或运算后，循环左移 C 位<code>xor 67, 4 &gt;&gt; 63</code>，<code>ROL 63, C &gt;&gt; 63000</code>;</p>
+</li>
+<li><p>然后把左移的结果和所有字节异或后累加的结果相加<code>63000 + 19E &gt;&gt; 6319E</code>；</p>
+</li>
+<li><p>转换成 10 进制<code>6319E &gt;&gt; 405918</code>；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1qoidbqcj30e409yq41.jpg" alt="真相"></p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>逆向工程</category>
+        <category>Windows</category>
+        <category>逆向分析</category>
+      </categories>
+      <tags>
+        <tag>软编码</tag>
+        <tag>算法分析</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>软编码寻找序列号（四）</title>
+    <url>/posts/4259093006/</url>
+    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
+<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
+<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-25">CrackMe</a>来自互联网，仅供学习使用；</li>
+<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
+</ul>
+<span id="more"></span>
+
+<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
+<li><p>首先运行程序，梳理程序流程：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqt65k1roxj30ua0tkq4h.jpg" alt="梳理程序流程"></p>
+<ul>
+<li>用户名不能少于 5 位（也就是提示的大于 4 位）；</li>
+<li>既然用户名是随机的，注册码应该是根据用户名动态生成的；</li>
+<li>有弹窗，可以试试<code>MessageBox</code>；</li>
+<li>CM 来自<a href="https://bbs.pediy.com/forum-99.htm">加密解密</a>，段钢大佬的作品，翻阅加密解密还真有这个示例以及分析思路；</li>
+<li>不过，先不看书中的分析思路，自己分析，然后和大佬的分析做比对，看看自己有什么疏漏；</li>
+</ul>
+</li>
+<li><p>将 CM 导入 OD，先 Ctrl + A 让 OD 自动分析一下 CM，然后 Ctrl + N 查找当前模块中的名称：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqt6lnxsqdj31fv0u0dlk.jpg" alt="Ctrl + A"></p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqt6lq0ibcj31fz0u0wjh.jpg" alt="Ctrl + N"></p>
+<p>找到了获取输入框文本的<code>GetDlgItemTextA</code>，设置断点；</p>
+</li>
+<li><p>F9 运行程序后，提示内存非法访问，尝试 Shift + F8 忽略错误后，程序终止：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqt6ushp9tj30rg0imjrz.jpg" alt="Shift + F8"></p>
+</li>
+<li><p>重载程序，Alt + B 来到断点窗口，双击断点到达指令位置，发现断点没有设置在预期位置上，很是奇怪，现在也不明白为什么：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqt723z5mpj31g20u0wkl.jpg" alt="Alt + B"></p>
+<p>断点处于程序领空而不是系统领空，看来这种方法不行，试试其它方法；</p>
+<p>既然在 API 列表可以看到<code>GetDlgItemTextA</code>，说明程序应该是调用它了，Ctrl + G 输入<code>GetDlgItemTextA</code>，尝试跳转到 API 行首；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqt775cldoj31fx0u0aew.jpg" alt="Ctrl + G"></p>
+<p>来到此处，无论是指令的地址，OD 的标题栏，还是注释中的信息，都说明这里才是正经八百的<code>GetDlgItemTextA</code>函数，如果右侧没有注释，可以尝试再次按下 Ctrl + A 分析程序，设置断点，然后运行程序；</p>
+</li>
+<li><p>这次没有错误，输入用户名和序列号，点击 check 之后，程序中断在<code>GetDlgItemTextA</code>函数的行首：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqt7dclleaj31g20u0gqj.jpg" alt="栈窗口"></p>
+<p>栈窗口显示了本次调用的详细信息，包括调用位置，最大字符限制，文本缓冲区地址，控件标识以及窗口句柄；</p>
+<p>在 Buffer 参数上右键选择数据窗口中跟随，然后 Ctrl + F9 执行<code>GetDlgItemTextA</code>函数：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqt7ials45j31fz0u0wja.jpg" alt="执行`GetDlgItemTextA`函数"></p>
+<p>在缓冲区地址中，就看到了输入的用户名；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqt7nvnnkxj31fx0u0jx4.jpg" alt="密码"></p>
+<p>再次执行同样的步骤，就得到了输入的密码；</p>
+</li>
+<li><p>看到输入内容不是重点，重点是程序是如何限制用户名必须大于 4 位，以及这样做的含义，还有，程序是如何根据用户名生成序列号的，一探究竟：</p>
+<p>现在，程序已经获取到用户名和序列号了，正常情况下，接下来的步骤就是比较了，我们 F8 跟随到调用<code>GetDlgItemTextA</code>函数的位置：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqt7wui6l8j31fz0u0n25.jpg" alt="F8 跟随到调用"></p>
+<p>可以看到两次都是间接调用<code>CALL EDI</code>，那么上面这条<code>MOV EDI,DWORD PTR DS:[&lt;&amp;USER32.GetDlgItemTextA&gt;]</code>就是起始位置了，设置断点，然后重载并运行程序；</p>
+</li>
+<li><p>这里，每次都是先把 Buffer（文本缓冲区指针）放入寄存器，然后 PUSH：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqt8am9enlj31g00u0gqk.jpg" alt="Buffer"></p>
+</li>
+<li><p>接下来就是调用<code>GetDlgItemTextA</code>了，先来了解一下这个函数：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqt8voatb1j31g10u07wh.jpg" alt="先来了解一下这个函数"></p>
+<ul>
+<li>首先可以看到，参数入栈的顺序是倒叙的，这是因为 Win32 API 采用 stdcall 调用约定，参数按照从右到左的顺序入栈；</li>
+<li>再看函数返回值的说明，成功返回字符个数（不包括结尾的 NULL），失败返回 0，函数的返回值默认位于 EAX 中，查看 EAX，确实是用户名的字符个数；</li>
+</ul>
+<p>用户名获取完毕，继续执行，同样的方法会获取到输入的序列号；</p>
+</li>
+<li><p>接下来就是对用户名长度的处理：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqt9althdfj31fy0u00xo.jpg" alt="首先是判断用户名是否大于 4 位"></p>
+<p>这里先判断用户名是否为空，然后判断用户名是否大于 4 位，两个跳转的地址相同，应该就是“你输入字符要大于 4 个！”那个弹窗，就不跟了；</p>
+<blockquote>
+<p>需要注意：比较指令需要和接下来的跳转指令一起理解才是正确的；</p>
+</blockquote>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqt9w7f1ovj31fw0u0wk3.jpg" alt="关键 CALL"></p>
+<p>这里用户名，用户名长度以及序列号都作为参数传递个了一个 CALL，那么这里很可能就是关键 CALL；</p>
+</li>
+<li><p>F7 进 CALL 分析：</p>
+<ul>
+<li><p>先上整个分析，然后逐步分析：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqtbqc6bp3j31fw0u043v.jpg" alt="先看整个分析结果"></p>
+</li>
+<li><p>首先，下面 👇 的这个跳转是看不懂的：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqtbysnu3yj31bi02mglp.jpg" alt="下面的这个跳转是看不懂的"></p>
+<p>这里的和 7 比较让人是云里雾里的，不用管它，继续向下分析；</p>
+</li>
+<li><p>直到来到这里：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqtc3lkx78j31fy0u0jws.jpg" alt="继续向下分析"></p>
+<p>先是<code>MOV DL,BYTE PTR DS:[ECX+EBP]</code>，这里很好理解，ECX 是 3，EBP 是用户名，这条指令的意思是取用户名下标为 3 的字符（BYTE），放入 DL；</p>
+<p>然后是<code>MOV BL,BYTE PTR DS:[EAX+405030]</code>，理解了上一条语句，这条指令也不难理解，当前 EAX 是 0，这条指令的意思是取 405030 处的第 0 个字符（BYTE）放入 BL，很别扭对不对，因为我们通常数数是从 1 开始的，其实如果 EAX 为 0，这里不好理解，可以先不看下面的语句，让循环再次执行到这里，此时 EAX 为 1，就好理解了，不过取的是第 2 个字符（下标为 1 嘛）；</p>
+<p>理解了这里，然后回想<code>CMP EAX,7</code>以及<code>JLE SHORT TraceMe.00401360</code>就不难理解了：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqtcjbehofj31r808u3zj.jpg" alt="就不难理解了"></p>
+<p>这里是一个循环，循环每执行一次，都会取 405030 处下标为 EAX 的字符，然后 EAX 自增 1，并且每次循环开始时，都会将 EAX 和 7 做比较，是不是就可以理解为 405030 处的字符是有限的，如果 EAX 大于 7（因为是 JLE 跳转，小于等于则跳转），则说明 405030 处的字符取完了，此时 JLE 就会跳转失败，从而执行<code>XOR EAX,EAX</code>让 EAX 置 0，重新从 405030 下标为 0 的字符开始；</p>
+</li>
+</ul>
+</li>
+<li><p>上面的循环不好理解，实在理解不了<code>CMP EAX,7</code>的话，可以输入 4 + 7 &#x3D; 11，也就是大于 11 个字符的用户名，然后重复执行循环，并且关注 405030 处存放的给定字符，就会进一步理解了；</p>
+</li>
+<li><p>接下来调用了<code>wsprintfA</code>函数：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqtdrmb1idj31ft0u07ci.jpg" alt="接下来调用了`wsprintf`函数"></p>
+<p>由于参数是倒序的，所以第 1 个参数是将要输出的内容，而 ESI 存放的是上面循环处理用户名后的结果，接下来是输出格式<code>%ld</code>，以长整型输出，最后是接收输出的缓冲区指针 EBP，所以，这几条指令的意思是：将处理用户名的最终结果以长整型存储到 EBP 指向的地址；</p>
+<p>可以在 EBP 上右键选择数据窗口中跟随去查看，计算的结果为 2470（<code>%ld</code>，10 进制长整型）；</p>
+</li>
+<li><p>接下来调用了<code>lstrcmpA</code>函数，这里很好理解：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqte7hjx34j31fy0u0n2h.jpg" alt="接下来调用了`lstrcmpA`函数"></p>
+<p>从信息面板可以看到，EAX 即将存放的是输入的序列号，而 EBP 存放的则是用户名处理并转为 10 进制之后的值，将它们俩作为参数传递给<code>lstrcmpA</code>，当然是比较相等了，那么计算的最终结果 2470 就是 pediy 这个用户名对应的注册码了；</p>
+<p>难点在<code>lstrcmpA</code>函数执行完毕后下面的指令：</p>
+<p>常见的处理方式是直接返回<code>lstrcmpA</code>函数的返回结果，0 表示相等，非 0 表示不相等，而这里使用了不同的方式，查看源码才知道，源码中要返回 true 或 false；</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqtecob54zj311a04m74e.jpg" alt="难点在`lstrcmpA`函数执行完毕后下面的指令"></p>
+<p><code>NEG EAX</code>是取反操作，即 0 - EAX，如，EAX &#x3D; 5，则<code>NEG EAX</code>的结果为 0 - 5 &#x3D; -5；</p>
+<p>同时，<code>NEG EAX</code>会影响 CF 标志位，EAX 为正数，会产生借位，EAX 为负数，会产生进位，只有 EAX 为 0 时才不会影响 CF 标志位，所以<code>NEG EAX</code>也可以理解为判断 EAX 是否为 0；</p>
+<p>接下来是<code>SBB EAX,EAX</code>，SBB 是带借位减法，可以理解为<code>EAX - EAX - CF</code>，首先 EAX - EAX 的结果一定是 0，然后用 0 减去 CF 标志位的值，而这一步的结果受到<code>NEG EAX</code>的影响，因为如果 EAX 自身不为 0，则<code>SBB EAX,EAX</code>的值为 -1；</p>
+<p>最后是<code>INC EAX</code>，理解了前面两条指令，这条指令就没什么难度了；</p>
+<p>所以，从<code>lstrcmpA</code>函数开始直至函数返回，中间的语句就是判断序列号是否相等：</p>
+<ul>
+<li>如果相等，<code>NEG EAX</code>不会影响 CF 标志位，<code>SBB EAX,EAX</code>的计算结果为 0，<code>INC EAX</code>后 EAX 为 1，最终返回 1；</li>
+<li>如果不相等，<code>NEG EAX</code>会使 CF 标志位置 1，<code>SBB EAX,EAX</code>的计算结果为 -1，<code>INC EAX</code>后 EAX 为 0，最终返回 0；</li>
+</ul>
+</li>
+<li><p>关键 CALL 出来后，判断 EAX 是否为 0，然后进行条件跳转：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqtf8iojmuj31g00u0q7y.jpg" alt="关键 CALL 出来后"></p>
+</li>
+<li><p>既然找到了用户名对应的序列好，测试一下：</p>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqtfai1so1j30ho0ay0sy.jpg" alt="测试一下"></p>
+<p>完全正确！</p>
+</li>
+<li><p>最后，说说注册码的规则：</p>
+<ul>
+<li><p>用户名必须大于 4 个字符，也就是大于等于 5；</p>
+</li>
+<li><p>从用户名的第 4 个字符开始，每次取出 1 个字符，以 16 进制和指定字符相乘，也就说，用户名第 4 个字符对应下标为 0 的字符，当用户名字符多于给定字符时，循环匹配，也就是说，下标为 7 的字符取出后，下一个匹配的是下标为 0 的字符，以此类推；<br>给定字符如下：</p>
+<table>
+<thead>
+<tr>
+<th align="center">0</th>
+<th align="center">1</th>
+<th align="center">2</th>
+<th align="center">3</th>
+<th align="center">4</th>
+<th align="center">5</th>
+<th align="center">6</th>
+<th align="center">7</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">0C</td>
+<td align="center">0A</td>
+<td align="center">13</td>
+<td align="center">09</td>
+<td align="center">0C</td>
+<td align="center">0B</td>
+<td align="center">0A</td>
+<td align="center">08</td>
+</tr>
+</tbody></table>
+</li>
+<li><p>将每次计算的结果累加；</p>
+</li>
+<li><p>最终结果转换为 10 进制就是用户名对应的注册码；</p>
+</li>
+<li><p>简单实现：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;string.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">GenRegCode</span><span class="params">(<span class="type">char</span> *name, <span class="type">char</span> *table)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">char</span> *name = <span class="string">&quot;undeio&quot;</span>;</span><br><span class="line">    <span class="type">char</span> table[<span class="number">8</span>] = &#123;<span class="number">0xC</span>, <span class="number">0xA</span>, <span class="number">0x13</span>, <span class="number">0x9</span>, <span class="number">0xC</span>, <span class="number">0xB</span>, <span class="number">0xA</span>, <span class="number">0x8</span>&#125;;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;%d\n&quot;</span>, GenRegCode(name, table));</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">GenRegCode</span><span class="params">(<span class="type">char</span> *name, <span class="type">char</span> *table)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">int</span> i, j;</span><br><span class="line">    <span class="type">int</span> code;</span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">3</span>, j = <span class="number">0</span>; i &lt; <span class="built_in">strlen</span>(name); i++, j++)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span> (j &gt; <span class="number">7</span>)</span><br><span class="line">            j = <span class="number">0</span>;</span><br><span class="line">        code += ((<span class="type">char</span>)name[i]) * table[j];</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> code;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>以用户名 undeio 为例：</p>
+<ul>
+<li>首先，undeio 长度大于 4；</li>
+<li>第 4 个字符为 e， 16 进制为 65，给定字符为 C，65 * 0C &#x3D; 4BC；</li>
+<li>第 5 个字符为 i，16 进制为 69，给定字符为 A，69 * 0A &#x3D; 41A；</li>
+<li>第 6 个字符为 o， 16 进制为 6F，给定字符为 13，6F * 13 &#x3D; 83D；</li>
+<li>最后 4BC + 41A + 83D &#x3D; 1113，转换为 10 进制后为 4371；</li>
+<li>测试一下：</li>
+</ul>
+<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqthllhn7qj30hq0b03yq.jpg" alt="测试一下"></p>
 </li>
 </ul>
 </li>
@@ -11076,313 +11383,6 @@ E --&gt; |&quot;否，未解决&quot;| G
       <tags>
         <tag>Hackintosh</tag>
         <tag>OpenCore</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>软编码寻找序列号（二）</title>
-    <url>/posts/3362832349/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-8">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；<span id="more"></span></li>
-</ul>
-<h4 id="逆向思路"><a href="#逆向思路" class="headerlink" title="逆向思路"></a>逆向思路</h4><ol>
-<li><p>首先，打开软件到处点点，逆向一个软件起码要会用吧，不会用就没必要说逆向了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1lnjinquj307x04v0tf.jpg" alt="开始"></p>
-<p>有点意思，输入内容之后没有任何提示，看来只有输入正确的序列号才会有提示；</p>
-</li>
-<li><p>倒入<code>OD</code>开始分析：</p>
-<ul>
-<li><p>首先按下<code>Ctrl + A</code>让<code>OD</code>分析一下代码；</p>
-</li>
-<li><p>既然界面没有按钮，那就得先猜测它的工作原理了，如果它会在输入正确之后提示的话，那么它就是实时获取我们输入的内容并进行判断，这样的话，有用的应该就是<code>内存断点</code>了；</p>
-</li>
-<li><p>说干就干，既然要去内存中找我们输入的内容，那输入就一定得个性一点，起码不是内存中常见的，不然一找一大堆就无从下手了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1lnjinquj307x04v0tf.jpg" alt="输入"></p>
-</li>
-<li><p>然后去<code>内存窗口</code>按下<code>Ctrl + B</code>或者右键选择<code>查找</code>，输入我们的序列号点击确定开始查找，记得勾选<code>区分大小写</code>：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1m10r2ncj30b806e74c.jpg" alt="查找"></p>
-</li>
-<li><p>输入的还算奇葩，只找到了两个，选择第二个吧，虽然第一个是独立的，但它在内存中的范围不太像：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1m2ueqnpj312j0nlgp6.jpg" alt="找到"></p>
-</li>
-<li><p>设置<code>内存访问断点</code>，长度随意，看心情，我就选 5 个字节了；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1m8qdz03j312i0noadj.jpg" alt="内存断点"></p>
-</li>
-<li><p>然后去程序界面再输入一个字符后，发现程序中断了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1mbkjvz1j312k0npgob.jpg" alt="中断1"></p>
-<p>不过中断的地方好像没什么用，我们输入的内容在<code>EDX</code>中，下面的代码段并没有操作它，<code>F9</code>继续运行程序；</p>
-</li>
-<li><p>刚一进程序领空就发现了亮点，这里好像就是比较了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1mgimi9aj312i0nljub.jpg" alt="亮点"></p>
-</li>
-<li><p>分析一番之后发现，逻辑很常规：</p>
-<ul>
-<li><p>首先，假码 和 可疑字符串 的前 4 个字节的机器码进行比较，不相等跳转到下一步；</p>
-</li>
-<li><p>接着，假码 和 可疑字符串 的第 1 个字节的机器码进行比较，不相等跳转到下一步</p>
-</li>
-<li><p>最后，恢复寄存器的内容并<code>RETN</code>，然后就杳无音讯了；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1mp4qouej312g0qqdjn.jpg" alt="比较"></p>
-</li>
-</ul>
-</li>
-<li><p>至于正确的序列号，当然就是那串可疑字符串了，那这串字符是怎么来的呢，不能每次都这么找吧：</p>
-<ul>
-<li><p>我们都知道<code>RETN</code>返回的是调用位置的下一行，那跟着<code>RETN</code>去看看：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1mv3jb6bj312i0qnq6f.jpg" alt="调用位置"></p>
-</li>
-<li><p>按照程序的流程走，既然这里是判断，那上面的就是获取和处理了，上面有好几个<code>CALL</code>，哪一个才是我们想要的那个呢，按照先获取后处理的流程来看，离我们最近的那个<code>CALL</code>应该是处理用的，那么这个<code>CALL</code>上面那两行代码应该就是它的参数，在参数上设置断点，看看参数是什么就知道这个<code>CALL</code>的用途了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1n7mrqnaj312i0qp0w5.jpg" alt="重点"></p>
-<p>设置断点，重载程序并运行后，程序中断了，但重点不在<code>反汇编窗口</code>，而是在<code>堆栈窗口</code>，我们发现了可疑字符串也就是正确的序列号，如果我们设置断点的这个<code>CALL</code>是处理函数的话，那么它还没运行怎么会出现正确的序列号呢？取消断点，在它上面那个<code>CALL</code>的参数上设置断点；</p>
-</li>
-<li><p>和上面的情况一样，程序中断后，在<code>堆栈窗口</code>，我们又发现了正确的序列号，再次取消断点，给它上面那个<code>CALL</code>设置断点：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1niua0lfj312g0qrgp0.jpg" alt="新断点"></p>
-<p>这次就好多了，虽然没发现有用的数据但正确的序列号也没有出现，那这个<code>CALL</code>很可能就是生成序列号的函数了，<code>F7</code>跟进去看看，结果很丧气，它也不是；</p>
-</li>
-<li><p>那就接着往上呗，终于，在设置好断点，重载并运行程序之后有了欣喜的收获，用户名当作参数传递了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1o2fra1jj312j0qowhy.jpg" alt="真的重点"></p>
-<p>虽然还没有运行代码，但信息窗口已经告诉我们它是什么了；</p>
-</li>
-<li><p>果断<code>F7</code>跟进去看看，都失败那么多次了，不差这一次：<br><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1o7hfyf0j312h0qr0w3.jpg" alt="进CALL"></p>
-<p>进来只有四行代码，但内容非常令人兴奋：这几行代码在检测有没有输入用户名；这就是一个好的开始，因为要操作数据的时候才会检测数据有没有输入；</p>
-</li>
-<li><p>从这个<code>CALl</code>里出来的窗口很熟悉，因为我们在这里已经操作了 3 次了，也失败了 3 次，这次将会是最后一次了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1ofq31sjj312h0qp78t.jpg" alt="多次操作"></p>
-</li>
-<li><p>这手灯下黑玩儿的漂亮，它一直在眼皮子底下计算序列号：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1q8fz1njj312g0qmn0r.jpg" alt="序列号运算"></p>
-<p>这就完了？那序列号呢？嘿嘿，在这里：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1qc14sgtj312i0qn42d.jpg" alt="序列号"></p>
-<p>是的，运算结束后，虽然数据保存到了<code>EBP-C</code>的位置，但我们并没有弹栈，所以<code>EAX</code>没有被覆盖，双击<code>EAX</code>试试，对啦，将运算结果转为 10 进制就是这个用户名对应的序列号；</p>
-</li>
-</ul>
-</li>
-<li><p>序列号的算法：</p>
-<ul>
-<li>用户名最少两位；</li>
-<li>用户名的下标从 1 开始；</li>
-<li>取用户名每个字节和它对应的下标进行异或运算；</li>
-<li>所有字节异或后的结果累加在一起；</li>
-<li>取最后一个字节的机器码，与对应下标进行异或运算后，循环左移 C 位；</li>
-<li>然后把左移的结果和所有字节异或后累加的结果相加；</li>
-<li>最后把最终结果转换成 10 进制就是这个用户名对应的注册码；</li>
-</ul>
-</li>
-<li><p>无图无真相</p>
-<ul>
-<li><p>例如：用户名<code>feng</code>对应的机器码是<code>66 65 6E 67</code>；</p>
-</li>
-<li><p>用户名的下标从 1 开始；</p>
-</li>
-<li><p>每个字节分别与它对应的下标进行异或运算<code>xor 66, 1 &gt;&gt; 67</code>，<code>xor 65, 2 &gt;&gt; 67</code>，<code>xor 6E, 3 &gt;&gt; 6D</code>，<code>xor 67, 4 &gt;&gt; 63</code>;</p>
-</li>
-<li><p>异或后的结果累加<code>67 + 67 + 6D + 63 &gt;&gt; 19E</code>;</p>
-</li>
-<li><p>取最后一个字节的机器码，与对应下标进行异或运算后，循环左移 C 位<code>xor 67, 4 &gt;&gt; 63</code>，<code>ROL 63, C &gt;&gt; 63000</code>;</p>
-</li>
-<li><p>然后把左移的结果和所有字节异或后累加的结果相加<code>63000 + 19E &gt;&gt; 6319E</code>；</p>
-</li>
-<li><p>转换成 10 进制<code>6319E &gt;&gt; 405918</code>；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/007S8ZIlly1gj1qoidbqcj30e409yq41.jpg" alt="真相"></p>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>Windows</category>
-        <category>逆向分析</category>
-      </categories>
-      <tags>
-        <tag>软编码</tag>
-        <tag>算法分析</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>软编码寻找序列号（四）</title>
-    <url>/posts/4259093006/</url>
-    <content><![CDATA[<h4 id="使用工具"><a href="#使用工具" class="headerlink" title="使用工具"></a>使用工具</h4><ul>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/Tool-1">OllyDbg 1.10</a>原版，简称<code>OD</code>；</li>
-<li><code>OD</code> <code>汉化</code>和<code>插件</code>均来自互联网；</li>
-<li><a href="https://github.com/Undeio/undeio.github.io/releases/tag/CrackMe-25">CrackMe</a>来自互联网，仅供学习使用；</li>
-<li>文中特殊数字均是<code>HEX</code>，为了书写方便采用<code>DEC</code>；</li>
-</ul>
-<span id="more"></span>
-
-<h4 id="分析思路"><a href="#分析思路" class="headerlink" title="分析思路"></a>分析思路</h4><ol>
-<li><p>首先运行程序，梳理程序流程：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqt65k1roxj30ua0tkq4h.jpg" alt="梳理程序流程"></p>
-<ul>
-<li>用户名不能少于 5 位（也就是提示的大于 4 位）；</li>
-<li>既然用户名是随机的，注册码应该是根据用户名动态生成的；</li>
-<li>有弹窗，可以试试<code>MessageBox</code>；</li>
-<li>CM 来自<a href="https://bbs.pediy.com/forum-99.htm">加密解密</a>，段钢大佬的作品，翻阅加密解密还真有这个示例以及分析思路；</li>
-<li>不过，先不看书中的分析思路，自己分析，然后和大佬的分析做比对，看看自己有什么疏漏；</li>
-</ul>
-</li>
-<li><p>将 CM 导入 OD，先 Ctrl + A 让 OD 自动分析一下 CM，然后 Ctrl + N 查找当前模块中的名称：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqt6lnxsqdj31fv0u0dlk.jpg" alt="Ctrl + A"></p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqt6lq0ibcj31fz0u0wjh.jpg" alt="Ctrl + N"></p>
-<p>找到了获取输入框文本的<code>GetDlgItemTextA</code>，设置断点；</p>
-</li>
-<li><p>F9 运行程序后，提示内存非法访问，尝试 Shift + F8 忽略错误后，程序终止：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqt6ushp9tj30rg0imjrz.jpg" alt="Shift + F8"></p>
-</li>
-<li><p>重载程序，Alt + B 来到断点窗口，双击断点到达指令位置，发现断点没有设置在预期位置上，很是奇怪，现在也不明白为什么：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqt723z5mpj31g20u0wkl.jpg" alt="Alt + B"></p>
-<p>断点处于程序领空而不是系统领空，看来这种方法不行，试试其它方法；</p>
-<p>既然在 API 列表可以看到<code>GetDlgItemTextA</code>，说明程序应该是调用它了，Ctrl + G 输入<code>GetDlgItemTextA</code>，尝试跳转到 API 行首；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqt775cldoj31fx0u0aew.jpg" alt="Ctrl + G"></p>
-<p>来到此处，无论是指令的地址，OD 的标题栏，还是注释中的信息，都说明这里才是正经八百的<code>GetDlgItemTextA</code>函数，如果右侧没有注释，可以尝试再次按下 Ctrl + A 分析程序，设置断点，然后运行程序；</p>
-</li>
-<li><p>这次没有错误，输入用户名和序列号，点击 check 之后，程序中断在<code>GetDlgItemTextA</code>函数的行首：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqt7dclleaj31g20u0gqj.jpg" alt="栈窗口"></p>
-<p>栈窗口显示了本次调用的详细信息，包括调用位置，最大字符限制，文本缓冲区地址，控件标识以及窗口句柄；</p>
-<p>在 Buffer 参数上右键选择数据窗口中跟随，然后 Ctrl + F9 执行<code>GetDlgItemTextA</code>函数：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqt7ials45j31fz0u0wja.jpg" alt="执行`GetDlgItemTextA`函数"></p>
-<p>在缓冲区地址中，就看到了输入的用户名；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqt7nvnnkxj31fx0u0jx4.jpg" alt="密码"></p>
-<p>再次执行同样的步骤，就得到了输入的密码；</p>
-</li>
-<li><p>看到输入内容不是重点，重点是程序是如何限制用户名必须大于 4 位，以及这样做的含义，还有，程序是如何根据用户名生成序列号的，一探究竟：</p>
-<p>现在，程序已经获取到用户名和序列号了，正常情况下，接下来的步骤就是比较了，我们 F8 跟随到调用<code>GetDlgItemTextA</code>函数的位置：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqt7wui6l8j31fz0u0n25.jpg" alt="F8 跟随到调用"></p>
-<p>可以看到两次都是间接调用<code>CALL EDI</code>，那么上面这条<code>MOV EDI,DWORD PTR DS:[&lt;&amp;USER32.GetDlgItemTextA&gt;]</code>就是起始位置了，设置断点，然后重载并运行程序；</p>
-</li>
-<li><p>这里，每次都是先把 Buffer（文本缓冲区指针）放入寄存器，然后 PUSH：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqt8am9enlj31g00u0gqk.jpg" alt="Buffer"></p>
-</li>
-<li><p>接下来就是调用<code>GetDlgItemTextA</code>了，先来了解一下这个函数：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqt8voatb1j31g10u07wh.jpg" alt="先来了解一下这个函数"></p>
-<ul>
-<li>首先可以看到，参数入栈的顺序是倒叙的，这是因为 Win32 API 采用 stdcall 调用约定，参数按照从右到左的顺序入栈；</li>
-<li>再看函数返回值的说明，成功返回字符个数（不包括结尾的 NULL），失败返回 0，函数的返回值默认位于 EAX 中，查看 EAX，确实是用户名的字符个数；</li>
-</ul>
-<p>用户名获取完毕，继续执行，同样的方法会获取到输入的序列号；</p>
-</li>
-<li><p>接下来就是对用户名长度的处理：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqt9althdfj31fy0u00xo.jpg" alt="首先是判断用户名是否大于 4 位"></p>
-<p>这里先判断用户名是否为空，然后判断用户名是否大于 4 位，两个跳转的地址相同，应该就是“你输入字符要大于 4 个！”那个弹窗，就不跟了；</p>
-<blockquote>
-<p>需要注意：比较指令需要和接下来的跳转指令一起理解才是正确的；</p>
-</blockquote>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqt9w7f1ovj31fw0u0wk3.jpg" alt="关键 CALL"></p>
-<p>这里用户名，用户名长度以及序列号都作为参数传递个了一个 CALL，那么这里很可能就是关键 CALL；</p>
-</li>
-<li><p>F7 进 CALL 分析：</p>
-<ul>
-<li><p>先上整个分析，然后逐步分析：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqtbqc6bp3j31fw0u043v.jpg" alt="先看整个分析结果"></p>
-</li>
-<li><p>首先，下面 👇 的这个跳转是看不懂的：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqtbysnu3yj31bi02mglp.jpg" alt="下面的这个跳转是看不懂的"></p>
-<p>这里的和 7 比较让人是云里雾里的，不用管它，继续向下分析；</p>
-</li>
-<li><p>直到来到这里：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqtc3lkx78j31fy0u0jws.jpg" alt="继续向下分析"></p>
-<p>先是<code>MOV DL,BYTE PTR DS:[ECX+EBP]</code>，这里很好理解，ECX 是 3，EBP 是用户名，这条指令的意思是取用户名下标为 3 的字符（BYTE），放入 DL；</p>
-<p>然后是<code>MOV BL,BYTE PTR DS:[EAX+405030]</code>，理解了上一条语句，这条指令也不难理解，当前 EAX 是 0，这条指令的意思是取 405030 处的第 0 个字符（BYTE）放入 BL，很别扭对不对，因为我们通常数数是从 1 开始的，其实如果 EAX 为 0，这里不好理解，可以先不看下面的语句，让循环再次执行到这里，此时 EAX 为 1，就好理解了，不过取的是第 2 个字符（下标为 1 嘛）；</p>
-<p>理解了这里，然后回想<code>CMP EAX,7</code>以及<code>JLE SHORT TraceMe.00401360</code>就不难理解了：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqtcjbehofj31r808u3zj.jpg" alt="就不难理解了"></p>
-<p>这里是一个循环，循环每执行一次，都会取 405030 处下标为 EAX 的字符，然后 EAX 自增 1，并且每次循环开始时，都会将 EAX 和 7 做比较，是不是就可以理解为 405030 处的字符是有限的，如果 EAX 大于 7（因为是 JLE 跳转，小于等于则跳转），则说明 405030 处的字符取完了，此时 JLE 就会跳转失败，从而执行<code>XOR EAX,EAX</code>让 EAX 置 0，重新从 405030 下标为 0 的字符开始；</p>
-</li>
-</ul>
-</li>
-<li><p>上面的循环不好理解，实在理解不了<code>CMP EAX,7</code>的话，可以输入 4 + 7 &#x3D; 11，也就是大于 11 个字符的用户名，然后重复执行循环，并且关注 405030 处存放的给定字符，就会进一步理解了；</p>
-</li>
-<li><p>接下来调用了<code>wsprintfA</code>函数：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqtdrmb1idj31ft0u07ci.jpg" alt="接下来调用了`wsprintf`函数"></p>
-<p>由于参数是倒序的，所以第 1 个参数是将要输出的内容，而 ESI 存放的是上面循环处理用户名后的结果，接下来是输出格式<code>%ld</code>，以长整型输出，最后是接收输出的缓冲区指针 EBP，所以，这几条指令的意思是：将处理用户名的最终结果以长整型存储到 EBP 指向的地址；</p>
-<p>可以在 EBP 上右键选择数据窗口中跟随去查看，计算的结果为 2470（<code>%ld</code>，10 进制长整型）；</p>
-</li>
-<li><p>接下来调用了<code>lstrcmpA</code>函数，这里很好理解：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqte7hjx34j31fy0u0n2h.jpg" alt="接下来调用了`lstrcmpA`函数"></p>
-<p>从信息面板可以看到，EAX 即将存放的是输入的序列号，而 EBP 存放的则是用户名处理并转为 10 进制之后的值，将它们俩作为参数传递给<code>lstrcmpA</code>，当然是比较相等了，那么计算的最终结果 2470 就是 pediy 这个用户名对应的注册码了；</p>
-<p>难点在<code>lstrcmpA</code>函数执行完毕后下面的指令：</p>
-<p>常见的处理方式是直接返回<code>lstrcmpA</code>函数的返回结果，0 表示相等，非 0 表示不相等，而这里使用了不同的方式，查看源码才知道，源码中要返回 true 或 false；</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqtecob54zj311a04m74e.jpg" alt="难点在`lstrcmpA`函数执行完毕后下面的指令"></p>
-<p><code>NEG EAX</code>是取反操作，即 0 - EAX，如，EAX &#x3D; 5，则<code>NEG EAX</code>的结果为 0 - 5 &#x3D; -5；</p>
-<p>同时，<code>NEG EAX</code>会影响 CF 标志位，EAX 为正数，会产生借位，EAX 为负数，会产生进位，只有 EAX 为 0 时才不会影响 CF 标志位，所以<code>NEG EAX</code>也可以理解为判断 EAX 是否为 0；</p>
-<p>接下来是<code>SBB EAX,EAX</code>，SBB 是带借位减法，可以理解为<code>EAX - EAX - CF</code>，首先 EAX - EAX 的结果一定是 0，然后用 0 减去 CF 标志位的值，而这一步的结果受到<code>NEG EAX</code>的影响，因为如果 EAX 自身不为 0，则<code>SBB EAX,EAX</code>的值为 -1；</p>
-<p>最后是<code>INC EAX</code>，理解了前面两条指令，这条指令就没什么难度了；</p>
-<p>所以，从<code>lstrcmpA</code>函数开始直至函数返回，中间的语句就是判断序列号是否相等：</p>
-<ul>
-<li>如果相等，<code>NEG EAX</code>不会影响 CF 标志位，<code>SBB EAX,EAX</code>的计算结果为 0，<code>INC EAX</code>后 EAX 为 1，最终返回 1；</li>
-<li>如果不相等，<code>NEG EAX</code>会使 CF 标志位置 1，<code>SBB EAX,EAX</code>的计算结果为 -1，<code>INC EAX</code>后 EAX 为 0，最终返回 0；</li>
-</ul>
-</li>
-<li><p>关键 CALL 出来后，判断 EAX 是否为 0，然后进行条件跳转：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqtf8iojmuj31g00u0q7y.jpg" alt="关键 CALL 出来后"></p>
-</li>
-<li><p>既然找到了用户名对应的序列好，测试一下：</p>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqtfai1so1j30ho0ay0sy.jpg" alt="测试一下"></p>
-<p>完全正确！</p>
-</li>
-<li><p>最后，说说注册码的规则：</p>
-<ul>
-<li><p>用户名必须大于 4 个字符，也就是大于等于 5；</p>
-</li>
-<li><p>从用户名的第 4 个字符开始，每次取出 1 个字符，以 16 进制和指定字符相乘，也就说，用户名第 4 个字符对应下标为 0 的字符，当用户名字符多于给定字符时，循环匹配，也就是说，下标为 7 的字符取出后，下一个匹配的是下标为 0 的字符，以此类推；<br>给定字符如下：</p>
-<table>
-<thead>
-<tr>
-<th align="center">0</th>
-<th align="center">1</th>
-<th align="center">2</th>
-<th align="center">3</th>
-<th align="center">4</th>
-<th align="center">5</th>
-<th align="center">6</th>
-<th align="center">7</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">0C</td>
-<td align="center">0A</td>
-<td align="center">13</td>
-<td align="center">09</td>
-<td align="center">0C</td>
-<td align="center">0B</td>
-<td align="center">0A</td>
-<td align="center">08</td>
-</tr>
-</tbody></table>
-</li>
-<li><p>将每次计算的结果累加；</p>
-</li>
-<li><p>最终结果转换为 10 进制就是用户名对应的注册码；</p>
-</li>
-<li><p>简单实现：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;string.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">GenRegCode</span><span class="params">(<span class="type">char</span> *name, <span class="type">char</span> *table)</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">char</span> *name = <span class="string">&quot;undeio&quot;</span>;</span><br><span class="line">    <span class="type">char</span> table[<span class="number">8</span>] = &#123;<span class="number">0xC</span>, <span class="number">0xA</span>, <span class="number">0x13</span>, <span class="number">0x9</span>, <span class="number">0xC</span>, <span class="number">0xB</span>, <span class="number">0xA</span>, <span class="number">0x8</span>&#125;;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;%d\n&quot;</span>, GenRegCode(name, table));</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">GenRegCode</span><span class="params">(<span class="type">char</span> *name, <span class="type">char</span> *table)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">int</span> i, j;</span><br><span class="line">    <span class="type">int</span> code;</span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">3</span>, j = <span class="number">0</span>; i &lt; <span class="built_in">strlen</span>(name); i++, j++)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span> (j &gt; <span class="number">7</span>)</span><br><span class="line">            j = <span class="number">0</span>;</span><br><span class="line">        code += ((<span class="type">char</span>)name[i]) * table[j];</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> code;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<p>以用户名 undeio 为例：</p>
-<ul>
-<li>首先，undeio 长度大于 4；</li>
-<li>第 4 个字符为 e， 16 进制为 65，给定字符为 C，65 * 0C &#x3D; 4BC；</li>
-<li>第 5 个字符为 i，16 进制为 69，给定字符为 A，69 * 0A &#x3D; 41A；</li>
-<li>第 6 个字符为 o， 16 进制为 6F，给定字符为 13，6F * 13 &#x3D; 83D；</li>
-<li>最后 4BC + 41A + 83D &#x3D; 1113，转换为 10 进制后为 4371；</li>
-<li>测试一下：</li>
-</ul>
-<p><img data-src="https://tva1.sinaimg.cn/large/008i3skNly1gqthllhn7qj30hq0b03yq.jpg" alt="测试一下"></p>
-</li>
-</ul>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>逆向工程</category>
-        <category>Windows</category>
-        <category>逆向分析</category>
-      </categories>
-      <tags>
-        <tag>软编码</tag>
-        <tag>算法分析</tag>
       </tags>
   </entry>
 </search>
