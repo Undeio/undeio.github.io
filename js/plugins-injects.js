@@ -24,14 +24,14 @@
 /* 显示访问 ip */
 !(function () {
   const ip = document.querySelector(".access-ip");
-  try {
-    ip.innerText = `访问IP: ${returnCitySN["cip"]} ${returnCitySN["cname"]}`;
-    ip.style.display = "block";
-  } catch (error) {
-    console.error(
-      "Script 加载失败：GET“https://pv.sohu.com/cityjson?ie=utf-8”。",
-      error
-    );
+  // try {
+  //   ip.innerText = `访问IP: ${returnCitySN["cip"]} ${returnCitySN["cname"]}`;
+  //   ip.style.display = "block";
+  // } catch (error) {
+  //   console.error(
+  //     "Script 加载失败：GET“https://pv.sohu.com/cityjson?ie=utf-8”。",
+  //     error
+  //   );
 
     fetch("https://ipapi.co/ip/")
       .then(function (response) {
@@ -43,7 +43,7 @@
       .catch(function (error) {
         console.error("Fetch 加载失败：GET“https://ipapi.co/ip/”。", error);
       });
-  }
+  // }
 })();
 
 /* 网站运行时间 runtime */
